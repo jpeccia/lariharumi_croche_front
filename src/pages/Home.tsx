@@ -1,7 +1,33 @@
+// src/pages/Home.tsx
+
+import { useState, useEffect } from 'react';
 import { Heart, Gift, MessageCircle } from 'lucide-react';
+import api from '../services/api'; // Importando o axios configurado
 import ProductCarousel from '../components/ProductCarousel';
 
 function Home() {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+
+  // Função para carregar categorias e produtos do back-end
+  const fetchData = async () => {
+    try {
+      // Requisição para buscar categorias e produtos
+      const categoriesResponse = await api.get('/categories');
+      const productsResponse = await api.get('/products');
+      
+      setCategories(categoriesResponse.data); // Setando as categorias
+      setProducts(productsResponse.data); // Setando os produtos
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error);
+    }
+  };
+
+  // Usando useEffect para carregar os dados assim que o componente for montado
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Hero Section */}
@@ -58,7 +84,7 @@ function Home() {
         <h2 className="text-2xl font-bold text-purple-800 mb-8 text-center">
           Nossas Criações
         </h2>
-        <ProductCarousel />
+        <ProductCarousel categories={categories} products={products} />
       </div>
     </div>
   );

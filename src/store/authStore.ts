@@ -5,28 +5,29 @@ import { User } from '../types/user';
 interface AuthState {
   user: User | null;
   token: string | null;
-  setAuth: (user: User, token: string) => void;
+  setAuth: (user: User, token: string, isAdmin: boolean) => void;
   logout: () => void;
-  isAdmin: () => boolean;
+  isAdmin: boolean; // Defina como booleano, não função
   updateToken: (token: string) => void;
-  isTokenValid: () => boolean; // Nova função para verificar validade do token
+  isTokenValid: () => boolean; 
 }
+
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
       token: null,
-      setAuth: (user, token) => set({ user, token }),
-      logout: () => set({ user: null, token: null }),
-      isAdmin: () => get().user?.role === 'ADMIN',
+      isAdmin: false, // Agora é um booleano
+      setAuth: (user, token, isAdmin) => {
+        set({ user, token, isAdmin });
+      },
+      logout: () => set({ user: null, token: null, isAdmin: false }), 
       updateToken: (token) => set({ token }),
       isTokenValid: () => {
         const token = get().token;
         if (!token) return false;
-
         try {
-          // Decodificar o token JWT para verificar validade
           const [, payload] = token.split('.');
           const decodedPayload = JSON.parse(atob(payload));
           const currentTime = Math.floor(Date.now() / 1000);
@@ -39,7 +40,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ token: state.token, user: state.user }),
+      partialize: (state) => ({ token: state.token, user: state.user, isAdmin: state.isAdmin }),
     }
   )
 );

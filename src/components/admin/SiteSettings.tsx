@@ -19,15 +19,6 @@ export function SiteSettings() {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">WhatsApp</label>
-          <input
-            type="text"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-            placeholder="+55 (11) 99999-9999"
-          />
-        </div>
-
         <button
           type="submit"
           className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { products } from '../data/products';
+import React, { useState } from 'react';
 
-export default function ProductCarousel() {
+interface ProductCarouselProps {
+  products: any[];
+}
+
+export default function ProductCarousel({ products }: ProductCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const nextSlide = () => {

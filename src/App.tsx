@@ -5,6 +5,8 @@ import Home from './pages/Home';
 import Catalog from './pages/Catalog';
 import Care from './pages/Care';
 import Contact from './pages/Contact';
+import LoginPage from './pages/Login';
+import AdminDashboard from './pages/admin/Dashboard';
 
 function App() {
   return (
@@ -12,9 +14,11 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/care" element={<Care />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/admin" element={<AdminDashboard />} />  {/* Página de admin */}
       </Routes>
     </div>
   );
