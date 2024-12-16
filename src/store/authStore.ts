@@ -8,7 +8,8 @@ interface AuthState {
   setAuth: (user: User, token: string) => void;
   logout: () => void;
   isAdmin: () => boolean;
-  updateToken: (token: string) => void;  // Nova função para atualizar o token
+  updateToken: (token: string) => void;
+  isTokenValid: () => boolean; // Nova função para verificar validade do token
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -18,12 +19,27 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       setAuth: (user, token) => set({ user, token }),
       logout: () => set({ user: null, token: null }),
-      isAdmin: () => get().user?.role === 'ADMIN', // Verifica se o usuário é admin
-      updateToken: (token) => set({ token }), // Função para atualizar o token
+      isAdmin: () => get().user?.role === 'ADMIN',
+      updateToken: (token) => set({ token }),
+      isTokenValid: () => {
+        const token = get().token;
+        if (!token) return false;
+
+        try {
+          // Decodificar o token JWT para verificar validade
+          const [, payload] = token.split('.');
+          const decodedPayload = JSON.parse(atob(payload));
+          const currentTime = Math.floor(Date.now() / 1000);
+          return decodedPayload.exp > currentTime;
+        } catch (error) {
+          console.error('Erro ao verificar token:', error);
+          return false;
+        }
+      },
     }),
     {
-      name: 'auth-storage', // Nome da chave no armazenamento local
-      partialize: (state) => ({ token: state.token, user: state.user }) // Caso queira persistir apenas certas partes
+      name: 'auth-storage',
+      partialize: (state) => ({ token: state.token, user: state.user }),
     }
   )
 );
