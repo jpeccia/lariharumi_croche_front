@@ -1,0 +1,23 @@
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import Catalog from './pages/Catalog';
+import Care from './pages/Care';
+import Contact from './pages/Contact';
+
+function App() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/catalog" element={<Catalog />} />
+        <Route path="/care" element={<Care />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
+    </div>
+  );
+}
+
+export default App;
