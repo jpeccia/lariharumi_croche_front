@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { categories, products } from '../data/products';
 import { CategoryCard } from '../components/catalog/CategoryCard';
 import { ProductCard } from '../components/catalog/ProductCard';
@@ -50,7 +50,7 @@ function Catalog() {
             <ProductCard
               key={product.id}
               product={product}
-              instagramUsername="larissa.harumi"
+              instagramUsername="lhkowara"
             />
           ))}
         </div>

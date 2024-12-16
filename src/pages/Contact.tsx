@@ -1,5 +1,4 @@
-import React from 'react';
-import { Instagram, Facebook, MessageCircle, Heart } from 'lucide-react';
+import { Instagram, Heart } from 'lucide-react';
 import { SocialLink } from '../components/contact/SocialLink';
 
 function Contact() {
@@ -38,21 +37,9 @@ function Contact() {
           <div className="space-y-4">
             <SocialLink
               platform="Instagram"
-              username="larissa.harumi"
-              url="https://instagram.com/larissa.harumi"
+              username="lhkowara"
+              url="https://instagram.com/lhkowara"
               Icon={Instagram}
-            />
-            <SocialLink
-              platform="Facebook"
-              username="larissa.harumi.croche"
-              url="https://facebook.com/larissa.harumi.croche"
-              Icon={Facebook}
-            />
-            <SocialLink
-              platform="WhatsApp"
-              username="Larissa Harumi"
-              url="https://wa.me/5511999999999"
-              Icon={MessageCircle}
             />
           </div>
 
@@ -61,8 +48,8 @@ function Contact() {
               Encomendas Personalizadas
             </h3>
             <p className="text-gray-700 mb-4">
-              Tem uma ideia especial em mente? Entre em contato comigo através de
-              qualquer uma das redes sociais para conversarmos sobre sua encomenda
+              Tem uma ideia especial em mente? Entre em contato comigo através do instagram
+              para conversarmos sobre sua encomenda
               personalizada.
             </p>
           </div>

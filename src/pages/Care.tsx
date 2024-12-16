@@ -1,4 +1,3 @@
-import React from 'react';
 import { Droplets, Sun, Wind, Thermometer } from 'lucide-react';
 import { CareCard } from '../components/care/CareCard';
 
@@ -6,7 +5,7 @@ const careInstructions = [
   {
     id: 1,
     title: 'Lavagem',
-    description: 'Lave suas peças de crochê à mão com água fria ou morna. Use sabão neutro e evite esfregar com força para não danificar as fibras.',
+    description: 'Lave suas peças de crochê à mão com água fria ou morna. Use sabão neutro e evite esfregar com força para não danificar as fibras. Não torcer e enxaguar com água corrente(tire o excesso da água com uma toalha).',
     Icon: Droplets
   },
   {
@@ -61,6 +60,7 @@ function Care() {
           <li>Evite usar alvejantes ou produtos químicos agressivos</li>
           <li>Para peças brancas, use água oxigenada volume 10 diluída</li>
           <li>Guarde as peças protegidas de poeira e insetos</li>
+          <li>Não deixe de molho com outros produtos.</li>
           <li>Em caso de manchas, lave imediatamente com água fria</li>
         </ul>
       </div>

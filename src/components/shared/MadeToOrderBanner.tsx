@@ -1,4 +1,3 @@
-import React from 'react';
 import { Clock, Heart } from 'lucide-react';
 
 export function MadeToOrderBanner() {

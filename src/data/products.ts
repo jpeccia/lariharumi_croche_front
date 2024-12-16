@@ -18,6 +18,12 @@ export const categories: Category[] = [
     name: 'Decoração',
     description: 'Itens para deixar sua casa mais aconchegante',
     image: 'https://images.unsplash.com/photo-1580746738099-6c290dfd0a70?auto=format&fit=crop&q=80&w=400'
+  },
+  {
+    id: 4,
+    name: 'Pelúcias',
+    description: '',
+    image: 'https://images.unsplash.com/photo-1580746738099-6c290dfd0a70?auto=format&fit=crop&q=80&w=400'
   }
 ];
 

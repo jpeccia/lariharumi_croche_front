@@ -1,4 +1,3 @@
-import React from 'react';
 import { Heart, Gift, MessageCircle } from 'lucide-react';
 import ProductCarousel from '../components/ProductCarousel';
 

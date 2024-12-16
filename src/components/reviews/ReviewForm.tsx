@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Star } from 'lucide-react';
 import { reviewsApi } from '../../services/api';
