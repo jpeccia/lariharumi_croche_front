@@ -35,27 +35,38 @@ function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Hero Section */}
-      <div className="relative text-center mb-16">
-        <FloatingHearts />
-        <h1 className="font-handwritten text-4xl text-purple-800 mb-4">
-          Crochê da Lari 🧶
-        </h1>
-        <p className="font-kawaii text-lg text-gray-600 mb-8">
-          Peças únicas e personalizadas, feitas à mão com muito carinho 💝
-        </p>
-        <div className="flex justify-center space-x-4">
-          <button className="bg-pink-400 hover:bg-pink-500 text-white px-6 py-3 rounded-full transition-all hover:scale-105">
-            Ver Catálogo
-          </button>
-          <button className="bg-purple-400 hover:bg-purple-500 text-white px-6 py-3 rounded-full transition-all hover:scale-105">
-            Encomendar Peça
-          </button>
-        </div>
-        <div className="absolute -bottom-8 left-1/4 transform -translate-x-1/2">
-          <CuteBunny />
-        </div>
+    {/* Hero Section */}
+    <div className="relative text-center mb-16">
+      <FloatingHearts />
+      <h1 className="font-handwritten text-4xl text-purple-800 mb-4">
+        Crochê da Lari 🧶
+      </h1>
+      <p className="font-kawaii text-lg text-gray-600 mb-8">
+        Peças únicas e personalizadas, feitas à mão com muito carinho 💝
+      </p>
+      <div className="flex justify-center space-x-4">
+        {/* Botão para ver o catálogo */}
+        <a 
+          href="/catalog" 
+          className="bg-pink-400 hover:bg-pink-500 text-white px-6 py-3 rounded-full transition-all hover:scale-105"
+        >
+          Ver Catálogo
+        </a>
+
+        {/* Botão para encomendar peça - link para DM do Instagram */}
+        <a 
+          href="https://www.instagram.com/lhkowara/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="bg-purple-400 hover:bg-purple-500 text-white px-6 py-3 rounded-full transition-all hover:scale-105"
+        >
+          Encomendar Peça
+        </a>
       </div>
+      <div className="absolute -bottom-8 left-1/4 transform -translate-x-1/2">
+        <CuteBunny />
+      </div>
+    </div>
 
       {/* Features */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">

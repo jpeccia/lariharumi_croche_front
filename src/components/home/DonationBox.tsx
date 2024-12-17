@@ -50,7 +50,7 @@ export function DonationBox() {
         
         <div className="flex flex-col items-center">
           <a
-            href=""
+            href="/donation"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-400 to-purple-400 text-white px-8 py-3 rounded-full hover:from-pink-500 hover:to-purple-500 transition-all transform hover:scale-105"

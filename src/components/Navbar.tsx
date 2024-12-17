@@ -47,6 +47,16 @@ export default function Navbar() {
               Cuidados
             </Link>
             <Link
+              to="/donation"
+              className={`${
+                isActive('/donation')
+                  ? 'text-pink-500 border-b-2 border-pink-500'
+                  : 'text-gray-600 hover:text-pink-500'
+              } px-3 py-2 text-sm font-medium transition-colors`}
+            >
+              Doação
+            </Link>
+            <Link
               to="/contact"
               className={`${
                 isActive('/contact')

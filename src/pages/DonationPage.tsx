@@ -1,20 +1,32 @@
-import React from 'react';
+// DonationPage.tsx
+import React, { useState } from 'react';
 import { Coffee, IceCream, Cake, Sparkles } from 'lucide-react';
-import { KawaiiMascot } from './KawaiiMascot';
-import { DonationTier } from './DonationTier';
-import { SupportMessage } from './SupportMessage';
-import { FloatingHearts } from '../../shared/KawaiiElements/FloatingHearts';
-import { CuteBunny } from '../../shared/KawaiiElements/CuteBunny';
+import { QRCodeCanvas } from 'qrcode.react';
+import { DonationTier } from '../components/home/DonationBox/DonationTier';
+import { KawaiiMascot } from '../components/home/DonationBox/KawaiiMascot';
+import { SupportMessage } from '../components/home/DonationBox/SupportMessage';
+import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
+import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 
-export function DonationBox() {
-  const handleDonation = (amount: number) => {
-    window.open(`https://ko-fi.com/larissaharumi/${amount}`, '_blank');
+
+export function DonationPage() {
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const pixKey = import.meta.env.VITE_PIX_KEY;
+
+  const handlePixDonation = (amount: number) => {
+    setSelectedAmount(amount);
+  };
+
+  const generatePixCode = (amount: number) => {
+    return `00020126330014BR.GOV.BCB.PIX0111${pixKey}520400005303986540${amount
+      .toFixed(2)
+      .replace('.', '')}5802BR5909Larissa6009Sao Paulo62070503***6304`;
   };
 
   return (
     <div className="relative bg-gradient-to-br from-pink-50 via-purple-50 to-pink-50 rounded-3xl p-8 shadow-sm overflow-hidden">
       <FloatingHearts />
-      
+
       <div className="max-w-3xl mx-auto relative">
         {/* Decorative elements */}
         <div className="absolute -top-4 -left-4 transform -rotate-12">
@@ -28,7 +40,7 @@ export function DonationBox() {
         <div className="text-center mb-12">
           <KawaiiMascot />
           <h2 className="font-handwritten text-3xl text-purple-800 mt-6 mb-3 flex items-center justify-center gap-2">
-            Apoie Meu Trabalho! 
+            Apoie Meu Trabalho!
             <Sparkles className="w-6 h-6 text-yellow-400 animate-wiggle" />
           </h2>
           <p className="font-kawaii text-gray-600">
@@ -44,23 +56,43 @@ export function DonationBox() {
             title="Cafezinho"
             amount="R$ 5"
             description="Um cafézinho para me manter inspirada! ☕️"
-            onClick={() => handleDonation(5)}
+            onClick={() => handlePixDonation(5)}
           />
           <DonationTier
             icon={IceCream}
             title="Sorvetinho"
             amount="R$ 10"
             description="Um docinho para adoçar meu dia! 🍦"
-            onClick={() => handleDonation(10)}
+            onClick={() => handlePixDonation(10)}
           />
           <DonationTier
             icon={Cake}
             title="Bolinho"
             amount="R$ 15"
             description="Uma fatia de bolo para celebrar! 🍰"
-            onClick={() => handleDonation(15)}
+            onClick={() => handlePixDonation(15)}
           />
         </div>
+
+        {/* QR Code Display */}
+        {selectedAmount !== null && (
+          <div className="text-center mt-8">
+            <h3 className="text-xl font-bold text-purple-800 mb-4">
+              Escaneie o QR Code para doar R$ {selectedAmount},00 💖
+            </h3>
+            <div className="inline-block bg-white p-4 rounded-xl shadow-md">
+              <QRCodeCanvas
+                value={generatePixCode(selectedAmount)}
+                size={200}
+                includeMargin={true}
+                level="H"
+              />
+            </div>
+            <p className="text-sm text-gray-600 mt-4">
+              Obrigada pelo seu apoio! 🧶✨
+            </p>
+          </div>
+        )}
 
         {/* Recent Support Messages */}
         <div className="space-y-4">
@@ -70,11 +102,11 @@ export function DonationBox() {
           <div className="grid md:grid-cols-2 gap-4">
             <SupportMessage
               message="Suas peças são incríveis! Continue espalhando amor através do crochê! 💕"
-              author="Mari S."
+              author="João O. P."
             />
             <SupportMessage
               message="Amei meu amigurumi! Cada pontinho feito com tanto carinho ✨"
-              author="Júlia K."
+              author="Lhko"
             />
           </div>
         </div>

@@ -7,6 +7,7 @@ import Care from './pages/Care';
 import Contact from './pages/Contact';
 import LoginPage from './pages/Login';
 import AdminDashboard from './pages/admin/Dashboard';
+import { DonationPage } from './pages/DonationPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/care" element={<Care />} />
+        <Route path="/donation" element={<DonationPage />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/admin" element={<AdminDashboard />} />  {/* Página de admin */}
       </Routes>
