@@ -1,19 +1,37 @@
 import { Instagram } from 'lucide-react';
 import { Product } from '../../types/product';
+import { useState, useEffect } from 'react';
+import { adminApi } from '../../services/api';
 
 interface ProductCardProps {
   product: Product;
   instagramUsername: string;
 }
 
+
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProductImage = async () => {
+      try {
+        const image = await adminApi.getProductImage(product.id);
+        setImageUrl(image); // A URL da imagem será salva no estado
+      } catch (error) {
+        console.error('Erro ao carregar imagem:', error);
+      }
+    };
+
+    fetchProductImage(); // Carrega a imagem quando o componente for montado
+  }, [product.id]);
+
   const instagramUrl = `https://instagram.com/${instagramUsername}`;
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="relative">
         <img
-          src={product.image}
+          src={imageUrl || '/default-image.jpg'} // Caso a imagem não seja carregada, mostra uma imagem padrão
           alt={product.name}
           className="w-full h-48 object-cover"
         />

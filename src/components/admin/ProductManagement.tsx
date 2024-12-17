@@ -2,37 +2,55 @@ import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
+import { UploadProductImage } from './UploadProductImage'; // Importando o componente
 
 export function ProductManagement() {
-  const [products, setProducts] = React.useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
-    image: '',
+    image: '', // Inicialmente será uma URL ou caminho para o arquivo de imagem
     price: '',
-    categoryId: 1, // Default category ID
+    categoryId: 1,
   });
   const [categories, setCategories] = useState<any[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false); // Estado para controlar o modal
 
   useEffect(() => {
     loadProducts();
     loadCategories();
   }, []);
 
+  useEffect(() => {
+    if (editingProduct) {
+      const loadProductImage = async () => {
+        try {
+          const imageUrl = await adminApi.getProductImage(editingProduct.id);
+          setNewProduct((prevProduct) => ({
+            ...prevProduct,
+            image: imageUrl, // Atualiza a URL da imagem
+          }));
+        } catch (error) {
+          console.error('Falha ao carregar a imagem do produto:', error);
+        }
+      };
+
+      loadProductImage();
+    }
+  }, [editingProduct]);
+
   const loadProducts = async () => {
     try {
       const data = await adminApi.getProducts();
       console.log('Produtos carregados:', data);
-      setProducts(data); // Aqui você precisa garantir que os dados carregados tenham categoryId
+      setProducts(data);
     } catch (error) {
       console.error('Falha ao carregar produtos:', error);
       alert('Falha ao carregar os produtos.');
     }
   };
-  
 
   const loadCategories = async () => {
     try {
@@ -44,51 +62,54 @@ export function ProductManagement() {
       alert('Falha ao carregar as categorias.');
     }
   };
-  
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
   
+    // Removendo o FormData, já que a imagem não é necessária
+    const formData = new FormData();
+    formData.append('name', newProduct.name);
+    formData.append('description', newProduct.description);
+    formData.append('price', parseFloat(newProduct.price).toString());
+    formData.append('categoryId', newProduct.categoryId.toString());
+  
     try {
-      const productData = {
+      const response = await adminApi.createProduct({
         name: newProduct.name,
         description: newProduct.description,
-        image: newProduct.image,
         price: parseFloat(newProduct.price),
-        categoryId: newProduct.categoryId, // Certifique-se de que está passando o categoryId corretamente
-      };
+        categoryId: newProduct.categoryId,
+        image: ''
+      }); // Envia apenas os dados necessários
   
-      const response = await adminApi.createProduct(productData);
       console.log('Produto criado com sucesso:', response);
   
-      loadProducts();
-      setIsCreating(false);
+      loadProducts(); // Atualiza a lista de produtos
+      setIsCreating(false); // Altera o estado de criação
       setNewProduct({
         name: '',
         description: '',
-        image: '',
+        image: '', // Resetando a imagem
         price: '',
-        categoryId: 1, // Garantir que está passando um categoryId válido (1 é o valor padrão)
+        categoryId: 1,
       });
     } catch (error) {
       console.error('Falha ao criar o produto:', error);
       alert('Falha ao criar o produto. Verifique os dados.');
     }
   };
-  
 
   const handleEditProduct = (product: Product) => {
-    setEditingProduct(product); // Define o produto a ser editado
+    setEditingProduct(product);
     setNewProduct({
       name: product.name,
       description: product.description,
-      image: product.image,
+      image: product.image || '', // Preservando a URL da imagem original
       price: product.priceRange ? product.priceRange.toString() : '',
-      categoryId: product.categoryId, // Verifique se categoryId está presente
+      categoryId: product.categoryId,
     });
-    setIsCreating(true); // Exibe o formulário de edição
+    setIsCreating(true);
   };
-  
 
   const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +126,7 @@ export function ProductManagement() {
       name: newProduct.name,
       description: newProduct.description,
       image: newProduct.image,
-      price: parseFloat(newProduct.price),
+      price: newProduct.price ? parseFloat(newProduct.price) : 0,
       categoryId: categoryIdToUpdate,
     };
 
@@ -139,14 +160,13 @@ export function ProductManagement() {
     }
   };
 
-  const getCategoryName = (categoryId: number) => {
-    const category = categories.find((category) => category.id === categoryId);
-    return category ? category.name : 'Categoria não encontrada';
+  const handleImageChange = (imageUrl: string) => {
+    setNewProduct({
+      ...newProduct,
+      image: imageUrl, // Atualizando a URL da imagem
+    });
+    setIsImageModalOpen(false); // Fechar o modal após a seleção da imagem
   };
-  
-  
-  
-  
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -168,113 +188,140 @@ export function ProductManagement() {
       </div>
 
       {(isCreating || editingProduct) && (
-        <form onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct} className="space-y-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Nome</label>
-            <input
-              type="text"
-              value={newProduct.name}
-              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              required
-            />
-          </div>
+  <form onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct} className="space-y-4 mb-6">
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Nome</label>
+      <input
+        type="text"
+        value={newProduct.name}
+        onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        required
+      />
+    </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Descrição</label>
-            <input
-              type="text"
-              value={newProduct.description}
-              onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              required
-            />
-          </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Descrição</label>
+      <input
+        type="text"
+        value={newProduct.description}
+        onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        required
+      />
+    </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Imagem</label>
-            <input
-              type="text"
-              value={newProduct.image}
-              onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              required
-            />
-          </div>
+    {/* O campo de imagem será exibido apenas durante a edição */}
+    {editingProduct && (
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Imagem</label>
+        <button
+          type="button"
+          onClick={() => setIsImageModalOpen(true)} // Abre o modal de imagem
+          className="mt-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+        >
+          Selecionar Imagem
+        </button>
+        {newProduct.image && (
+          <img
+            src={newProduct.image}
+            alt="Imagem do Produto"
+            className="mt-2 w-32 h-32 object-cover"
+          />
+        )}
+      </div>
+    )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Preço</label>
-            <input
-              type="number"
-              value={newProduct.price}
-              onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              required
-            />
-          </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Preço</label>
+      <input
+        type="number"
+        value={newProduct.price}
+        onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        required
+      />
+    </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Categoria</label>
-            <select
-              value={newProduct.categoryId}
-              onChange={(e) => setNewProduct({ ...newProduct, categoryId: parseInt(e.target.value) })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-            >
-              {categories.length > 0 ? (
-                categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))
-              ) : (
-                <option>Carregando...</option>
-              )}
-            </select>
-          </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Categoria</label>
+      <select
+        value={newProduct.categoryId}
+        onChange={(e) => setNewProduct({ ...newProduct, categoryId: parseInt(e.target.value) })}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+      >
+        {categories.length > 0 ? (
+          categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))
+        ) : (
+          <option>Carregando...</option>
+        )}
+      </select>
+    </div>
 
-          <button
-            type="submit"
-            className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700"
-          >
-            {editingProduct ? 'Atualizar Produto' : 'Criar Produto'}
-          </button>
-        </form>
-      )}
+    <button
+      type="submit"
+      className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700"
+    >
+      {editingProduct ? 'Atualizar Produto' : 'Criar Produto'}
+    </button>
+  </form>
+)}
+
 
       <div className="space-y-4">
         {products.map((product) => (
-          <div key={product.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+          <div key={product.id} className="flex items-center justify-between p-4 bg-gray-100 rounded-md">
             <div className="flex items-center gap-4">
               <img
-                src={product.image}
+                src={product.image || 'placeholder.jpg'}
                 alt={product.name}
-                className="w-16 h-16 object-cover rounded-md"
+                className="w-12 h-12 object-cover rounded-md"
               />
               <div>
-                <h3 className="font-medium text-purple-800">{product.name}</h3>
+                <p className="font-semibold text-lg">{product.name}</p>
                 <p className="text-sm text-gray-600">{product.description}</p>
-                <p className="text-sm text-gray-600">Preço: R${product.priceRange}</p>
-                <p className="text-sm text-gray-600">Categoria: {product.category?.name}</p>
-
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => handleEditProduct(product)}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"
+                className="text-blue-600 hover:text-blue-700"
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="w-5 h-5" />
               </button>
               <button
                 onClick={() => handleDeleteProduct(product.id)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-md"
+                className="text-red-600 hover:text-red-700"
               >
-                <Trash className="w-4 h-4" />
+                <Trash className="w-5 h-5" />
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {isImageModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-sm w-96">
+            <UploadProductImage
+              productId={editingProduct ? editingProduct.id : newProduct.id}
+              onImageUploaded={handleImageChange}
+            />
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setIsImageModalOpen(false)} // Fecha o modal
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

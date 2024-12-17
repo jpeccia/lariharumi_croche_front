@@ -24,7 +24,13 @@ export const authApi = {
   },
 };
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token'); // Ou de onde o token estiver armazenado
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export const adminApi = {
+  // Criar um produto
   createProduct: async (productData: { name: string; description: string; image: string; price: number; categoryId: number }) => {
     const dataToSend = {
       name: productData.name,
@@ -33,36 +39,99 @@ export const adminApi = {
       price: productData.price,
       categoryId: productData.categoryId, // Envia diretamente o ID da categoria
     };
-
-    const response = await api.post('/products', dataToSend); // Envia os dados para criar o produto
+    
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    const response = await api.post('/products', dataToSend, { headers });
     return response.data; // Retorna o produto criado
   },
+
+  // Criar uma categoria
   createCategory: async (categoryData: { name: string }) => {
-    const response = await api.post('/categories', categoryData);
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    const response = await api.post('/categories', categoryData, { headers });
     return response.data;
   },
+
+  // Obter todas as categorias
   getCategories: async () => {
-    const response = await api.get('/categories');
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    const response = await api.get('/categories', { headers });
     return response.data; // Retorna a lista de categorias
   },
+
+  // Obter todos os produtos
   getProducts: async () => {
-    const response = await api.get('/products');
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    const response = await api.get('/products', { headers });
     return response.data; // Retorna todos os produtos
   },
+
+  // Atualizar um produto existente
   updateProduct: async (productId: number, data: any) => {
-    const response = await api.put(`/products/${productId}`, data);
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    const response = await api.put(`/products/${productId}`, data, { headers });
     return response.data; // Retorna o produto atualizado
   },
-    // Função para atualizar uma categoria existente
+
+  // Atualizar uma categoria existente
   updateCategory: async (categoryId: number, categoryData: { name: string }) => {
-    const response = await api.put(`/categories/${categoryId}`, categoryData);
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    const response = await api.put(`/categories/${categoryId}`, categoryData, { headers });
     return response.data;
   },
-  deleteProduct: async (productId: number) => {
-    await api.delete(`/products/${productId}`);
+
+  // Função para fazer o upload de imagem de produto
+  uploadProductImage: async (
+    file: File,
+    productId: number,
+    onImageUploaded: (imageUrl: string) => void
+  ) => {
+    const formData = new FormData();
+    formData.append('image', file); // A chave "image" deve corresponder ao nome do parâmetro do backend
+    
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    
+    try {
+      const response = await api.post(`/products/${productId}/upload-image`, formData, {
+        headers, // Passando o cabeçalho com token
+      });
+
+      if (response.data && response.data.imageUrl) {
+        onImageUploaded(response.data.imageUrl); // Chama a função com a URL da imagem
+      } else {
+        console.error('Resposta do servidor não contém a URL da imagem');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar a imagem:', error);
+      throw new Error('Falha ao fazer upload da imagem');
+    }
   },
+
+  // Função para buscar a imagem de um produto
+  getProductImage: async (productId: number) => {
+    try {
+      const headers = getAuthHeaders(); // Cabeçalhos com token
+      const response = await api.get(`/products/${productId}/image`, {
+        responseType: 'blob', // Para garantir que a resposta seja tratada como um arquivo binário (imagem)
+        headers, // Passando o cabeçalho com token
+      });
+      return URL.createObjectURL(response.data); // Retorna a URL da imagem (blobs)
+    } catch (error) {
+      console.error('Erro ao buscar imagem do produto:', error);
+      throw new Error('Falha ao buscar imagem do produto');
+    }
+  },
+
+  // Deletar um produto
+  deleteProduct: async (productId: number) => {
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    await api.delete(`/products/${productId}`, { headers });
+  },
+
+  // Deletar uma categoria
   deleteCategory: async (categoryId: number) => {
-    const response = await api.delete(`/categories/${categoryId}`);
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    const response = await api.delete(`/categories/${categoryId}`, { headers });
     return response.data;
   },
 };
