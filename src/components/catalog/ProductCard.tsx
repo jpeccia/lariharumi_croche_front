@@ -1,4 +1,3 @@
-import React from 'react';
 import { Instagram } from 'lucide-react';
 import { Product } from '../../types/product';
 
@@ -19,7 +18,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           className="w-full h-48 object-cover"
         />
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
-          <span className="text-sm font-medium text-pink-600">{product.priceRange}</span>
+          <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
         </div>
       </div>
       <div className="p-4">

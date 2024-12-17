@@ -3,6 +3,8 @@ import api from '../services/api'; // Importando o axios configurado
 import { CategoryCard } from '../components/catalog/CategoryCard';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
+import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
+import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
 
 function Catalog() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -46,10 +48,18 @@ function Catalog() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <MadeToOrderBanner />
+      <div className="relative">
+        <FloatingHearts />
+        <div className="absolute -top-4 -right-4">
+          <CuteBunny />
+        </div>
+        <MadeToOrderBanner />
+      </div>
 
       <div className="mb-12">
-        <h2 className="text-2xl font-bold text-purple-800 mb-8">Categorias</h2>
+      <h2 className="font-handwritten text-2xl text-purple-800 mb-8 text-center">
+          Categorias Especiais 🌸
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map((category) => (
             <CategoryCard
@@ -63,16 +73,17 @@ function Catalog() {
 
       <div>
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-purple-800">
-            {selectedCategory 
+        <h2 className="font-handwritten text-2xl text-purple-800 mb-8">
+                  {selectedCategory 
               ? `${categories.find(c => c.id === selectedCategory)?.name}` 
               : 'Todas as Peças'
             }
           </h2>
+          <FloatingHearts />
           {selectedCategory && (
             <button
               onClick={() => setSelectedCategory(null)} // Limpa a categoria e exibe todos os produtos
-              className="text-purple-600 hover:text-purple-700 font-medium"
+              className="font-kawaii text-purple-600 hover:text-purple-700 font-medium hover:scale-105 transition-transform"
             >
               Ver todas as categorias
             </button>

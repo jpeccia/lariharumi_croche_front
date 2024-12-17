@@ -9,11 +9,11 @@ export function MadeToOrderBanner() {
         </div>
         <div>
           <h3 className="text-lg font-semibold text-purple-800 flex items-center gap-2">
-            Feito sob encomenda
+            Pronta entrega e sob pedido
             <Heart className="w-4 h-4 text-pink-500" />
           </h3>
           <p className="text-gray-600">
-            Todas as peças são confeccionadas após o pedido, com muito carinho e atenção aos detalhes
+            Para peças sob encomenda, entrar em contato via DM no instagram!
           </p>
         </div>
       </div>

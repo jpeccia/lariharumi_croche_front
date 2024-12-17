@@ -1,0 +1,10 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Mali:wght@400;600&display=swap');
+
+.font-handwritten {
+  font-family: 'Caveat', cursive;
+}
+
+.font-kawaii {
+  font-family: 'Mali', cursive;
+}
