@@ -34,7 +34,8 @@ export default function ProductCarousel({ products }: ProductCarouselProps) {
                 <h3 className="text-lg font-semibold text-purple-800">
                   {product.name}
                 </h3>
-                <p className="text-sm text-gray-500">{product.category}</p>
+                {/* Aqui corrigimos o acesso à categoria para exibir o nome */}
+                <p className="text-sm text-gray-500">{product.category?.name}</p>
               </div>
             </div>
           </div>

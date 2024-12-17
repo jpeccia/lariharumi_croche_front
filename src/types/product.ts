@@ -3,10 +3,9 @@ export interface Product {
   id: number;
   name: string;
   image: string;
-  category: Category; // Aqui estamos garantindo que category é um objeto
+  category: string;
   priceRange: string;
   description: string;
-  
 }
 
 export interface Category {

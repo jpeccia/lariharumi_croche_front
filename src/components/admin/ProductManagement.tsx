@@ -254,7 +254,7 @@ export function ProductManagement() {
                 <h3 className="font-medium text-purple-800">{product.name}</h3>
                 <p className="text-sm text-gray-600">{product.description}</p>
                 <p className="text-sm text-gray-600">Preço: R${product.priceRange}</p>
-                <p className="text-sm text-gray-600">Categoria: {product.category?.name}</p> {/* Acessando o nome da categoria */}
+                <p className="text-sm text-gray-600">Categoria: {product.category?.name}</p>
 
               </div>
             </div>
