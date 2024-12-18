@@ -44,8 +44,10 @@ export function DonationPage() {
             <Sparkles className="w-6 h-6 text-yellow-400 animate-wiggle" />
           </h2>
           <p className="font-kawaii text-gray-600">
-            Oii! Que tal me ajudar a continuar criando peças fofas e cheias de amor? 
-            Cada doação é como um abraço quentinho que me incentiva a seguir tecendo sonhos! 🧶💕
+          Se tocar no seu coração e quiser ver mais coisinhas legais por aqui, 
+          sintam-se à vontade para doar. 
+          Cada doação é como um abraço quentinho que me incentiva a seguir crochetando sonhos! ✨🌸
+
           </p>
         </div>
 
@@ -111,8 +113,7 @@ export function DonationPage() {
         {/* Footer Message */}
         <div className="text-center mt-12">
           <p className="font-kawaii text-sm text-gray-500">
-            Cada contribuição me ajuda a comprar mais novelos e criar mais peças cheias de amor! 
-            Muito obrigada pelo seu apoio! 🌸
+          Cada contribuição me ajudará a transformar cada vez mais fios em histórias únicas! Muito obrigada pelo apoio! 🦋
           </p>
         </div>
       </div>
