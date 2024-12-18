@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Coffee, IceCream, Cake, Sparkles } from 'lucide-react';
 import { DonationTier } from '../components/home/DonationBox/DonationTier';
 import { KawaiiMascot } from '../components/home/DonationBox/KawaiiMascot';
@@ -6,8 +6,12 @@ import { SupportMessage } from '../components/home/DonationBox/SupportMessage';
 import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 
-// Substitua pelo caminho da imagem do QR Code
-const qrCodeImage = '/qrcode.jpg';
+// Caminhos das imagens de QR Code
+const qrCodeImages: Record<number, string> = {
+  5: '/qrcode5.jpg',
+  10: '/qrcode10.jpg',
+  15: '/qrcode15.jpg',
+};
 
 export function DonationPage() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
@@ -21,7 +25,7 @@ export function DonationPage() {
       <FloatingHearts />
 
       <div className="max-w-3xl mx-auto relative">
-        {/* Decorative elements */}
+        {/* Elementos decorativos */}
         <div className="absolute -top-4 -left-4 transform -rotate-12">
           <CuteBunny />
         </div>
@@ -29,7 +33,7 @@ export function DonationPage() {
           <CuteBunny />
         </div>
 
-        {/* Mascot and Header */}
+        {/* Mascote e Cabeçalho */}
         <div className="text-center mb-12">
           <KawaiiMascot />
           <h2 className="font-handwritten text-4xl text-purple-800 mt-6 mb-3 flex items-center justify-center gap-2">
@@ -43,7 +47,7 @@ export function DonationPage() {
           </p>
         </div>
 
-        {/* Donation Tiers */}
+        {/* Opções de doação */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           <DonationTier
             icon={Coffee}
@@ -68,7 +72,7 @@ export function DonationPage() {
           />
         </div>
 
-        {/* QR Code Display */}
+        {/* Exibição do QR Code */}
         {selectedAmount !== null && (
           <div className="text-center mt-8 my-12">
             <h3 className="text-xl font-bold text-purple-800 mb-4">
@@ -76,15 +80,15 @@ export function DonationPage() {
             </h3>
             <div className="inline-block bg-white p-4 rounded-xl shadow-md">
               <img
-                src={qrCodeImage}
-                alt="QR Code Pix"
+                src={qrCodeImages[selectedAmount]}
+                alt={`QR Code para R$ ${selectedAmount}`}
                 className="rounded-md"
               />
             </div>
           </div>
         )}
 
-        {/* Recent Support Messages */}
+        {/* Mensagens de Apoio Recentes */}
         <div className="space-y-4">
           <h3 className="font-handwritten text-4xl text-center text-purple-800 mb-6">
             Mensagens Fofas de Apoio 💌
@@ -101,7 +105,7 @@ export function DonationPage() {
           </div>
         </div>
 
-        {/* Footer Message */}
+        {/* Mensagem de Rodapé */}
         <div className="text-center mt-12">
           <p className="font-kawaii text-sm text-gray-500">
             Cada contribuição me ajudará a transformar cada vez mais fios em histórias únicas! Muito obrigada pelo apoio! 🦋
