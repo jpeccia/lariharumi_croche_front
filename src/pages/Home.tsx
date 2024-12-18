@@ -7,6 +7,9 @@ import { Gift, Heart, MessageCircle } from 'lucide-react';
 import { DonationBox } from '../components/home/DonationBox';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
+import { CutePanda } from '../components/shared/KawaiiElements/CutePanda';
+import { CuteBear } from '../components/shared/KawaiiElements/CuteBear';
+import { StarWand } from '../components/shared/KawaiiElements/Starwand';
 
 function Home() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -36,6 +39,9 @@ function Home() {
     {/* Hero Section */}
     <div className="relative text-center mb-16">
       <FloatingHearts />
+        <div className="absolute -top-4 -right-4">
+          <CutePanda />
+        </div>
       <h1 className="font-handwritten text-6xl text-purple-800 mb-4">
         Crochê da Lari 🧶
       </h1>
@@ -61,6 +67,12 @@ function Home() {
           Encomendar Peça
         </a>
       </div>
+      <div className="absolute -bottom-8 left-1/4 transform -translate-x-1/2">
+          <StarWand />
+        </div>
+        <div className="absolute -bottom-8 right-1/4 transform translate-x-1/2">
+          <CuteBear />
+        </div>
       <div className="absolute -bottom-8 left-1/4 transform -translate-x-1/2">
       </div>
     </div>
