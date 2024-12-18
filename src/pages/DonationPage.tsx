@@ -1,26 +1,19 @@
-// DonationPage.tsx
 import React, { useState } from 'react';
 import { Coffee, IceCream, Cake, Sparkles } from 'lucide-react';
-import { QRCodeCanvas } from 'qrcode.react';
 import { DonationTier } from '../components/home/DonationBox/DonationTier';
 import { KawaiiMascot } from '../components/home/DonationBox/KawaiiMascot';
 import { SupportMessage } from '../components/home/DonationBox/SupportMessage';
 import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 
+// Substitua pelo caminho da imagem do QR Code
+const qrCodeImage = '/qrcode.jpg';
 
 export function DonationPage() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const pixKey = import.meta.env.VITE_PIX_KEY;
 
   const handlePixDonation = (amount: number) => {
     setSelectedAmount(amount);
-  };
-
-  const generatePixCode = (amount: number) => {
-    const value = (amount / 100).toFixed(2).replace('.', ''); // Valor sem ponto
-    const pixCode = `00020126330014BR.GOV.BCB.PIX0111${pixKey}520400005303986540${value}5802BR5909Larissa6009Sao Paulo62070503***6304`;
-    return pixCode;
   };
 
   return (
@@ -44,10 +37,9 @@ export function DonationPage() {
             <Sparkles className="w-6 h-6 text-yellow-400 animate-wiggle" />
           </h2>
           <p className="font-kawaii text-gray-600">
-          Se tocar no seu coração e quiser ver mais coisinhas legais por aqui, 
-          sintam-se à vontade para doar. 
-          Cada doação é como um abraço quentinho que me incentiva a seguir crochetando sonhos! ✨🌸
-
+            Se tocar no seu coração e quiser ver mais coisinhas legais por aqui,
+            sintam-se à vontade para doar.
+            Cada doação é como um abraço quentinho que me incentiva a seguir crochetando sonhos! ✨🌸
           </p>
         </div>
 
@@ -83,12 +75,11 @@ export function DonationPage() {
               Escaneie o QR Code para doar R$ {selectedAmount},00 💖
             </h3>
             <div className="inline-block bg-white p-4 rounded-xl shadow-md">
-            <QRCodeCanvas
-              value={generatePixCode(selectedAmount)}
-              size={200}
-              includeMargin={true}
-              level="H"
-            />
+              <img
+                src={qrCodeImage}
+                alt="QR Code Pix"
+                className="rounded-md"
+              />
             </div>
           </div>
         )}
@@ -113,7 +104,7 @@ export function DonationPage() {
         {/* Footer Message */}
         <div className="text-center mt-12">
           <p className="font-kawaii text-sm text-gray-500">
-          Cada contribuição me ajudará a transformar cada vez mais fios em histórias únicas! Muito obrigada pelo apoio! 🦋
+            Cada contribuição me ajudará a transformar cada vez mais fios em histórias únicas! Muito obrigada pelo apoio! 🦋
           </p>
         </div>
       </div>
