@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import ProductCarousel from '../components/ProductCarousel';
-import { useNavigate } from 'react-router-dom'; // Importar hook de navegação
 import { Gift, Heart, MessageCircle } from 'lucide-react';
 import { DonationBox } from '../components/home/DonationBox';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
@@ -13,7 +12,6 @@ function Home() {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
 
-  const history = useNavigate(); // Hook de navegação para redirecionamento
 
   // Função para carregar categorias e produtos do back-end
   const fetchData = async () => {
@@ -38,7 +36,7 @@ function Home() {
     {/* Hero Section */}
     <div className="relative text-center mb-16">
       <FloatingHearts />
-      <h1 className="font-handwritten text-4xl text-purple-800 mb-4">
+      <h1 className="font-handwritten text-6xl text-purple-800 mb-4">
         Crochê da Lari 🧶
       </h1>
       <p className="font-kawaii text-lg text-gray-600 mb-8">
@@ -64,15 +62,14 @@ function Home() {
         </a>
       </div>
       <div className="absolute -bottom-8 left-1/4 transform -translate-x-1/2">
-        <CuteBunny />
       </div>
     </div>
-
       {/* Features */}
+      <CuteBunny />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
         <div className="text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all hover:scale-105">
           <Heart className="w-12 h-12 text-pink-400 mx-auto mb-4 animate-bounce-slow" />
-          <h3 className="font-handwritten text-xl text-purple-800 mb-2">
+          <h3 className="font-handwritten text-2xl text-purple-800 mb-2">
             Feito com carinho
           </h3>
           <p className="font-kawaii text-gray-600">
@@ -81,7 +78,7 @@ function Home() {
         </div>
         <div className="text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all hover:scale-105">
           <Gift className="w-12 h-12 text-pink-400 mx-auto mb-4 animate-bounce-slow" />
-          <h3 className="font-handwritten text-xl text-purple-800 mb-2">
+          <h3 className="font-handwritten text-2xl text-purple-800 mb-2">
             Personalização
           </h3>
           <p className="font-kawaii text-gray-600">
@@ -90,7 +87,7 @@ function Home() {
         </div>
         <div className="text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all hover:scale-105">
           <MessageCircle className="w-12 h-12 text-pink-400 mx-auto mb-4 animate-bounce-slow" />
-          <h3 className="font-handwritten text-xl text-purple-800 mb-2">
+          <h3 className="font-handwritten text-2xl text-purple-800 mb-2">
             Atendimento
           </h3>
           <p className="font-kawaii text-gray-600">
@@ -101,7 +98,7 @@ function Home() {
 
       {/* Categories Carousel */}
       <div className="mb-16">
-        <h2 className="font-handwritten text-2xl text-purple-800 mb-8 text-center">Nossas Criações</h2>
+        <h2 className="font-handwritten text-5xl text-purple-800 mb-8 text-center">Minhas Criações</h2>
         <ProductCarousel categories={categories} products={products} />
       </div>
 

@@ -38,11 +38,11 @@ function Care() {
         <div className="absolute -top-4 -left-4">
           <CuteBunny />
         </div>
-        <h1 className="font-handwritten text-3xl text-purple-800 mb-4">
+        <h1 className="font-handwritten text-4xl text-purple-800 mb-4">
           Cuidados com suas Peças 💝
         </h1>
         <p className="font-kawaii text-gray-600 max-w-2xl mx-auto">
-          Para que suas peças de crochê durem muito tempo e mantenham sua beleza,
+          Para que suas peças de crochê durem mais tempo e mantenham sua beleza,
           siga estas recomendações de cuidados especiais ✨
         </p>
       </div>

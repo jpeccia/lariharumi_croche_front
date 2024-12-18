@@ -57,8 +57,8 @@ function Catalog() {
       </div>
 
       <div className="mb-12">
-      <h2 className="font-handwritten text-2xl text-purple-800 mb-8 text-center">
-          Categorias Especiais 🌸
+      <h2 className="font-handwritten text-4xl text-purple-800 mb-8 text-center">
+          Categorias 🌸
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map((category) => (
@@ -73,7 +73,7 @@ function Catalog() {
 
       <div>
         <div className="flex justify-between items-center mb-8">
-        <h2 className="font-handwritten text-2xl text-purple-800 mb-8">
+        <h2 className="font-handwritten text-4xl text-purple-800 mb-8">
                   {selectedCategory 
               ? `${categories.find(c => c.id === selectedCategory)?.name}` 
               : 'Todas as Peças'

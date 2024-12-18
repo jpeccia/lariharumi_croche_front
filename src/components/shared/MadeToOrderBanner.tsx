@@ -9,7 +9,7 @@ export function MadeToOrderBanner() {
         </div>
         <div>
           <h3 className="text-lg font-semibold text-purple-800 flex items-center gap-2">
-            Pronta entrega e sob encomenda
+            Adquira sua peça!
             <Heart className="w-4 h-4 text-pink-500" />
           </h3>
           <p className="text-gray-600">

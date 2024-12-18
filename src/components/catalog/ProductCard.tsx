@@ -8,7 +8,6 @@ interface ProductCardProps {
   instagramUsername: string;
 }
 
-
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -29,11 +28,11 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="relative">
+      <div className="relative w-full h-48"> {/* Ajuste do contêiner da imagem */}
         <img
           src={imageUrl || '/default-image.jpg'} // Caso a imagem não seja carregada, mostra uma imagem padrão
           alt={product.name}
-          className="w-full h-48 object-cover"
+          className="w-full h-full object-fill" // Usar 'object-fill' para a imagem preencher o contêiner sem bordas
         />
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
           <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>

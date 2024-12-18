@@ -16,7 +16,7 @@ function Contact() {
           <div className="absolute -top-4 -left-4">
             <CuteBunny />
           </div>
-          <h2 className="font-handwritten text-3xl text-purple-800">
+          <h2 className="font-handwritten text-4xl text-purple-800">
             Sobre Larissa Harumi ✨
           </h2>
         </div>
@@ -31,7 +31,7 @@ function Contact() {
 
           {/* Social Links Section */}
           <div>
-            <h2 className="font-handwritten text-2xl text-purple-800 mb-6">
+            <h2 className="font-handwritten text-4xl text-purple-800 mb-6">
               Onde me Encontrar 💌
             </h2>
             <div className="space-y-4">
@@ -42,6 +42,11 @@ function Contact() {
                 Icon={Instagram}
               />
             </div>
+            <div className="flex justify-center space-y-4 my-8">
+  <img src="/logo.png" alt="" className="w-72" />
+</div>
+
+
           </div>
         </div>
       </div>

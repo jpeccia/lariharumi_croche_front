@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Category } from '../../types/product';
 import { adminApi } from '../../services/api';
 

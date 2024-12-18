@@ -39,7 +39,7 @@ export function DonationPage() {
         {/* Mascot and Header */}
         <div className="text-center mb-12">
           <KawaiiMascot />
-          <h2 className="font-handwritten text-3xl text-purple-800 mt-6 mb-3 flex items-center justify-center gap-2">
+          <h2 className="font-handwritten text-4xl text-purple-800 mt-6 mb-3 flex items-center justify-center gap-2">
             Apoie Meu Trabalho!
             <Sparkles className="w-6 h-6 text-yellow-400 animate-wiggle" />
           </h2>
@@ -76,7 +76,7 @@ export function DonationPage() {
 
         {/* QR Code Display */}
         {selectedAmount !== null && (
-          <div className="text-center mt-8">
+          <div className="text-center mt-8 my-12">
             <h3 className="text-xl font-bold text-purple-800 mb-4">
               Escaneie o QR Code para doar R$ {selectedAmount},00 💖
             </h3>
@@ -88,15 +88,12 @@ export function DonationPage() {
                 level="H"
               />
             </div>
-            <p className="text-sm text-gray-600 mt-4">
-              Obrigada pelo seu apoio! 🧶✨
-            </p>
           </div>
         )}
 
         {/* Recent Support Messages */}
         <div className="space-y-4">
-          <h3 className="font-handwritten text-2xl text-center text-purple-800 mb-6">
+          <h3 className="font-handwritten text-4xl text-center text-purple-800 mb-6">
             Mensagens Fofas de Apoio 💌
           </h3>
           <div className="grid md:grid-cols-2 gap-4">
