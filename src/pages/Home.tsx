@@ -9,6 +9,8 @@ import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
 import { CutePanda } from '../components/shared/KawaiiElements/CutePanda';
 import { CuteBear } from '../components/shared/KawaiiElements/CuteBear';
 import { StarWand } from '../components/shared/KawaiiElements/Starwand';
+import { CuteCinnamoroll } from '../components/shared/KawaiiElements/CuteCinnamoroll';
+import { CuteCinnamoroll2 } from '../components/shared/KawaiiElements/CuteCinnamoroll2';
 
 function Home() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -35,14 +37,16 @@ function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <CuteCinnamoroll />
+    <FloatingHearts />
+
     {/* Hero Section */}
     <div className="relative text-center mb-16">
-      <FloatingHearts />
         <div className="absolute -top-4 -right-4">
           <CutePanda />
         </div>
       <h1 className="font-handwritten text-6xl text-purple-800 mb-4">
-        Crochê da Lari 🧶
+        Crochê da Lari
       </h1>
       <p className="font-kawaii text-lg text-gray-600 mb-8">
         Peças únicas e personalizadas, feitas à mão com muito carinho 💝
@@ -67,7 +71,6 @@ function Home() {
         </a>
       </div>
       <div className="absolute -bottom-8 left-1/4 transform -translate-x-1/2">
-          <StarWand />
         </div>
         <div className="absolute -bottom-8 right-1/4 transform translate-x-1/2">
           <CuteBear />

@@ -5,6 +5,7 @@ import { ProductCard } from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
+import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 
 function Catalog() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -48,8 +49,8 @@ function Catalog() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <FloatingHearts />
       <div className="relative">
-        <FloatingHearts />
         <div className="absolute -top-4 -right-4">
           <CuteBunny />
         </div>
@@ -57,27 +58,31 @@ function Catalog() {
       </div>
 
       <div className="mb-12">
-      <h2 className="font-handwritten text-4xl text-purple-800 mb-8 text-center">
+        <h2 className="font-handwritten text-4xl text-purple-800 mb-8 text-center">
           Categorias 🌸
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              onClick={() => setSelectedCategory(category.id)} // Atualiza a categoria selecionada
-            />
-          ))}
+          <Stitch />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex-grow">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categories.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  onClick={() => setSelectedCategory(category.id)} // Atualiza a categoria selecionada
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       <div>
         <div className="flex justify-between items-center mb-8">
-        <h2 className="font-handwritten text-4xl text-purple-800 mb-8">
-                  {selectedCategory 
-              ? `${categories.find(c => c.id === selectedCategory)?.name}` 
-              : 'Todas as Peças'
-            }
+          <h2 className="font-handwritten text-4xl text-purple-800 mb-8">
+            {selectedCategory
+              ? `${categories.find((c) => c.id === selectedCategory)?.name}`
+              : 'Todas as Peças'}
           </h2>
           <FloatingHearts />
           {selectedCategory && (

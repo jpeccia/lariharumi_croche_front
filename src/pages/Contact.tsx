@@ -1,4 +1,4 @@
-import { Instagram } from 'lucide-react';
+import { Instagram, Github } from 'lucide-react'; // Importando os ícones do Instagram e GitHub
 import { SocialLink } from '../components/contact/SocialLink';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
@@ -43,12 +43,31 @@ function Contact() {
               />
             </div>
             <div className="flex justify-center space-y-4 my-8">
-  <img src="/logo.png" alt="" className="w-72" />
-</div>
-
-
+              <img src="/logo.png" alt="Logo" className="w-72" />
+            </div>
           </div>
         </div>
+
+        {/* Footer Section */}
+        <div className="border-t border-gray-300 text-center py-4 mt-12">
+          <p className="text-sm text-gray-600">
+            Site criado por <span className="font-bold">João Otávio Peccia</span>
+          </p>
+        </div>
+
+        {/* Social Media Links in Footer */}
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Conheça meu trabalho também:</p>
+            <div className="flex justify-center space-x-6 mt-2">
+              <a href="https://instagram.com/jpeccia" target="_blank" rel="noopener noreferrer">
+                <Instagram size={24} className="text-purple-600 hover:text-purple-700" />
+              </a>
+              <a href="https://github.com/jpeccia" target="_blank" rel="noopener noreferrer">
+                <Github size={24} className="text-gray-800 hover:text-gray-900" />
+              </a>
+            </div>
+          </div>
+
       </div>
     </div>
   );
