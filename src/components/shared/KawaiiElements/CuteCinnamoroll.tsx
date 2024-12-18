@@ -6,7 +6,7 @@ export function CuteCinnamoroll() {
       <img 
         src="/cinna.png" 
         alt="Cinnamoroll" 
-        className="w-full h-full object-cover rounded-full" 
+        className="w-full h-full object-cover" 
       />
     </div>
   );

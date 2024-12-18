@@ -18,9 +18,9 @@ export function DonationPage() {
   };
 
   const generatePixCode = (amount: number) => {
-    return `00020126330014BR.GOV.BCB.PIX0111${pixKey}520400005303986540${amount
-      .toFixed(2)
-      .replace('.', '')}5802BR5909Larissa6009Sao Paulo62070503***6304`;
+    const value = (amount / 100).toFixed(2).replace('.', ''); // Valor sem ponto
+    const pixCode = `00020126330014BR.GOV.BCB.PIX0111${pixKey}520400005303986540${value}5802BR5909Larissa6009Sao Paulo62070503***6304`;
+    return pixCode;
   };
 
   return (
@@ -57,7 +57,7 @@ export function DonationPage() {
             icon={Coffee}
             title="Cafezinho"
             amount="R$ 5"
-            description="Um cafézinho para me manter inspirada! ☕️"
+            description="Um cafézinho para iniciar o dia! ☕️"
             onClick={() => handlePixDonation(5)}
           />
           <DonationTier
@@ -83,12 +83,12 @@ export function DonationPage() {
               Escaneie o QR Code para doar R$ {selectedAmount},00 💖
             </h3>
             <div className="inline-block bg-white p-4 rounded-xl shadow-md">
-              <QRCodeCanvas
-                value={generatePixCode(selectedAmount)}
-                size={200}
-                includeMargin={true}
-                level="H"
-              />
+            <QRCodeCanvas
+              value={generatePixCode(selectedAmount)}
+              size={200}
+              includeMargin={true}
+              level="H"
+            />
             </div>
           </div>
         )}

@@ -1,6 +1,8 @@
 
 import { HeartHandshake, Sparkles } from 'lucide-react';
 import { CuteCinnamoroll2 } from '../shared/KawaiiElements/CuteCinnamoroll2';
+import { Harry } from '../shared/KawaiiElements/Harry';
+import { Cat } from '../shared/KawaiiElements/Cat';
 
 export function DonationBox() {
   return (
@@ -30,11 +32,11 @@ export function DonationBox() {
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <img
               src="https://img.freepik.com/fotos-premium/maos-segurando-um-novelo-de-la_155165-11960.jpg"
-              alt="Compra de material (ex: linhas, argola para chaveiro, enchimento)🧶🐼"
+              alt="Compra de materiais 🧶🐼"
               className="w-full h-48 object-cover rounded-lg mb-4"
             />
             <p className="text-sm text-gray-600">
-            Compra de material (ex: linhas, argola para chaveiro, enchimento)🧶🐼
+            Compra de materiais 🧶🐼
             </p>
           </div>
           
@@ -62,7 +64,7 @@ export function DonationBox() {
         </div>
         
         <div className="flex flex-col items-center">
-        <CuteCinnamoroll2 />
+        <Cat />
           <a
             href="/donation"
             target="_blank"
@@ -70,7 +72,7 @@ export function DonationBox() {
             className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-400 to-purple-400 text-white px-8 py-3 rounded-full hover:from-pink-500 hover:to-purple-500 transition-all transform hover:scale-105"
           >
             <Sparkles className="w-5 h-5" />
-            <span>*Expelliarmus! Apoiar e espalhar boas energias</span>
+            <span>Expelliarmus! Apoiar e espalhar boas energias</span>
           </a>
           <p className="text-sm text-gray-500 mt-4">
             Sua generosidade significa muito! 💝

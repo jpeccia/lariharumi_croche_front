@@ -51,17 +51,16 @@ function Catalog() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <FloatingHearts />
       <div className="relative">
-        <div className="absolute -top-4 -right-4">
-          <CuteBunny />
+        <div className="absolute top-24 -right-3 sm:-top-2 sm:-right-4 sm:left-auto">
+          <Stitch />
         </div>
         <MadeToOrderBanner />
       </div>
 
       <div className="mb-12">
-        <h2 className="font-handwritten text-4xl text-purple-800 mb-8 text-center">
-          Categorias 🌸
+        <h2 className="font-handwritten text-6xl text-purple-800 mb-8 text-center">
+          - Categorias -
         </h2>
-          <Stitch />
         <div className="flex items-center justify-between mb-8">
           <div className="flex-grow">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -79,7 +78,7 @@ function Catalog() {
 
       <div>
         <div className="flex justify-between items-center mb-8">
-          <h2 className="font-handwritten text-4xl text-purple-800 mb-8">
+          <h2 className="font-handwritten text-6xl text-purple-800 mb-8">
             {selectedCategory
               ? `${categories.find((c) => c.id === selectedCategory)?.name}`
               : 'Todas as Peças'}
@@ -88,7 +87,7 @@ function Catalog() {
           {selectedCategory && (
             <button
               onClick={() => setSelectedCategory(null)} // Limpa a categoria e exibe todos os produtos
-              className="font-kawaii text-purple-600 hover:text-purple-700 font-medium hover:scale-105 transition-transform"
+              className="font-kawaii text-purple-600 hover:text-purple-700 text-xl font-medium hover:scale-105 transition-transform"
             >
               Ver todas as categorias
             </button>

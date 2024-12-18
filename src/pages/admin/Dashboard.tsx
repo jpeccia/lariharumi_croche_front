@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore'; // Assumindo que você tem um hook de autenticação
+import { useAuthStore } from '../../store/authStore';
 import { ProductManagement } from '../../components/admin/ProductManagement';
-import { SiteSettings } from '../../components/admin/SiteSettings';
 import { CategoryManagement } from '../../components/admin/CategoryManagement';
 
 function AdminDashboard() {
@@ -26,9 +25,6 @@ function AdminDashboard() {
         </div>
         <CategoryManagement />
         <div>
-          <div className="space-y-6">
-            <SiteSettings />
-          </div>
         </div>
       </div>
     </div>

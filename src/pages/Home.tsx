@@ -11,6 +11,8 @@ import { CuteBear } from '../components/shared/KawaiiElements/CuteBear';
 import { StarWand } from '../components/shared/KawaiiElements/Starwand';
 import { CuteCinnamoroll } from '../components/shared/KawaiiElements/CuteCinnamoroll';
 import { CuteCinnamoroll2 } from '../components/shared/KawaiiElements/CuteCinnamoroll2';
+import { Harry } from '../components/shared/KawaiiElements/Harry';
+import { PokeBall } from '../components/shared/KawaiiElements/Pokeball';
 
 function Home() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -37,14 +39,17 @@ function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <CuteCinnamoroll />
     <FloatingHearts />
-
+    <div className="relative w-40 h-40"></div>
     {/* Hero Section */}
     <div className="relative text-center mb-16">
-        <div className="absolute -top-4 -right-4">
-          <CutePanda />
-        </div>
+
+        <div className="absolute -top-32 sm:-top-4 left-auto right-1 sm:left-auto sm:-right-4">
+  <CutePanda />
+</div>
+        <div className="absolute top-[-160px] left-1/2 transform -translate-x-1/2">
+    <CuteCinnamoroll />
+  </div>
       <h1 className="font-handwritten text-6xl text-purple-800 mb-4">
         Crochê da Lari
       </h1>
@@ -70,20 +75,15 @@ function Home() {
           Encomendar Peça
         </a>
       </div>
-      <div className="absolute -bottom-8 left-1/4 transform -translate-x-1/2">
-        </div>
-        <div className="absolute -bottom-8 right-1/4 transform translate-x-1/2">
-          <CuteBear />
-        </div>
-      <div className="absolute -bottom-8 left-1/4 transform -translate-x-1/2">
+      <div className="absolute -top-32 sm:-top-4 left-1 right-auto sm:-left-4 sm:right-auto">
+      <CuteBunny />
       </div>
     </div>
       {/* Features */}
-      <CuteBunny />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
         <div className="text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all hover:scale-105">
           <Heart className="w-12 h-12 text-pink-400 mx-auto mb-4 animate-bounce-slow" />
-          <h3 className="font-handwritten text-2xl text-purple-800 mb-2">
+          <h3 className="font-handwritten text-4xl text-purple-800 mb-2">
             Feito com carinho
           </h3>
           <p className="font-kawaii text-gray-600">
@@ -92,7 +92,7 @@ function Home() {
         </div>
         <div className="text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all hover:scale-105">
           <Gift className="w-12 h-12 text-pink-400 mx-auto mb-4 animate-bounce-slow" />
-          <h3 className="font-handwritten text-2xl text-purple-800 mb-2">
+          <h3 className="font-handwritten text-4xl text-purple-800 mb-2">
             Personalização
           </h3>
           <p className="font-kawaii text-gray-600">
@@ -101,19 +101,13 @@ function Home() {
         </div>
         <div className="text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all hover:scale-105">
           <MessageCircle className="w-12 h-12 text-pink-400 mx-auto mb-4 animate-bounce-slow" />
-          <h3 className="font-handwritten text-2xl text-purple-800 mb-2">
+          <h3 className="font-handwritten text-4xl text-purple-800 mb-2">
             Atendimento
           </h3>
           <p className="font-kawaii text-gray-600">
             Suporte personalizado do início ao fim
           </p>
         </div>
-      </div>
-
-      {/* Categories Carousel */}
-      <div className="mb-16">
-        <h2 className="font-handwritten text-5xl text-purple-800 mb-8 text-center">Minhas Criações</h2>
-        <ProductCarousel categories={categories} products={products} />
       </div>
 
       {/* Donation Box */}
