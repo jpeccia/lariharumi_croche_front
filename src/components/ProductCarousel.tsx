@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { adminApi } from '../services/api'; // Certifique-se de importar a API correta
 
 interface ProductCarouselProps {
   products: any[];
@@ -7,6 +8,7 @@ interface ProductCarouselProps {
 
 export default function ProductCarousel({ products }: ProductCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [productImages, setProductImages] = useState<Record<number, string>>({});
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % products.length);
@@ -15,6 +17,26 @@ export default function ProductCarousel({ products }: ProductCarouselProps) {
   const prevSlide = () => {
     setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
   };
+
+  // Função para carregar a imagem do produto
+  const fetchProductImage = async (productId: number) => {
+    try {
+      const image = await adminApi.getProductImage(productId);
+      setProductImages((prevImages) => ({
+        ...prevImages,
+        [productId]: image, // Salva a URL da imagem para o produto correspondente
+      }));
+    } catch (error) {
+      console.error('Erro ao carregar imagem:', error);
+    }
+  };
+
+  // Carregar as imagens dos produtos assim que o componente for montado
+  useEffect(() => {
+    products.forEach((product) => {
+      fetchProductImage(product.id);
+    });
+  }, [products]);
 
   return (
     <div className="relative">
@@ -25,16 +47,18 @@ export default function ProductCarousel({ products }: ProductCarouselProps) {
             className="flex-none w-72 snap-center"
           >
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-48 object-cover"
-              />
+              <div className="relative">
+                <img
+                  src={productImages[product.id] || '/default-image.jpg'} // Usa a URL da imagem ou uma imagem padrão
+                  alt={product.name}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
+                  <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
+                </div>
+              </div>
               <div className="p-4">
-                <h3 className="text-lg font-semibold text-purple-800">
-                  {product.name}
-                </h3>
-                {/* Aqui corrigimos o acesso à categoria para exibir o nome */}
+                <h3 className="text-lg font-semibold text-purple-800 mb-2">{product.name}</h3>
                 <p className="text-sm text-gray-500">{product.category?.name}</p>
               </div>
             </div>

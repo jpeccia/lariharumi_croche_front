@@ -16,12 +16,29 @@ export function ProductManagement() {
     categoryId: 1,
   });
   const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true); // Estado de carregamento
   const [isImageModalOpen, setIsImageModalOpen] = useState(false); // Estado para controlar o modal
 
   useEffect(() => {
     loadProducts();
     loadCategories();
   }, []);
+
+  // Carrega as categorias
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await adminApi.getCategories(); // Função para pegar categorias
+        setCategories(response.data); // Atualiza as categorias no estado
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+      } finally {
+        setLoading(false); // Define o carregamento como falso após a requisição
+      }
+    };
+
+    fetchCategories();
+  }, []); // Esse efeito só vai rodar uma vez, quando o componente for montado
 
   useEffect(() => {
     if (editingProduct) {
@@ -250,14 +267,18 @@ export function ProductManagement() {
         onChange={(e) => setNewProduct({ ...newProduct, categoryId: parseInt(e.target.value) })}
         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
       >
-        {categories.length > 0 ? (
-          categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))
+        {loading ? (
+          <option>Carregando...</option> // Exibe "Carregando..." enquanto as categorias são carregadas
         ) : (
-          <option>Carregando...</option>
+          categories.length > 0 ? (
+            categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))
+          ) : (
+            <option>Nenhuma categoria encontrada</option> // Mensagem caso não haja categorias
+          )
         )}
       </select>
     </div>

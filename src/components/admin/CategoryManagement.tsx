@@ -1,26 +1,38 @@
-import React, { useState } from 'react';
+// CategoryManagement.tsx
+import React, { useState, useEffect } from 'react';
+import { Package, Plus, Edit, Trash } from 'lucide-react';
 import { adminApi } from '../../services/api';
-import { Category } from '../../types/product';
-import { Edit, Trash, Plus, Package } from 'lucide-react';
+import { UploadCategoryImage } from './UploadCategoryImage'; // Componente para upload de imagem de categoria
+
+interface Category {
+  id: number;
+  name: string;
+  description: string;
+  image: string | null;
+}
 
 export function CategoryManagement() {
-  const [categories, setCategories] = React.useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [newCategory, setNewCategory] = useState({
     name: '',
+    description: '',
+    image: '', // Inicialmente será uma URL ou caminho para o arquivo de imagem
   });
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false); // Estado para controlar o modal
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadCategories();
   }, []);
 
   const loadCategories = async () => {
     try {
       const data = await adminApi.getCategories();
+      console.log('Categorias carregadas:', data);
       setCategories(data);
     } catch (error) {
-      console.error('Failed to load categories:', error);
+      console.error('Falha ao carregar categorias:', error);
       alert('Falha ao carregar as categorias.');
     }
   };
@@ -29,16 +41,19 @@ export function CategoryManagement() {
     e.preventDefault();
 
     try {
-      const categoryData = {
+      const response = await adminApi.createCategory({
         name: newCategory.name,
-      };
+      });
 
-      const response = await adminApi.createCategory(categoryData);
       console.log('Categoria criada com sucesso:', response);
 
-      loadCategories();
-      setIsCreating(false);
-      setNewCategory({ name: '' });
+      loadCategories(); // Atualiza a lista de categorias
+      setIsCreating(false); // Altera o estado de criação
+      setNewCategory({
+        name: '',
+        description: '',
+        image: '', // Resetando a imagem
+      });
     } catch (error) {
       console.error('Falha ao criar a categoria:', error);
       alert('Falha ao criar a categoria. Verifique os dados.');
@@ -46,9 +61,13 @@ export function CategoryManagement() {
   };
 
   const handleEditCategory = (category: Category) => {
-    setEditingCategory(category); // Define a categoria a ser editada
-    setNewCategory({ name: category.name });
-    setIsCreating(true); // Exibe o formulário de edição
+    setEditingCategory(category);
+    setNewCategory({
+      name: category.name,
+      description: category.description,
+      image: category.image || '', // Preservando a URL da imagem original
+    });
+    setIsCreating(true);
   };
 
   const handleUpdateCategory = async (e: React.FormEvent) => {
@@ -62,6 +81,8 @@ export function CategoryManagement() {
 
     const categoryData = {
       name: newCategory.name,
+      description: newCategory.description,
+      image: newCategory.image,
     };
 
     try {
@@ -71,7 +92,11 @@ export function CategoryManagement() {
       loadCategories();
       setEditingCategory(null);
       setIsCreating(false);
-      setNewCategory({ name: '' });
+      setNewCategory({
+        name: '',
+        description: '',
+        image: '',
+      });
     } catch (error) {
       console.error('Falha ao atualizar a categoria:', error);
       alert('Falha ao atualizar a categoria. Verifique os dados.');
@@ -81,11 +106,19 @@ export function CategoryManagement() {
   const handleDeleteCategory = async (categoryId: number) => {
     try {
       await adminApi.deleteCategory(categoryId);
-      loadCategories(); // Recarrega a lista de categorias após a exclusão
+      loadCategories();
     } catch (error) {
       console.error('Falha ao excluir a categoria:', error);
       alert('Falha ao excluir a categoria. Tente novamente.');
     }
+  };
+
+  const handleImageChange = (imageUrl: string) => {
+    setNewCategory({
+      ...newCategory,
+      image: imageUrl, // Atualizando a URL da imagem
+    });
+    setIsImageModalOpen(false); // Fechar o modal após a seleção da imagem
   };
 
   return (
@@ -120,9 +153,30 @@ export function CategoryManagement() {
             />
           </div>
 
+          {/* O campo de imagem será exibido apenas durante a edição */}
+          {editingCategory && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Imagem</label>
+              <button
+                type="button"
+                onClick={() => setIsImageModalOpen(true)} // Abre o modal de imagem
+                className="mt-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+              >
+                Selecionar Imagem
+              </button>
+              {newCategory.image && (
+                <img
+                  src={newCategory.image}
+                  alt="Imagem da Categoria"
+                  className="mt-2 w-32 h-32 object-cover"
+                />
+              )}
+            </div>
+          )}
+
           <button
             type="submit"
-            className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700"
+            className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700"
           >
             {editingCategory ? 'Atualizar Categoria' : 'Criar Categoria'}
           </button>
@@ -131,27 +185,54 @@ export function CategoryManagement() {
 
       <div className="space-y-4">
         {categories.map((category) => (
-          <div key={category.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-md">
-            <div>
-              <h3 className="font-medium text-purple-800">{category.name}</h3>
+          <div key={category.id} className="flex items-center justify-between p-4 bg-gray-100 rounded-md">
+            <div className="flex items-center gap-4">
+              <img
+                src={category.image || 'placeholder.jpg'}
+                alt={category.name}
+                className="w-12 h-12 object-cover rounded-md"
+              />
+              <div>
+                <p className="font-semibold text-lg">{category.name}</p>
+                <p className="text-sm text-gray-600">{category.description}</p>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => handleEditCategory(category)}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"
+                className="text-blue-600 hover:text-blue-700"
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="w-5 h-5" />
               </button>
               <button
                 onClick={() => handleDeleteCategory(category.id)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-md"
+                className="text-red-600 hover:text-red-700"
               >
-                <Trash className="w-4 h-4" />
+                <Trash className="w-5 h-5" />
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {isImageModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-sm w-96">
+            <UploadCategoryImage
+              categoryId={editingCategory ? editingCategory.id : newCategory.id}
+              onImageUploaded={handleImageChange}
+            />
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setIsImageModalOpen(false)} // Fecha o modal
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

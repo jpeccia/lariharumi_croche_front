@@ -106,7 +106,32 @@ export const adminApi = {
       throw new Error('Falha ao fazer upload da imagem');
     }
   },
+// Função para fazer o upload de imagem de categoria
+uploadCategoryImage: async (
+  file: File,
+  categoryId: number,
+  onImageUploaded: (imageUrl: string) => void
+) => {
+  const formData = new FormData();
+  formData.append('image', file); // A chave "image" deve corresponder ao nome do parâmetro do backend
 
+  const headers = getAuthHeaders(); // Cabeçalhos com token
+
+  try {
+    const response = await api.post(`/categories/${categoryId}/upload-image`, formData, {
+      headers, // Passando o cabeçalho com token
+    });
+
+    if (response.data && response.data.imageUrl) {
+      onImageUploaded(response.data.imageUrl); // Chama a função com a URL da imagem
+    } else {
+      console.error('Resposta do servidor não contém a URL da imagem');
+    }
+  } catch (error) {
+    console.error('Erro ao enviar a imagem:', error);
+    throw new Error('Falha ao fazer upload da imagem');
+  }
+},
   // Função para buscar a imagem de um produto
   getProductImage: async (productId: number) => {
     try {
@@ -121,7 +146,20 @@ export const adminApi = {
       throw new Error('Falha ao buscar imagem do produto');
     }
   },
-
+  // Função para buscar a imagem de um produto
+  getCategoryImage: async (categoryId: number) => {
+    try {
+      const headers = getAuthHeaders(); // Cabeçalhos com token
+      const response = await api.get(`/categories/${categoryId}/image`, {
+        responseType: 'blob', // Para garantir que a resposta seja tratada como um arquivo binário (imagem)
+        headers, // Passando o cabeçalho com token
+      });
+      return URL.createObjectURL(response.data); // Retorna a URL da imagem (blobs)
+    } catch (error) {
+      console.error('Erro ao buscar imagem da categoria:', error);
+      throw new Error('Falha ao buscar da categoria');
+    }
+  },
   // Deletar um produto
   deleteProduct: async (productId: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token

@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore'; // Assumindo que você tem um hook de autenticação
 import { ProductManagement } from '../../components/admin/ProductManagement';
-import { ReviewManagement } from '../../components/admin/ReviewManagement';
 import { SiteSettings } from '../../components/admin/SiteSettings';
 import { CategoryManagement } from '../../components/admin/CategoryManagement';
 
