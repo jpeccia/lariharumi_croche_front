@@ -1,4 +1,4 @@
-import { Instagram, Github } from 'lucide-react'; // Importando os ícones do Instagram e GitHub
+import { Instagram, Github, Linkedin } from 'lucide-react'; // Importando os ícones do Instagram e GitHub
 import { SocialLink } from '../components/contact/SocialLink';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { CustomOrderInfo } from '../components/contact/CustomOrderInfo';
@@ -61,11 +61,14 @@ function Contact() {
         <div className="text-center">
           <p className="text-sm text-gray-600">Conheça meu trabalho também:</p>
           <div className="flex justify-center space-x-6 mt-2">
+          <a href="https://github.com/jpeccia" target="_blank" rel="noopener noreferrer">
+              <Github size={24} className="text-gray-800 hover:text-gray-900" />
+            </a>
             <a href="https://instagram.com/jpeccia_" target="_blank" rel="noopener noreferrer">
               <Instagram size={24} className="text-purple-600 hover:text-purple-700" />
             </a>
-            <a href="https://github.com/jpeccia" target="_blank" rel="noopener noreferrer">
-              <Github size={24} className="text-gray-800 hover:text-gray-900" />
+            <a href="https://www.linkedin.com/in/joao-peccia/" target="_blank" rel="noopener noreferrer">
+              <Linkedin size={24} className="text-gray-800 hover:text-gray-900" />
             </a>
           </div>
         </div>

@@ -4,7 +4,6 @@ import { CategoryCard } from '../components/catalog/CategoryCard';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
-import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 
 function Catalog() {
@@ -87,7 +86,7 @@ function Catalog() {
           {selectedCategory && (
             <button
               onClick={() => setSelectedCategory(null)} // Limpa a categoria e exibe todos os produtos
-              className="font-kawaii text-purple-600 hover:text-purple-700 text-xl font-medium hover:scale-105 transition-transform"
+              className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl  font-medium hover:scale-105 transition-transform"
             >
               Ver todas as categorias
             </button>

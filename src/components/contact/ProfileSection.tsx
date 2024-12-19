@@ -13,15 +13,18 @@ export function ProfileSection() {
       <div className="flex-1">
         <div className="font-kawaii prose text-gray-600 space-y-4">
           <p>
-          Olá! Meu nome é Larissa, 
-          moro em Cravinhos e sou estudante de Engenharia Elétrica no IFSP. 
-          Há um tempo me apaixonei pelo crochê e 
-          desde então venho fazendo todas as peças com muito carinho!
+          Bem vindo! Sou a Larissa, tenho 21 aninhos, 
+          moro em Cravinhos e sou estudante de Engenharia Elétrica no IFSP.  
+          Há mais ou menos 1 ano comecei minha jornada com o crochê e 
+          desde então venho me apaixonando e me aventurando cada vez mais por essa arte! 🌻💫
           </p>
           <p>
-            Cada peça que crio é única e feita especialmente para você, com todo
-            o cuidado e atenção aos detalhes. Acredito que o artesanato tem o
-            poder de tornar momentos ainda mais especiais.
+          Cada peça que crio é única, feita com todo o cuidado e atenção aos detalhes, 
+          especialmente para você! ♡ 
+          Acredito que o artesanato tem o poder de transformar momentos em algo ainda mais especial.
+          </p>
+          <p>
+            
           </p>
           <div className="flex items-center gap-2 text-pink-500">
             <Heart className="w-5 h-5 animate-bounce-slow" />
