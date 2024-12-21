@@ -31,7 +31,7 @@ export function DonationBox() {
           
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <img
-              src="https://img.freepik.com/fotos-premium/maos-segurando-um-novelo-de-la_155165-11960.jpg"
+              src="/materiais.jpg"
               alt="Compra de materiais 🧶🐼"
               className="w-full h-48 object-cover rounded-lg mb-4"
             />
@@ -42,7 +42,7 @@ export function DonationBox() {
           
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <img
-              src="/lari.jpg"
+              src="/feirinha.jpg"
               alt="Feirinha da lari!"
               className="w-full h-48 object-cover rounded-lg mb-4"
             />
@@ -53,7 +53,7 @@ export function DonationBox() {
 
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <img
-              src="/natal.jpg"
+              src="/sorteio.jpg"
               alt="Sorteios temáticos"
               className="w-full h-48 object-cover rounded-lg mb-4"
             />
