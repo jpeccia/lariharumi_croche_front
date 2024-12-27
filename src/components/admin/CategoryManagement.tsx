@@ -1,4 +1,3 @@
-// CategoryManagement.tsx
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash } from 'lucide-react';
 import { adminApi } from '../../services/api';
@@ -8,10 +7,10 @@ interface Category {
   id: number;
   name: string;
   description: string;
-  image: string | null;
+  image: string | null; // Imagem pode ser nula
 }
 
-export function CategoryManagement() {
+export function CategoryManagement({id}: Category) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -26,9 +25,10 @@ export function CategoryManagement() {
     loadCategories();
   }, []);
 
+
   const loadCategories = async () => {
     try {
-      const data = await adminApi.getCategories();
+      const data = await adminApi.getCategories(); // Supondo que esta função retorne as categorias com a URL da imagem
       console.log('Categorias carregadas:', data);
       setCategories(data);
     } catch (error) {
@@ -188,9 +188,9 @@ export function CategoryManagement() {
           <div key={category.id} className="flex items-center justify-between p-4 bg-gray-100 rounded-md">
             <div className="flex items-center gap-4">
               <img
-                src={category.image || 'placeholder.jpg'}
+                src={category.image || 'placeholder.jpg'} // Imagem padrão caso não exista imagem
                 alt={category.name}
-                className="w-12 h-12 object-cover rounded-md"
+                className="w-12 h-12 object-fill rounded-md"
               />
               <div>
                 <p className="font-semibold text-lg">{category.name}</p>

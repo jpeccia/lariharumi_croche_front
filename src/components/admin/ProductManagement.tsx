@@ -31,8 +31,8 @@ export function ProductManagement({ product }: ProductProps) {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
-    loadProducts();
     loadCategories();
+    loadProducts();
     // Verifique se o produto está presente antes de tentar buscar imagens
     if (product?.id) {
       fetchProductImages();
