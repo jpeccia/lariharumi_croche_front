@@ -80,32 +80,32 @@ export const adminApi = {
     return response.data;
   },
 
-  // Função para fazer o upload de imagem de produto
-  uploadProductImage: async (
-    file: File,
-    productId: number,
-    onImageUploaded: (imageUrl: string) => void
-  ) => {
-    const formData = new FormData();
-    formData.append('image', file); // A chave "image" deve corresponder ao nome do parâmetro do backend
-    
-    const headers = getAuthHeaders(); // Cabeçalhos com token
-    
-    try {
-      const response = await api.post(`/products/${productId}/upload-image`, formData, {
-        headers, // Passando o cabeçalho com token
-      });
+// Função para fazer o upload de múltiplas imagens de um produto
+uploadProductImages: async (
+  files: File[],
+  productId: number,
+  onImagesUploaded: (imageUrls: string[]) => void
+) => {
+  const formData = new FormData();
+  files.forEach((file) => formData.append(`images`, file)); // A chave "images" deve corresponder ao parâmetro do backend
 
-      if (response.data && response.data.imageUrl) {
-        onImageUploaded(response.data.imageUrl); // Chama a função com a URL da imagem
-      } else {
-        console.error('Resposta do servidor não contém a URL da imagem');
-      }
-    } catch (error) {
-      console.error('Erro ao enviar a imagem:', error);
-      throw new Error('Falha ao fazer upload da imagem');
+  const headers = getAuthHeaders(); // Cabeçalhos com token
+
+  try {
+    const response = await api.post(`/products/${productId}/upload-images`, formData, {
+      headers, // Passando o cabeçalho com token
+    });
+
+    if (response.data && response.data.imageUrls) {
+      onImagesUploaded(response.data.imageUrls); // Chama a função com as URLs das imagens
+    } else {
+      console.error('Resposta do servidor não contém as URLs das imagens');
     }
-  },
+  } catch (error) {
+    console.error('Erro ao enviar as imagens:', error);
+    throw new Error('Falha ao fazer upload das imagens');
+  }
+},
 // Função para fazer o upload de imagem de categoria
 uploadCategoryImage: async (
   file: File,
@@ -132,20 +132,25 @@ uploadCategoryImage: async (
     throw new Error('Falha ao fazer upload da imagem');
   }
 },
-  // Função para buscar a imagem de um produto
-  getProductImage: async (productId: number) => {
-    try {
-      const headers = getAuthHeaders(); // Cabeçalhos com token
-      const response = await api.get(`/products/${productId}/image`, {
-        responseType: 'blob', // Para garantir que a resposta seja tratada como um arquivo binário (imagem)
-        headers, // Passando o cabeçalho com token
-      });
-      return URL.createObjectURL(response.data); // Retorna a URL da imagem (blobs)
-    } catch (error) {
-      console.error('Erro ao buscar imagem do produto:', error);
-      throw new Error('Falha ao buscar imagem do produto');
+// Função para buscar todas as imagens de um produto
+getProductImages: async (productId: number) => {
+  try {
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    const response = await api.get(`/products/${productId}/images`, {
+      headers, // Passando o cabeçalho com token
+    });
+
+    if (response.data && response.data.imageUrls) {
+      return response.data.imageUrls; // Retorna as URLs das imagens
+    } else {
+      console.error('Nenhuma imagem encontrada para este produto');
+      return [];
     }
-  },
+  } catch (error) {
+    console.error('Erro ao buscar imagens do produto:', error);
+    throw new Error('Falha ao buscar imagens do produto');
+  }
+},
   // Função para buscar a imagem de um produto
   getCategoryImage: async (categoryId: number) => {
     try {

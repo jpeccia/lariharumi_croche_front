@@ -1,4 +1,4 @@
-import { Instagram } from 'lucide-react';
+import { Instagram, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../../types/product';
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
@@ -9,31 +9,71 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<string[]>([]); // Estado para múltiplas imagens
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Índice da imagem atual
 
   useEffect(() => {
-    const fetchProductImage = async () => {
+    const fetchProductImages = async () => {
       try {
-        const image = await adminApi.getProductImage(product.id);
-        setImageUrl(image); // A URL da imagem será salva no estado
+        const images = await adminApi.getProductImages(product.id);
+        setImageUrls(images); // Salva as URLs das imagens no estado
       } catch (error) {
-        console.error('Erro ao carregar imagem:', error);
+        console.error('Erro ao carregar imagens:', error);
       }
     };
 
-    fetchProductImage(); // Carrega a imagem quando o componente for montado
+    fetchProductImages(); // Carrega as imagens quando o componente for montado
   }, [product.id]);
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? imageUrls.length - 1 : prevIndex - 1
+    );
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
+    );
+  };
 
   const instagramUrl = `https://instagram.com/${instagramUsername}`;
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="relative w-full h-48"> {/* Ajuste do contêiner da imagem */}
-        <img
-          src={imageUrl || '/default-image.jpg'} // Caso a imagem não seja carregada, mostra uma imagem padrão
-          alt={product.name}
-          className="w-full h-full object-fill" // Usar 'object-fill' para a imagem preencher o contêiner sem bordas
-        />
+      <div className="relative w-full h-48 flex items-center justify-center">
+        {imageUrls.length > 0 ? (
+          <>
+            {/* Botão para imagem anterior */}
+            <button
+              onClick={handlePrevImage}
+              className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <ChevronLeft size={24} />
+            </button>
+
+            {/* Imagem atual */}
+            <img
+              src={imageUrls[currentImageIndex]}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+
+            {/* Botão para próxima imagem */}
+            <button
+              onClick={handleNextImage}
+              className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        ) : (
+          <img
+            src="/default-image.jpg" // Imagem padrão se nenhuma estiver disponível
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
+        )}
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
           <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
         </div>
