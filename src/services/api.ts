@@ -84,28 +84,24 @@ export const adminApi = {
 uploadProductImages: async (
   files: File[],
   productId: number,
-  onImagesUploaded: (imageUrls: string[]) => void
 ) => {
   const formData = new FormData();
-  files.forEach((file) => formData.append(`images`, file)); // A chave "images" deve corresponder ao parâmetro do backend
+  files.forEach((file) => formData.append('image', file)); // Envia os arquivos como 'image'
 
   const headers = getAuthHeaders(); // Cabeçalhos com token
 
   try {
-    const response = await api.post(`/products/${productId}/upload-images`, formData, {
+    const response = await api.post(`/products/${productId}/upload-image`, formData, {
       headers, // Passando o cabeçalho com token
     });
 
-    if (response.data && response.data.imageUrls) {
-      onImagesUploaded(response.data.imageUrls); // Chama a função com as URLs das imagens
-    } else {
-      console.error('Resposta do servidor não contém as URLs das imagens');
-    }
+    console.log('Resposta do servidor:', response);  // Exibe a resposta completa para verificar a estrutura
   } catch (error) {
     console.error('Erro ao enviar as imagens:', error);
     throw new Error('Falha ao fazer upload das imagens');
   }
 },
+
 // Função para fazer o upload de imagem de categoria
 uploadCategoryImage: async (
   file: File,
@@ -141,7 +137,8 @@ getProductImages: async (productId: number) => {
     });
 
     if (response.data && response.data.imageUrls) {
-      return response.data.imageUrls; // Retorna as URLs das imagens
+      // Retorna as URLs das imagens
+      return response.data.imageUrls.map((url: string) => `http://localhost:8080${url}`); // Concatena o domínio com a URL da imagem
     } else {
       console.error('Nenhuma imagem encontrada para este produto');
       return [];
@@ -170,7 +167,10 @@ getProductImages: async (productId: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
     await api.delete(`/products/${productId}`, { headers });
   },
-
+  deleteProductImage: async (productId: number, imageIndex: number) => {
+    const headers = getAuthHeaders(); // Cabeçalhos com token
+    await api.delete(`/products/${productId}/images/${imageIndex}`, { headers });
+  },  
   // Deletar uma categoria
   deleteCategory: async (categoryId: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
