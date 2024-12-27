@@ -49,7 +49,7 @@ function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="relative w-full flex items-center justify-center">
+      <div className="relative w-full h-32 flex items-center justify-center">
       {imageUrls.length > 0 ? (
   <>
     {/* Botão para imagem anterior */}
