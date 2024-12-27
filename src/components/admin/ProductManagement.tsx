@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Edit, Trash, X } from 'lucide-react'; // Adicionamos o ícone X para o botão de remover
+import { Package, Plus, Edit, Trash, X, ChevronLeft, ChevronRight, Instagram } from 'lucide-react'; // Adicionamos o ícone X para o botão de remover
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
 import { UploadProductImage } from './UploadProductImage';
@@ -12,6 +12,79 @@ interface Category {
 
 interface ProductProps {
   product: Product;
+}
+
+interface ProductCardProps {
+  product: Product;
+}
+
+function ProductCard({ product }: ProductCardProps) {
+  const [imageUrls, setImageUrls] = useState<string[]>([]); // Estado para múltiplas imagens
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Índice da imagem atual
+
+  useEffect(() => {
+    const fetchProductImages = async () => {
+      try {
+        const images = await adminApi.getProductImages(product.id);
+        setImageUrls(images); // Salva as URLs completas das imagens no estado
+      } catch (error) {
+        console.error('Erro ao carregar imagens:', error);
+      }
+    };
+
+    fetchProductImages(); // Carrega as imagens quando o componente for montado
+  }, [product.id]);
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? imageUrls.length - 1 : prevIndex - 1
+    );
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div className="relative w-full flex items-center justify-center">
+      {imageUrls.length > 0 ? (
+  <>
+    {/* Botão para imagem anterior */}
+    <button
+      onClick={handlePrevImage}
+      className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+    >
+      <ChevronLeft size={12} />
+    </button>
+
+    {/* Imagem atual */}
+    <img
+      src={imageUrls[currentImageIndex]}
+      alt={product.name}
+      className="w-full h-full object-fill"  
+    />
+
+    {/* Botão para próxima imagem */}
+    <button
+      onClick={handleNextImage}
+      className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+    >
+      <ChevronRight size={12} />
+    </button>
+  </>
+) : (
+  <img
+    src="/default-image.jpg" // Imagem padrão se nenhuma estiver disponível
+    alt={product.name}
+    className="w-full h-full object-cover"  // Imagem padrão preenchendo o espaço
+  />
+)}
+      </div>
+    </div>
+  );
 }
 
 export function ProductManagement({ product }: ProductProps) {
@@ -29,14 +102,12 @@ export function ProductManagement({ product }: ProductProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [productImageUrl, setProductImageUrl] = useState<string>('');
 
   useEffect(() => {
     loadCategories();
     loadProducts();
     // Verifique se o produto está presente antes de tentar buscar imagens
-    if (product?.id) {
-      fetchProductImages();
-    }
   }, [product]);
 
   const loadProducts = async () => {
@@ -62,19 +133,18 @@ export function ProductManagement({ product }: ProductProps) {
     }
   };
 
-  const fetchProductImages = async () => {
-    if (!product?.id) {
-      console.error('Produto não encontrado para buscar imagens.');
-      return;
-    }
+  useEffect(() => {
+    const fetchProductImage = async () => {
+      try {
+        const response = await adminApi.getProductImages(product.id); // Supondo que a resposta seja uma imagem binária
+        setProductImageUrl(response); // Salva a URL da imagem no estado
+      } catch (error) {
+        console.error('Erro ao carregar imagem da categoria:', error);
+      }
+    };
 
-    try {
-      const images = await adminApi.getProductImages(product.id);
-      setImageUrls(images);
-    } catch (error) {
-      console.error('Erro ao carregar imagens:', error);
-    }
-  };
+    fetchProductImage(); // Carrega a imagem da categoria quando o componente for montado
+  }, [product]);
 
   const handleRemoveImage = async (imageUrl: string) => {
     if (!product?.id) {
@@ -245,11 +315,6 @@ export function ProductManagement({ product }: ProductProps) {
               </button>
               {newProduct.image && (
                 <div className="mt-2 relative">
-                  <img
-                    src={newProduct.image}
-                    alt="Imagem do Produto"
-                    className="w-32 h-32 object-cover"
-                  />
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(newProduct.image)}
@@ -305,37 +370,43 @@ export function ProductManagement({ product }: ProductProps) {
         </form>
       )}
 
-      <div className="space-y-4">
-        {products.map((product) => (
-          <div key={product.id} className="flex items-center justify-between p-4 bg-gray-100 rounded-md">
-            <div className="flex items-center gap-4">
-              <img
-                src={product.image || 'placeholder.jpg'}
-                alt={product.name}
-                className="w-12 h-12 object-cover rounded-md"
-              />
-              <div>
-                <p className="font-semibold text-lg">{product.name}</p>
-                <p className="text-sm text-gray-600">{product.description}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleEditProduct(product)}
-                className="text-blue-600 hover:text-blue-700"
-              >
-                <Edit className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => handleDeleteProduct(product.id)}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        ))}
+
+<div className="space-y-6">
+  {products.map((product) => (
+    <div
+      key={product.id}
+      className="flex items-center justify-between p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105"
+    >
+      <div className="flex items-center gap-6">
+        {/* Container responsivo para a imagem */}
+        <div className="w-32 h-32 flex-shrink-0">
+          <ProductCard key={product.id} product={product} />
+        </div>
+        <div className="space-y-2">
+          <p className="text-xl font-semibold text-gray-800">{product.name}</p>
+          <p className="text-sm text-gray-500">{product.description}</p>
+        </div>
       </div>
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => handleEditProduct(product)}
+          className="text-blue-600 hover:text-blue-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
+        >
+          <Edit className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => handleDeleteProduct(product.id)}
+          className="text-red-600 hover:text-red-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
+        >
+          <Trash className="w-6 h-6" />
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+
+
+
 
       {isImageModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">

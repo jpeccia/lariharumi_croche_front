@@ -1,34 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash } from 'lucide-react';
 import { adminApi } from '../../services/api';
-import { UploadCategoryImage } from './UploadCategoryImage'; // Componente para upload de imagem de categoria
+import { UploadCategoryImage } from './UploadCategoryImage';
 
 interface Category {
   id: number;
   name: string;
   description: string;
-  image: string | null; // Imagem pode ser nula
+  image: string | null;
 }
 
-export function CategoryManagement({id}: Category) {
+interface CategoryCardProps {
+  category: Category;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
+  const [categoryImageUrl, setCategoryImageUrl] = useState<string>('');
+
+  useEffect(() => {
+    const fetchCategoryImage = async () => {
+      try {
+        const response = await adminApi.getCategoryImage(category.id); // Supondo que a resposta seja uma imagem binária
+        setCategoryImageUrl(response); // Salva a URL da imagem no estado
+      } catch (error) {
+        console.error('Erro ao carregar imagem da categoria:', error);
+      }
+    };
+
+    fetchCategoryImage(); // Carrega a imagem da categoria quando o componente for montado
+  }, [category]);
+
+  return (
+    <div className="flex items-center justify-between p-4 bg-gray-100 rounded-md">
+      <div className="flex items-center gap-4">
+        <img
+          src={categoryImageUrl || category.image || '/default-image.png'} // Usando a URL de imagem de fallback
+          alt={category.name}
+          className="w-12 h-12 object-cover rounded-md"
+        />
+        <div>
+          <p className="font-semibold text-lg">{category.name}</p>
+          <p className="text-sm text-gray-600">{category.description}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onEdit}
+          className="text-blue-600 hover:text-blue-700"
+        >
+          <Edit className="w-5 h-5" />
+        </button>
+        <button
+          onClick={onDelete}
+          className="text-red-600 hover:text-red-700"
+        >
+          <Trash className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
-    image: '', // Inicialmente será uma URL ou caminho para o arquivo de imagem
+    image: '',
   });
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false); // Estado para controlar o modal
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   useEffect(() => {
     loadCategories();
   }, []);
 
-
   const loadCategories = async () => {
     try {
-      const data = await adminApi.getCategories(); // Supondo que esta função retorne as categorias com a URL da imagem
+      const data = await adminApi.getCategories();
       console.log('Categorias carregadas:', data);
       setCategories(data);
     } catch (error) {
@@ -47,12 +99,12 @@ export function CategoryManagement({id}: Category) {
 
       console.log('Categoria criada com sucesso:', response);
 
-      loadCategories(); // Atualiza a lista de categorias
-      setIsCreating(false); // Altera o estado de criação
+      loadCategories();
+      setIsCreating(false);
       setNewCategory({
         name: '',
         description: '',
-        image: '', // Resetando a imagem
+        image: '',
       });
     } catch (error) {
       console.error('Falha ao criar a categoria:', error);
@@ -65,7 +117,7 @@ export function CategoryManagement({id}: Category) {
     setNewCategory({
       name: category.name,
       description: category.description,
-      image: category.image || '', // Preservando a URL da imagem original
+      image: category.image || '',
     });
     setIsCreating(true);
   };
@@ -116,9 +168,9 @@ export function CategoryManagement({id}: Category) {
   const handleImageChange = (imageUrl: string) => {
     setNewCategory({
       ...newCategory,
-      image: imageUrl, // Atualizando a URL da imagem
+      image: imageUrl,
     });
-    setIsImageModalOpen(false); // Fechar o modal após a seleção da imagem
+    setIsImageModalOpen(false);
   };
 
   return (
@@ -153,13 +205,12 @@ export function CategoryManagement({id}: Category) {
             />
           </div>
 
-          {/* O campo de imagem será exibido apenas durante a edição */}
           {editingCategory && (
             <div>
               <label className="block text-sm font-medium text-gray-700">Imagem</label>
               <button
                 type="button"
-                onClick={() => setIsImageModalOpen(true)} // Abre o modal de imagem
+                onClick={() => setIsImageModalOpen(true)}
                 className="mt-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
               >
                 Selecionar Imagem
@@ -185,33 +236,12 @@ export function CategoryManagement({id}: Category) {
 
       <div className="space-y-4">
         {categories.map((category) => (
-          <div key={category.id} className="flex items-center justify-between p-4 bg-gray-100 rounded-md">
-            <div className="flex items-center gap-4">
-              <img
-                src={category.image || 'placeholder.jpg'} // Imagem padrão caso não exista imagem
-                alt={category.name}
-                className="w-12 h-12 object-fill rounded-md"
-              />
-              <div>
-                <p className="font-semibold text-lg">{category.name}</p>
-                <p className="text-sm text-gray-600">{category.description}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleEditCategory(category)}
-                className="text-blue-600 hover:text-blue-700"
-              >
-                <Edit className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => handleDeleteCategory(category.id)}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+          <CategoryCard
+            key={category.id}
+            category={category}
+            onEdit={() => handleEditCategory(category)}
+            onDelete={() => handleDeleteCategory(category.id)}
+          />
         ))}
       </div>
 
@@ -219,12 +249,12 @@ export function CategoryManagement({id}: Category) {
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-sm w-96">
             <UploadCategoryImage
-              categoryId={editingCategory ? editingCategory.id : newCategory.id}
+              categoryId={editingCategory ? editingCategory.id : undefined}
               onImageUploaded={handleImageChange}
             />
             <div className="mt-4 flex justify-end">
               <button
-                onClick={() => setIsImageModalOpen(false)} // Fecha o modal
+                onClick={() => setIsImageModalOpen(false)}
                 className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
               >
                 Fechar

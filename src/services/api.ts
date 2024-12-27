@@ -161,7 +161,7 @@ getProductImages: async (productId: number) => {
       console.error('Erro ao buscar imagem da categoria:', error);
       throw new Error('Falha ao buscar da categoria');
     }
-  },
+  },  
   // Deletar um produto
   deleteProduct: async (productId: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
