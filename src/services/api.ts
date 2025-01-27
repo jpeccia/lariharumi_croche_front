@@ -138,7 +138,7 @@ getProductImages: async (productId: number) => {
 
     if (response.data && response.data.imageUrls) {
       // Retorna as URLs das imagens
-      return response.data.imageUrls.map((url: string) => `http://localhost:8080${url}`); // Concatena o domínio com a URL da imagem
+      return response.data.imageUrls.map((url: string) => import.meta.env.VITE_API_URL + {url}); // Concatena o domínio com a URL da imagem
     } else {
       console.error('Nenhuma imagem encontrada para este produto');
       return [];
