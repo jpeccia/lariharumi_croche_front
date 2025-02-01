@@ -43,7 +43,7 @@ export function LoginForm() {
       console.log('API Response:', response);
       
       // Aqui, estamos assumindo que o token está diretamente na resposta
-      const token = response; // Ajuste isso se o token estiver dentro de um campo como response.token
+      const token = response.token; 
   
       if (!token || typeof token !== 'string') {
         throw new Error('Token inválido');
