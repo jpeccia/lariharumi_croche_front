@@ -95,7 +95,7 @@ export function ProductManagement({ product }: ProductProps) {
     name: '',
     description: '',
     image: '',
-    price: '',
+    priceRange: '',
     categoryId: 1,
   });
   const [categories, setCategories] = useState<Category[]>([]); // Usando o tipo Category
@@ -133,17 +133,20 @@ export function ProductManagement({ product }: ProductProps) {
   };
 
   useEffect(() => {
+    if (!product?.ID) return; // Não roda o efeito se product ou product.ID não estiver definido
+  
     const fetchProductImage = async () => {
       try {
-        const response = await adminApi.getProductImages(product.ID); // Supondo que a resposta seja uma imagem binária
-        setProductImageUrl(response); // Salva a URL da imagem no estado
+        const response = await adminApi.getProductImages(product.ID);
+        setProductImageUrl(response);
       } catch (error) {
-        console.error('Erro ao carregar imagem da categoria:', error);
+        console.error('Erro ao carregar imagem do produto:', error);
       }
     };
-
-    fetchProductImage(); // Carrega a imagem da categoria quando o componente for montado
-  }, [product]);
+  
+    fetchProductImage();
+  }, [product?.ID]);
+  
 
   const handleRemoveImage = async (imageUrl: string) => {
     if (!product?.ID) {
@@ -181,7 +184,7 @@ export function ProductManagement({ product }: ProductProps) {
   
     console.log(newProduct); // Adicione isto para depurar o valor de newProduct
     
-    if (!newProduct.name || !newProduct.description || !newProduct.price || !newProduct.categoryId ) {
+    if (!newProduct.name || !newProduct.description || !newProduct.priceRange || !newProduct.categoryId ) {
       alert('Por favor, preencha todos os campos.');
       return;
     }
@@ -190,7 +193,7 @@ export function ProductManagement({ product }: ProductProps) {
       const response = await adminApi.createProduct({
         name: newProduct.name,
         description: newProduct.description,
-        price: newProduct.price,
+        price: newProduct.priceRange,
         categoryId: newProduct.categoryId,
       });
   
@@ -209,7 +212,7 @@ export function ProductManagement({ product }: ProductProps) {
       name: product.name,
       description: product.description,
       image: product.image,
-      price: product.price,
+      priceRange: product.priceRange,
       categoryId: product.categoryId,
     });
     setIsCreating(true);
@@ -221,20 +224,22 @@ export function ProductManagement({ product }: ProductProps) {
       alert('Produto não selecionado ou ID inválido');
       return;
     }
-
+  
     try {
-      const updatedProduct = {
+      // Cria um novo objeto removendo `image` se ela não foi alterada
+      const updatedProduct: any = {
         name: newProduct.name,
         description: newProduct.description,
-        image: newProduct.image,
-        price: newProduct.price,  // Aqui o preço continua como string
+        price: newProduct.price,  
         categoryId: newProduct.categoryId,
       };
-      
-      console.log("Dados para atualização:", updatedProduct);
 
+  
+      console.log("Dados para atualização:", updatedProduct);
+  
       const response = await adminApi.updateProduct(editingProduct.ID, updatedProduct);
-      loadProducts();
+      
+      loadProducts(); // Recarrega a lista de produtos
       setEditingProduct(null);
       setIsCreating(false);
       resetForm();
@@ -242,7 +247,8 @@ export function ProductManagement({ product }: ProductProps) {
       console.error('Falha ao atualizar o produto:', error);
       alert('Falha ao atualizar o produto.');
     }
-};
+  };
+  
 
 
   const handleDeleteProduct = async (productId: number) => {
@@ -267,7 +273,7 @@ export function ProductManagement({ product }: ProductProps) {
       name: '',
       description: '',
       image: '',
-      price: '',
+      priceRange: '',
       categoryId: 1,
     });
   };
@@ -343,8 +349,8 @@ export function ProductManagement({ product }: ProductProps) {
             <label className="block text-sm font-medium text-gray-700">Preço</label>
             <input
               type="number"
-              value={newProduct.price}
-              onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+              value={newProduct.priceRange}
+              onChange={(e) => setNewProduct({ ...newProduct, priceRange: e.target.value })}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               required
             />

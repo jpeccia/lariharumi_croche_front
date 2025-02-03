@@ -76,7 +76,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
 )}
 
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
-          <span className="text-sm font-medium text-pink-600">R$ {product.price}</span>
+          <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
         </div>
       </div>
       <div className="p-4">

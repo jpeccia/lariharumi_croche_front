@@ -45,6 +45,8 @@ export const adminApi = {
     };
   
     const response = await api.post('/products', dataToSend, { headers });
+    alert("Produto criado com sucesso!")
+    window.location.reload();
     return response.data;
   },
 
@@ -52,6 +54,7 @@ export const adminApi = {
   createCategory: async (categoryData: { name: string }) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
     const response = await api.post('/categories', categoryData, { headers });
+    alert("Categoria criada com sucesso!")
     return response.data;
   },
 
@@ -71,21 +74,24 @@ export const adminApi = {
 
   // Atualizar um produto existente
   updateProduct: async (productId: number, data: any) => {
-    const headers = getAuthHeaders(); // Cabeçalhos com token
-    const response = await api.put(`/products/${productId}`, data, { headers });
-    return response.data; // Retorna o produto atualizado
+    const headers = getAuthHeaders();
+    const response = await api.patch(`/products/${productId}`, data, { headers }); 
+    alert("Produto atualizado com sucesso!")
+    window.location.reload();
+    return response.data;
   },
+  
 
   // Atualizar uma categoria existente
   updateCategory: async (categoryId: number, categoryData: { name: string }) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
     const response = await api.put(`/categories/${categoryId}`, categoryData, { headers });
+    alert("Categoria atualizada com sucesso!")
     return response.data;
   },
 
 // Função para fazer o upload de múltiplas imagens de um produto
 uploadProductImages: async (files: File[], productId: number) => {
-  console.log('Product ID:', productId);  // Verifique o valor de productId
   const formData = new FormData();
   files.forEach((file) => formData.append('image', file));
 
@@ -95,8 +101,8 @@ uploadProductImages: async (files: File[], productId: number) => {
     const response = await api.post(`/products/${productId}/upload-image`, formData, {
       headers,
     });
-
-    console.log('Resposta do servidor:', response);  // Exibe a resposta completa para verificar a estrutura
+    alert("Imagem enviada com sucesso!")
+    window.location.reload();
   } catch (error) {
     console.error('Erro ao enviar as imagens:', error);
     throw new Error('Falha ao fazer upload das imagens');
@@ -124,6 +130,8 @@ uploadCategoryImage: async (
     } else {
       console.error('Resposta do servidor não contém a URL da imagem');
     }
+    alert("Imagem enviada com sucesso!")
+    window.location.reload();
   } catch (error) {
     console.error('Erro ao enviar a imagem:', error);
     throw new Error('Falha ao fazer upload da imagem');
@@ -176,15 +184,19 @@ getProductImages: async (productId: number) => {
   deleteProduct: async (productId: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
     await api.delete(`/products/${productId}`, { headers });
+    alert("Produto removido com sucesso!")
   },
   deleteProductImage: async (productId: number, imageIndex: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
     await api.delete(`/products/${productId}/images/${imageIndex}`, { headers });
+    alert("Imagem do produto removida com sucesso!")
+    window.location.reload();
   },  
   // Deletar uma categoria
   deleteCategory: async (categoryId: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
     const response = await api.delete(`/categories/${categoryId}`, { headers });
+    alert("Categoria removida com sucesso!")
     return response.data;
   },
 };
