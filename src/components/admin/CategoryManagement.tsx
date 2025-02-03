@@ -138,7 +138,7 @@ export function CategoryManagement() {
     };
 
     try {
-      const response = await adminApi.updateCategory(editingCategory.id, categoryData);
+      const response = await adminApi.updateCategory(editingCategory.ID, categoryData);
       console.log('Categoria atualizada com sucesso:', response);
 
       loadCategories();
