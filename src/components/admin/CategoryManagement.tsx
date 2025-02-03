@@ -81,7 +81,6 @@ export function CategoryManagement() {
   const loadCategories = async () => {
     try {
       const data = await adminApi.getCategories();
-      console.log('Categorias carregadas:', data);
       setCategories(data);
     } catch (error) {
       console.error('Falha ao carregar categorias:', error);
@@ -110,6 +109,7 @@ export function CategoryManagement() {
       console.error('Falha ao criar a categoria:', error);
       alert('Falha ao criar a categoria. Verifique os dados.');
     }
+    window.location.reload();
   };
 
   const handleEditCategory = (category: Category) => {
@@ -153,6 +153,7 @@ export function CategoryManagement() {
       console.error('Falha ao atualizar a categoria:', error);
       alert('Falha ao atualizar a categoria. Verifique os dados.');
     }
+    window.location.reload();
   };
 
   const handleDeleteCategory = async (categoryId: number) => {
@@ -171,6 +172,7 @@ export function CategoryManagement() {
       image: imageUrl,
     });
     setIsImageModalOpen(false);
+    window.location.reload();
   };
 
   return (
@@ -215,13 +217,6 @@ export function CategoryManagement() {
               >
                 Selecionar Imagem
               </button>
-              {newCategory.image && (
-                <img
-                  src={newCategory.image}
-                  alt="Imagem da Categoria"
-                  className="mt-2 w-32 h-32 object-cover"
-                />
-              )}
             </div>
           )}
 

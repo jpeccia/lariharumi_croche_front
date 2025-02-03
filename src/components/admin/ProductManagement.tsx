@@ -123,7 +123,6 @@ export function ProductManagement({ product }: ProductProps) {
   const loadCategories = async () => {
     try {
       const data = await adminApi.getCategories();
-      console.log('Categorias carregadas:', data); // Depuração
       setCategories(data); // Supondo que response.data seja a lista de categorias
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
@@ -184,12 +183,6 @@ export function ProductManagement({ product }: ProductProps) {
     
     if (!newProduct.name || !newProduct.description || !newProduct.price || !newProduct.categoryId ) {
       alert('Por favor, preencha todos os campos.');
-      return;
-    }
-  
-    const price = parseFloat(newProduct.price);
-    if (isNaN(price)) {
-      alert('O preço informado é inválido.');
       return;
     }
   
