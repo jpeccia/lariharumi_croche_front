@@ -15,15 +15,15 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   useEffect(() => {
     const fetchProductImages = async () => {
       try {
-        const images = await adminApi.getProductImages(product.id);
+        const images = await adminApi.getProductImages(product.ID);
         setImageUrls(images); // Salva as URLs completas das imagens no estado
       } catch (error) {
         console.error('Erro ao carregar imagens:', error);
       }
     };
-
-    fetchProductImages(); // Carrega as imagens quando o componente for montado
-  }, [product.id]);
+  
+    fetchProductImages();
+  }, [product.ID]);
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prevIndex) =>
@@ -76,7 +76,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
 )}
 
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
-          <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
+          <span className="text-sm font-medium text-pink-600">R$ {product.price}</span>
         </div>
       </div>
       <div className="p-4">

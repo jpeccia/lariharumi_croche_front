@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { adminApi } from '../../services/api';
 
 interface UploadCategoryImageProps {
-  categoryId: number;
+  categoryID: number;
   onImageUploaded: (imageUrl: string) => void;
 }
 
-export function UploadCategoryImage({ categoryId, onImageUploaded }: UploadCategoryImageProps) {
+export function UploadCategoryImage({ categoryID, onImageUploaded }: UploadCategoryImageProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +19,7 @@ export function UploadCategoryImage({ categoryId, onImageUploaded }: UploadCateg
         setError(null);
 
         // Passando os 3 parâmetros necessários para o upload da imagem da categoria
-        await adminApi.uploadCategoryImage(file, categoryId, onImageUploaded);
+        await adminApi.uploadCategoryImage(file, categoryID, onImageUploaded);
 
         setLoading(false);
       } catch (err) {

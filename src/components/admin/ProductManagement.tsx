@@ -6,7 +6,7 @@ import { UploadProductImage } from './UploadProductImage';
 
 // Definindo o tipo para Category
 interface Category {
-  id: number;
+  ID: number;
   name: string;
 }
 
@@ -25,7 +25,7 @@ function ProductCard({ product }: ProductCardProps) {
   useEffect(() => {
     const fetchProductImages = async () => {
       try {
-        const images = await adminApi.getProductImages(product.id);
+        const images = await adminApi.getProductImages(product.ID);
         setImageUrls(images); // Salva as URLs completas das imagens no estado
       } catch (error) {
         console.error('Erro ao carregar imagens:', error);
@@ -33,7 +33,7 @@ function ProductCard({ product }: ProductCardProps) {
     };
 
     fetchProductImages(); // Carrega as imagens quando o componente for montado
-  }, [product.id]);
+  }, [product.ID]);
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prevIndex) =>
@@ -136,7 +136,7 @@ export function ProductManagement({ product }: ProductProps) {
   useEffect(() => {
     const fetchProductImage = async () => {
       try {
-        const response = await adminApi.getProductImages(product.id); // Supondo que a resposta seja uma imagem binária
+        const response = await adminApi.getProductImages(product.ID); // Supondo que a resposta seja uma imagem binária
         setProductImageUrl(response); // Salva a URL da imagem no estado
       } catch (error) {
         console.error('Erro ao carregar imagem da categoria:', error);
@@ -147,7 +147,7 @@ export function ProductManagement({ product }: ProductProps) {
   }, [product]);
 
   const handleRemoveImage = async (imageUrl: string) => {
-    if (!product?.id) {
+    if (!product?.ID) {
       console.error('Produto não encontrado para remover imagem.');
       return;
     }
@@ -161,7 +161,7 @@ export function ProductManagement({ product }: ProductProps) {
       }
   
       // Faça a chamada para a API para remover a imagem
-      await adminApi.deleteProductImage(product.id, imageIndex);
+      await adminApi.deleteProductImage(product.ID, imageIndex);
   
       // Atualize o estado para refletir a remoção
       setImageUrls(imageUrls.filter((url) => url !== imageUrl));
@@ -179,14 +179,28 @@ export function ProductManagement({ product }: ProductProps) {
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+  
+    console.log(newProduct); // Adicione isto para depurar o valor de newProduct
+    
+    if (!newProduct.name || !newProduct.description || !newProduct.price || !newProduct.categoryId ) {
+      alert('Por favor, preencha todos os campos.');
+      return;
+    }
+  
+    const price = parseFloat(newProduct.price);
+    if (isNaN(price)) {
+      alert('O preço informado é inválido.');
+      return;
+    }
+  
     try {
       const response = await adminApi.createProduct({
         name: newProduct.name,
         description: newProduct.description,
-        price: parseFloat(newProduct.price),
+        price: newProduct.price,
         categoryId: newProduct.categoryId,
-        image: newProduct.image,
       });
+  
       loadProducts();
       setIsCreating(false);
       resetForm();
@@ -201,8 +215,8 @@ export function ProductManagement({ product }: ProductProps) {
     setNewProduct({
       name: product.name,
       description: product.description,
-      image: product.image || '',
-      price: product.priceRange ? product.priceRange.toString() : '',
+      image: product.image,
+      price: product.price,
       categoryId: product.categoryId,
     });
     setIsCreating(true);
@@ -210,19 +224,23 @@ export function ProductManagement({ product }: ProductProps) {
 
   const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingProduct?.id) {
-      alert('Produto não selecionado ou id inválido');
+    if (!editingProduct?.ID) {
+      alert('Produto não selecionado ou ID inválido');
       return;
     }
 
     try {
-      const response = await adminApi.updateProduct(editingProduct.id, {
+      const updatedProduct = {
         name: newProduct.name,
         description: newProduct.description,
         image: newProduct.image,
-        price: parseFloat(newProduct.price),
+        price: newProduct.price,  // Aqui o preço continua como string
         categoryId: newProduct.categoryId,
-      });
+      };
+      
+      console.log("Dados para atualização:", updatedProduct);
+
+      const response = await adminApi.updateProduct(editingProduct.ID, updatedProduct);
       loadProducts();
       setEditingProduct(null);
       setIsCreating(false);
@@ -231,7 +249,8 @@ export function ProductManagement({ product }: ProductProps) {
       console.error('Falha ao atualizar o produto:', error);
       alert('Falha ao atualizar o produto.');
     }
-  };
+};
+
 
   const handleDeleteProduct = async (productId: number) => {
     try {
@@ -350,7 +369,7 @@ export function ProductManagement({ product }: ProductProps) {
               ) : (
                 Array.isArray(categories) && categories.length > 0 ? (
                   categories.map((category) => (
-                    <option key={category.id} value={category.id}>
+                    <option key={category.ID} value={category.ID}>
                       {category.name}
                     </option>
                   ))
@@ -374,13 +393,13 @@ export function ProductManagement({ product }: ProductProps) {
 <div className="space-y-6">
   {products.map((product) => (
     <div
-      key={product.id}
+      key={product.ID}
       className="flex items-center justify-between p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105"
     >
       <div className="flex items-center gap-6">
         {/* Container responsivo para a imagem */}
         <div className="w-32 h-32 flex-shrink-0">
-          <ProductCard key={product.id} product={product} />
+          <ProductCard key={product.ID} product={product} />
         </div>
         <div className="space-y-2">
           <p className="text-xl font-semibold text-gray-800">{product.name}</p>
@@ -395,7 +414,7 @@ export function ProductManagement({ product }: ProductProps) {
           <Edit className="w-6 h-6" />
         </button>
         <button
-          onClick={() => handleDeleteProduct(product.id)}
+          onClick={() => handleDeleteProduct(product.ID)}
           className="text-red-600 hover:text-red-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
         >
           <Trash className="w-6 h-6" />
@@ -412,7 +431,7 @@ export function ProductManagement({ product }: ProductProps) {
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-sm w-96">
             <UploadProductImage
-              productId={editingProduct ? editingProduct.id : newProduct.id}
+              productID={editingProduct ? editingProduct.ID : newProduct.ID}
               onImagesUploaded={handleImageChange}
             />
             <div className="mt-4 flex justify-end">

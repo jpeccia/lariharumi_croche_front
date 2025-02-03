@@ -13,19 +13,20 @@ export function CategoryCard({ category, onClick }: CategoryCardProps) {
   useEffect(() => {
     const fetchCategoryImage = async () => {
       try {
-        const image = await adminApi.getCategoryImage(category.id); // Supondo que você tenha uma função getCategoryImage
-        setCategoryImageUrl(image); // Salva a URL da imagem no estado
+        const image = await adminApi.getCategoryImage(category.ID);
+        setCategoryImageUrl(image);
       } catch (error) {
         console.error('Erro ao carregar imagem da categoria:', error);
       }
     };
-
+  
     fetchCategoryImage(); // Carrega a imagem da categoria quando o componente for montado
-  }, [category.id]);
+  }, [category.ID]);
+  
 
   return (
     <div 
-      onClick={() => onClick(category.id)}
+      onClick={() => onClick(category.ID)}
       className="cursor-pointer group hover:transform hover:scale-105 transition-all duration-300"
     >
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">

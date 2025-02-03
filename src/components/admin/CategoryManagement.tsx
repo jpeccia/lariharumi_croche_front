@@ -4,7 +4,7 @@ import { adminApi } from '../../services/api';
 import { UploadCategoryImage } from './UploadCategoryImage';
 
 interface Category {
-  id: number;
+  ID: number;
   name: string;
   description: string;
   image: string | null;
@@ -22,7 +22,7 @@ function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
   useEffect(() => {
     const fetchCategoryImage = async () => {
       try {
-        const response = await adminApi.getCategoryImage(category.id); // Supondo que a resposta seja uma imagem binária
+        const response = await adminApi.getCategoryImage(category.ID); // Supondo que a resposta seja uma imagem binária
         setCategoryImageUrl(response); // Salva a URL da imagem no estado
       } catch (error) {
         console.error('Erro ao carregar imagem da categoria:', error);
@@ -125,7 +125,7 @@ export function CategoryManagement() {
   const handleUpdateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!editingCategory || !editingCategory.id) {
+    if (!editingCategory || !editingCategory.ID) {
       console.error('Categoria não selecionada ou id inválido');
       alert('Categoria não selecionada ou id inválido');
       return;
@@ -237,10 +237,10 @@ export function CategoryManagement() {
       <div className="space-y-4">
         {categories.map((category) => (
           <CategoryCard
-            key={category.id}
+            key={category.ID}
             category={category}
             onEdit={() => handleEditCategory(category)}
-            onDelete={() => handleDeleteCategory(category.id)}
+            onDelete={() => handleDeleteCategory(category.ID)}
           />
         ))}
       </div>
@@ -249,7 +249,7 @@ export function CategoryManagement() {
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-sm w-96">
             <UploadCategoryImage
-              categoryId={editingCategory ? editingCategory.id : undefined}
+              categoryID={editingCategory ? editingCategory.ID : undefined}
               onImageUploaded={handleImageChange}
             />
             <div className="mt-4 flex justify-end">

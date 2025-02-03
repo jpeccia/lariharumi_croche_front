@@ -28,9 +28,10 @@ function Catalog() {
       if (categoryId) {
         url = `/products/category/${categoryId}`; // URL para produtos da categoria específica
       }
-
+  
       const response = await api.get(url);
-      setProducts(response.data); // Setando os produtos filtrados ou todos os produtos
+      console.log('Produtos filtrados ou todos:', response.data); // Log para verificar o que está sendo retornado
+      setProducts(response.data); // Atualiza o estado com os produtos filtrados ou todos
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     }
@@ -63,13 +64,17 @@ function Catalog() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex-grow">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  category={category}
-                  onClick={() => setSelectedCategory(category.id)} // Atualiza a categoria selecionada
-                />
-              ))}
+            {categories.map((category) => (
+              <CategoryCard
+                key={category.ID}
+                category={category}
+                onClick={() => {
+                  console.log('Categoria selecionada:', category.ID); // Verifica se o ID está correto
+                  setSelectedCategory(category.ID);
+                }}
+              />
+            ))}
+
             </div>
           </div>
         </div>
@@ -79,7 +84,7 @@ function Catalog() {
         <div className="flex justify-between items-center mb-8">
           <h2 className="font-handwritten text-6xl text-purple-800 mb-8">
             {selectedCategory
-              ? `${categories.find((c) => c.id === selectedCategory)?.name}`
+              ? `${categories.find((c) => c.ID === selectedCategory)?.name}`
               : 'Todas as Peças'}
           </h2>
           <FloatingHearts />
@@ -99,7 +104,7 @@ function Catalog() {
           ) : (
             products.map((product) => (
               <ProductCard
-                key={product.id}
+                key={product.ID}
                 product={product}
                 instagramUsername="lhkowara"
               />

@@ -5,8 +5,6 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/',
 });
 
-console.log(import.meta.env.VITE_API_URL);
-
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
   if (token) {
@@ -33,18 +31,21 @@ const getAuthHeaders = () => {
 
 export const adminApi = {
   // Criar um produto
-  createProduct: async (productData: { name: string; description: string; image: string; price: number; categoryId: number }) => {
+  createProduct: async (productData: { name: string; description: string; price: number | string; categoryId: number | string }) => {
     const dataToSend = {
       name: productData.name,
       description: productData.description,
-      image: productData.image,
-      price: productData.price,
-      categoryId: productData.categoryId, // Envia diretamente o ID da categoria
+      price: productData.price,         // Converte para número
+      categoryId: Number(productData.categoryId), // Converte para número
     };
-    
-    const headers = getAuthHeaders(); // Cabeçalhos com token
+  
+    const headers = {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json'
+    };
+  
     const response = await api.post('/products', dataToSend, { headers });
-    return response.data; // Retorna o produto criado
+    return response.data;
   },
 
   // Criar uma categoria
@@ -83,18 +84,16 @@ export const adminApi = {
   },
 
 // Função para fazer o upload de múltiplas imagens de um produto
-uploadProductImages: async (
-  files: File[],
-  productId: number,
-) => {
+uploadProductImages: async (files: File[], productId: number) => {
+  console.log('Product ID:', productId);  // Verifique o valor de productId
   const formData = new FormData();
-  files.forEach((file) => formData.append('image', file)); // Envia os arquivos como 'image'
+  files.forEach((file) => formData.append('image', file));
 
   const headers = getAuthHeaders(); // Cabeçalhos com token
 
   try {
     const response = await api.post(`/products/${productId}/upload-image`, formData, {
-      headers, // Passando o cabeçalho com token
+      headers,
     });
 
     console.log('Resposta do servidor:', response);  // Exibe a resposta completa para verificar a estrutura
@@ -134,36 +133,45 @@ uploadCategoryImage: async (
 getProductImages: async (productId: number) => {
   try {
     const headers = getAuthHeaders(); // Cabeçalhos com token
-    const response = await api.get(`/products/${productId}/images`, {
-      headers, // Passando o cabeçalho com token
-    });
+    const response = await api.get(`/products/${productId}/images`, { headers });
 
-    if (response.data && response.data.imageUrls) {
-      // Retorna as URLs das imagens
-      return response.data.imageUrls.map((url: string) => import.meta.env.VITE_API_URL + url); // Concatena o domínio com a URL da imagem
+    if (response.data && Array.isArray(response.data)) {
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+      const images = response.data.map((url: string) =>
+        url.startsWith("http") ? url : `${baseUrl}${url.startsWith("/") ? url : "/" + url}`
+      );
+
+      return images;
     } else {
-      console.error('Nenhuma imagem encontrada para este produto');
+      console.error("Nenhuma imagem encontrada para este produto");
       return [];
     }
   } catch (error) {
-    console.error('Erro ao buscar imagens do produto:', error);
-    throw new Error('Falha ao buscar imagens do produto');
+    console.error("Erro ao buscar imagens do produto:", error);
+    return [];
   }
 },
   // Função para buscar a imagem de um produto
   getCategoryImage: async (categoryId: number) => {
+    if (!categoryId) {
+      console.error("ID da categoria não definido");
+      return "";
+    }
+  
     try {
       const headers = getAuthHeaders(); // Cabeçalhos com token
       const response = await api.get(`/categories/${categoryId}/image`, {
-        responseType: 'blob', // Para garantir que a resposta seja tratada como um arquivo binário (imagem)
-        headers, // Passando o cabeçalho com token
+        headers,
       });
-      return URL.createObjectURL(response.data); // Retorna a URL da imagem (blobs)
+  
+      // Retorna a URL da imagem fornecida pela API
+      return response.data.imageUrl; // A resposta contém o campo imageUrl com a URL da imagem
     } catch (error) {
-      console.error('Erro ao buscar imagem da categoria:', error);
-      throw new Error('Falha ao buscar da categoria');
+      console.error("Erro ao buscar imagem da categoria:", error);
+      throw new Error("Falha ao buscar imagem da categoria");
     }
-  },  
+  },
+
   // Deletar um produto
   deleteProduct: async (productId: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token

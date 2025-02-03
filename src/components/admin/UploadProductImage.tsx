@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
 
 interface UploadProductImagesProps {
-  productId: number;
+  productID: number;
   onImagesUploaded: (imageUrls: string[]) => void;  // Mudança para múltiplas URLs de imagens
 }
 
-export function UploadProductImage({ productId, onImagesUploaded }: UploadProductImagesProps) {
+export function UploadProductImage({ productID, onImagesUploaded }: UploadProductImagesProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]); // Estado para imagens existentes
@@ -15,7 +15,7 @@ export function UploadProductImage({ productId, onImagesUploaded }: UploadProduc
   useEffect(() => {
     const fetchExistingImages = async () => {
       try {
-        const images = await adminApi.getProductImages(productId);  // Supondo que exista uma função para buscar as imagens do produto
+        const images = await adminApi.getProductImages(productID);  // Supondo que exista uma função para buscar as imagens do produto
         setExistingImages(images);
       } catch (err) {
         setError('Falha ao carregar imagens existentes');
@@ -23,7 +23,7 @@ export function UploadProductImage({ productId, onImagesUploaded }: UploadProduc
     };
 
     fetchExistingImages();
-  }, [productId]);
+  }, [productID]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -37,7 +37,7 @@ export function UploadProductImage({ productId, onImagesUploaded }: UploadProduc
         const fileArray = Array.from(files);
   
         // Enviando todas as imagens de uma vez para o backend
-        const imageUrls = await adminApi.uploadProductImages(fileArray, productId);
+        const imageUrls = await adminApi.uploadProductImages(fileArray, productID);
   
         // Verificando se o backend retornou as URLs corretamente
         if (Array.isArray(imageUrls)) {
@@ -72,7 +72,7 @@ export function UploadProductImage({ productId, onImagesUploaded }: UploadProduc
       }
   
       // Chamando a API para remover a imagem passando o índice
-      await adminApi.deleteProductImage(productId, imageIndex);
+      await adminApi.deleteProductImage(productID, imageIndex);
   
       // Atualiza a lista de imagens, removendo a imagem excluída
       const updatedImages = existingImages.filter((image) => image !== imageUrl);
