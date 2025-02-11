@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
+import { env } from '../env';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: env.VITE_API_BASE_URL,
 });
 
 api.interceptors.request.use((config) => {
@@ -144,7 +145,7 @@ getProductImages: async (productId: number) => {
     const response = await api.get(`/products/${productId}/images`, { headers });
 
     if (response.data && Array.isArray(response.data)) {
-      const baseUrl = import.meta.env.VITE_API_URL;
+      const baseUrl = env.VITE_API_BASE_URL;
       const images = response.data.map((url: string) =>
         url.startsWith("http") ? url : `${baseUrl}${url.startsWith("/") ? url : "/" + url}`
       );
