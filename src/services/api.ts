@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/',
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 api.interceptors.request.use((config) => {
@@ -144,7 +144,7 @@ getProductImages: async (productId: number) => {
     const response = await api.get(`/products/${productId}/images`, { headers });
 
     if (response.data && Array.isArray(response.data)) {
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+      const baseUrl = import.meta.env.VITE_API_URL;
       const images = response.data.map((url: string) =>
         url.startsWith("http") ? url : `${baseUrl}${url.startsWith("/") ? url : "/" + url}`
       );
