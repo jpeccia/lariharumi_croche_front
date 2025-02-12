@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { UploadCategoryImage } from './UploadCategoryImage';
+import { toast } from 'react-toastify';
 
 interface Category {
   ID: number;
@@ -84,7 +85,7 @@ export function CategoryManagement() {
       setCategories(data);
     } catch (error) {
       console.error('Falha ao carregar categorias:', error);
-      alert('Falha ao carregar as categorias.');
+      toast.error('Falha ao carregar as categorias.');
     }
   };
 
@@ -107,7 +108,7 @@ export function CategoryManagement() {
       });
     } catch (error) {
       console.error('Falha ao criar a categoria:', error);
-      alert('Falha ao criar a categoria. Verifique os dados.');
+      toast.error('Falha ao criar a categoria. Verifique os dados.');
     }
     window.location.reload();
   };
@@ -127,7 +128,7 @@ export function CategoryManagement() {
 
     if (!editingCategory || !editingCategory.ID) {
       console.error('Categoria não selecionada ou id inválido');
-      alert('Categoria não selecionada ou id inválido');
+      toast.error('Categoria não selecionada ou id inválido');
       return;
     }
 
@@ -151,7 +152,7 @@ export function CategoryManagement() {
       });
     } catch (error) {
       console.error('Falha ao atualizar a categoria:', error);
-      alert('Falha ao atualizar a categoria. Verifique os dados.');
+      toast.error('Falha ao atualizar a categoria. Verifique os dados.');
     }
     window.location.reload();
   };
@@ -162,7 +163,7 @@ export function CategoryManagement() {
       loadCategories();
     } catch (error) {
       console.error('Falha ao excluir a categoria:', error);
-      alert('Falha ao excluir a categoria. Tente novamente.');
+      toast.error('Falha ao excluir a categoria. Tente novamente.');
     }
   };
 
