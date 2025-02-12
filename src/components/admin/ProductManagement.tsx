@@ -93,7 +93,7 @@ export function ProductManagement({ product }: ProductProps) {
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
-    image: '',
+    images: [] as string[], // Inicializando como um array de strings
     priceRange: '',
     categoryId: 1,
   });
@@ -159,16 +159,14 @@ export function ProductManagement({ product }: ProductProps) {
         return;
       }
   
-      
       await adminApi.deleteProductImage(product.ID, imageIndex);
   
-      
-      setImageUrls(imageUrls.filter((url) => url !== imageUrl));
+      setImageUrls((prevImages) => prevImages.filter((url) => url !== imageUrl));
   
-      
-      if (newProduct.image === imageUrl) {
-        setNewProduct({ ...newProduct, image: '' });
-      }
+      setNewProduct((prev) => ({
+        ...prev,
+        images: prev.images.filter((url) => url !== imageUrl),
+      }));
     } catch (error) {
       console.error('Erro ao remover imagem:', error);
       alert('Falha ao remover imagem.');
@@ -203,17 +201,17 @@ export function ProductManagement({ product }: ProductProps) {
     }
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setNewProduct({
-      name: product.name,
-      description: product.description,
-      image: product.image,
-      priceRange: product.priceRange,
-      categoryId: product.categoryId,
-    });
-    setIsCreating(true);
-  };
+ const handleEditProduct = (product: Product) => {
+  setEditingProduct(product);
+  setNewProduct({
+    name: product.name,
+    description: product.description,
+    images: product.images ? [product.images] : [], // Ajustando para array
+    priceRange: product.priceRange,
+    categoryId: product.categoryId,
+  });
+  setIsCreating(true);
+};
 
   const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,19 +221,24 @@ export function ProductManagement({ product }: ProductProps) {
     }
   
     try {
-      // Cria um novo objeto removendo `image` se ela não foi alterada
-      const updatedProduct: any = {
+      const updatedProduct = {
         name: newProduct.name,
         description: newProduct.description,
         price: newProduct.priceRange,  
         categoryId: newProduct.categoryId,
       };
-
   
       console.log("Dados para atualização:", updatedProduct);
+    
+      // Atualiza os dados do produto sem a imagem
+      await adminApi.updateProduct(editingProduct.ID, updatedProduct);
   
-      const response = await adminApi.updateProduct(editingProduct.ID, updatedProduct);
-      
+      // Se houver imagens, fazer o upload delas
+      if (newProduct.images.length > 0) {
+        const imageFiles = newProduct.images.map((imageUrl) => new File([imageUrl], "image.jpg"));
+        await adminApi.uploadProductImages(imageFiles, editingProduct.ID);
+      }
+  
       loadProducts(); // Recarrega a lista de produtos
       setEditingProduct(null);
       setIsCreating(false);
@@ -245,6 +248,7 @@ export function ProductManagement({ product }: ProductProps) {
       alert('Falha ao atualizar o produto.');
     }
   };
+  
   
 
 
@@ -258,10 +262,15 @@ export function ProductManagement({ product }: ProductProps) {
     }
   };
 
-  const handleImageChange = (imageUrls: string[]) => {
-    // Supondo que você queira pegar o primeiro item do array
-    setNewProduct({ ...newProduct, image: imageUrls[0] });
-    setIsImageModalOpen(false);
+  const handleImageChange = (files: FileList | null) => {
+    if (!files) return;
+  
+    const newImages = Array.from(files).map((file) => URL.createObjectURL(file));
+  
+    setNewProduct((prev) => ({
+      ...prev,
+      images: [...prev.images, ...newImages], // Mantendo as imagens existentes
+    }));
   };
   
 
@@ -269,7 +278,7 @@ export function ProductManagement({ product }: ProductProps) {
     setNewProduct({
       name: '',
       description: '',
-      image: '',
+      images: [] as string[], // Inicializando como um array de strings
       priceRange: '',
       categoryId: 1,
     });
@@ -328,15 +337,21 @@ export function ProductManagement({ product }: ProductProps) {
               >
                 Selecionar Imagem
               </button>
-              {newProduct.image && (
-                <div className="mt-2 relative">
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(newProduct.image)}
-                    className="absolute top-0 right-0 bg-red-600 text-white p-1 rounded-full"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+
+              {newProduct.images?.length > 0 && (
+                <div className="mt-2">
+                  {newProduct.images.map((image: string, index: number) => (
+                    <div key={index} className="relative inline-block mr-2">
+                      <img src={image} alt={`Imagem ${index}`} className="w-32 h-32 rounded-md" />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

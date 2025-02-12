@@ -92,39 +92,37 @@ export const adminApi = {
     return response.data;
   },
 
-// Função para fazer o upload de múltiplas imagens de um produto
 uploadProductImages: async (files: File[], productId: number) => {
   const formData = new FormData();
-  files.forEach((file) => formData.append('image', file));
+  files.forEach((file) => formData.append("images[]", file)); 
 
-  const headers = getAuthHeaders(); // Cabeçalhos com token
+  const headers = getAuthHeaders();
 
   try {
-    const response = await api.post(`/products/${productId}/upload-image`, formData, {
+    const response = await api.post(`/products/${productId}/upload-images`, formData, {
       headers,
     });
-    window.location.reload();
-    toast.success("Imagem enviada com sucesso!")
+    toast.success("Imagens enviadas com sucesso!");
+    return response.data;
   } catch (error) {
-    console.error('Erro ao enviar as imagens:', error);
-    throw new Error('Falha ao fazer upload das imagens');
+    console.error("Erro ao enviar as imagens:", error);
+    throw new Error("Falha ao fazer upload das imagens");
   }
 },
 
-// Função para fazer o upload de imagem de categoria
 uploadCategoryImage: async (
   file: File,
   categoryId: number,
   onImageUploaded: (imageUrl: string) => void
 ) => {
   const formData = new FormData();
-  formData.append('image', file); // A chave "image" deve corresponder ao nome do parâmetro do backend
+  formData.append('image', file);
 
-  const headers = getAuthHeaders(); // Cabeçalhos com token
+  const headers = getAuthHeaders(); 
 
   try {
     const response = await api.post(`/categories/${categoryId}/upload-image`, formData, {
-      headers, // Passando o cabeçalho com token
+      headers, 
     });
 
     if (response.data && response.data.imageUrl) {

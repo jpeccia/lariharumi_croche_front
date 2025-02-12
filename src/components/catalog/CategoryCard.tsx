@@ -8,21 +8,27 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category, onClick }: CategoryCardProps) {
-  const [categoryImageUrl, setCategoryImageUrl] = useState<string>(''); // Estado para armazenar a URL da imagem
+  const [categoryImageUrl, setCategoryImageUrl] = useState<string>(category.image || ''); // Usa a imagem padrão da categoria inicialmente
 
   useEffect(() => {
-    const fetchCategoryImage = async () => {
-      try {
-        const image = await adminApi.getCategoryImage(category.ID);
-        setCategoryImageUrl(image);
-      } catch (error) {
-        console.error('Erro ao carregar imagem da categoria:', error);
-      }
-    };
-  
-    fetchCategoryImage(); // Carrega a imagem da categoria quando o componente for montado
+    const cachedImage = sessionStorage.getItem(`categoryImage-${category.ID}`);
+
+    if (cachedImage) {
+      setCategoryImageUrl(cachedImage);
+    } else {
+      const fetchCategoryImage = async () => {
+        try {
+          const image = await adminApi.getCategoryImage(category.ID);
+          setCategoryImageUrl(image);
+          sessionStorage.setItem(`categoryImage-${category.ID}`, image); // Armazena no sessionStorage
+        } catch (error) {
+          console.error('Erro ao carregar imagem da categoria:', error);
+        }
+      };
+
+      fetchCategoryImage();
+    }
   }, [category.ID]);
-  
 
   return (
     <div 
@@ -32,7 +38,7 @@ export function CategoryCard({ category, onClick }: CategoryCardProps) {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="relative h-48">
           <img
-            src={categoryImageUrl || category.image} // Se a imagem da categoria não for carregada, usa a imagem default da categoria
+            src={categoryImageUrl}
             alt={category.name}
             className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
           />
