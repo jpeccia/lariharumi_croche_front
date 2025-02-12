@@ -11,22 +11,20 @@ function Catalog() {
   const [products, setProducts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
-  // Função para carregar categorias do back-end
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data); // Setando as categorias
+      setCategories(response.data); 
     } catch (error) {
       console.error('Erro ao buscar categorias:', error);
     }
   };
 
-  // Função para carregar todos os produtos ou os produtos de uma categoria específica
   const fetchProducts = async (categoryId: number | null) => {
     try {
-      let url = '/products'; // URL para todos os produtos
+      let url = '/products';
       if (categoryId) {
-        url = `/products/category/${categoryId}`; // URL para produtos da categoria específica
+        url = `/products/category/${categoryId}`; 
       }
   
       const response = await api.get(url);

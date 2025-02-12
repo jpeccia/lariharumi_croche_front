@@ -230,7 +230,7 @@ export function ProductManagement({ product }: ProductProps) {
       const updatedProduct: any = {
         name: newProduct.name,
         description: newProduct.description,
-        price: newProduct.price,  
+        price: newProduct.priceRange,  
         categoryId: newProduct.categoryId,
       };
 
