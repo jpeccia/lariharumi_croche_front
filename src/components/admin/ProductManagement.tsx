@@ -3,6 +3,7 @@ import { Package, Plus, Edit, Trash, X, ChevronLeft, ChevronRight } from 'lucide
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
 import { UploadProductImage } from './UploadProductImage';
+import { toast } from 'react-toastify';
 
 interface Category {
   ID: number;
@@ -100,13 +101,22 @@ export function ProductManagement({ product }: ProductProps) {
   const [categories, setCategories] = useState<Category[]>([]); // Usando o tipo Category
   const [loading, setLoading] = useState<boolean>(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [productImageUrl, setProductImageUrl] = useState<string>('');
 
   useEffect(() => {
     loadCategories();
     loadProducts();
   }, [product]);
+
+  useEffect(() => {
+    if (editingProduct) {
+      const fetchImages = async () => {
+        const images = await adminApi.getProductImages(editingProduct.ID);
+        setNewProduct((prev) => ({ ...prev, images }));
+      };
+      fetchImages();
+    }
+  }, [editingProduct]);
 
   const loadProducts = async () => {
     try {
@@ -147,21 +157,20 @@ export function ProductManagement({ product }: ProductProps) {
   
 
   const handleRemoveImage = async (imageUrl: string) => {
-    if (!product?.ID) {
+    if (!editingProduct?.ID) {
       console.error('Produto não encontrado para remover imagem.');
       return;
     }
   
     try {
-      const imageIndex = imageUrls.indexOf(imageUrl);
+      const imageIndex = newProduct.images.indexOf(imageUrl);
       if (imageIndex === -1) {
         console.error('Imagem não encontrada.');
+        toast.error('Imagem não encontrada.');
         return;
       }
   
-      await adminApi.deleteProductImage(product.ID, imageIndex);
-  
-      setImageUrls((prevImages) => prevImages.filter((url) => url !== imageUrl));
+      await adminApi.deleteProductImage(editingProduct.ID, imageIndex);
   
       setNewProduct((prev) => ({
         ...prev,
@@ -169,7 +178,7 @@ export function ProductManagement({ product }: ProductProps) {
       }));
     } catch (error) {
       console.error('Erro ao remover imagem:', error);
-      alert('Falha ao remover imagem.');
+      toast.error('Falha ao remover imagem.');
     }
   };
   
@@ -180,7 +189,7 @@ export function ProductManagement({ product }: ProductProps) {
     console.log(newProduct); // Adicione isto para depurar o valor de newProduct
     
     if (!newProduct.name || !newProduct.description || !newProduct.priceRange || !newProduct.categoryId ) {
-      alert('Por favor, preencha todos os campos.');
+      toast.error('Por favor, preencha todos os campos.');
       return;
     }
   
@@ -197,21 +206,21 @@ export function ProductManagement({ product }: ProductProps) {
       resetForm();
     } catch (error) {
       console.error('Falha ao criar o produto:', error);
-      alert('Falha ao criar o produto.');
+      toast.error('Falha ao criar o produto.');
     }
   };
 
- const handleEditProduct = (product: Product) => {
-  setEditingProduct(product);
-  setNewProduct({
-    name: product.name,
-    description: product.description,
-    images: product.images ? [product.images] : [], // Ajustando para array
-    priceRange: product.priceRange,
-    categoryId: product.categoryId,
-  });
-  setIsCreating(true);
-};
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      description: product.description,
+      images: Array.isArray(product.images) ? product.images : [], // Garante que seja um array
+      priceRange: product.priceRange,
+      categoryId: product.categoryId,
+    });
+    setIsCreating(true);
+  };
 
   const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -245,7 +254,7 @@ export function ProductManagement({ product }: ProductProps) {
       resetForm();
     } catch (error) {
       console.error('Falha ao atualizar o produto:', error);
-      alert('Falha ao atualizar o produto.');
+      toast.error('Falha ao atualizar o produto.');
     }
   };
   
@@ -262,16 +271,19 @@ export function ProductManagement({ product }: ProductProps) {
     }
   };
 
-  const handleImageChange = (files: FileList | null) => {
+  const handleImageChange = async (files: FileList | null) => {
     if (!files) return;
   
-    const newImages = Array.from(files);
-    const newImageUrls = newImages.map(file => URL.createObjectURL(file));
-  
-    setNewProduct((prev) => ({
-      ...prev,
-      images: [...prev.images, ...newImageUrls],
-    }));
+    try {
+      const uploadedImages = await adminApi.uploadProductImages(files, editingProduct?.ID || newProduct.ID);
+      setNewProduct((prev) => ({
+        ...prev,
+        images: [...prev.images, ...uploadedImages], // URLs reais do servidor
+      }));
+    } catch (error) {
+      console.error('Erro ao fazer upload das imagens:', error);
+      toast.error('Falha ao fazer upload das imagens.');
+    }
   };
   
   
