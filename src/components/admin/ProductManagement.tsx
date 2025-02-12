@@ -264,12 +264,16 @@ export function ProductManagement({ product }: ProductProps) {
 
   const handleImageChange = (files: FileList | null) => {
     if (!files) return;
+  
     const newImages = Array.from(files);
+    const newImageUrls = newImages.map(file => URL.createObjectURL(file));
+  
     setNewProduct((prev) => ({
       ...prev,
-      images: [...prev.images, ...newImages.map(file => URL.createObjectURL(file))],
+      images: [...prev.images, ...newImageUrls],
     }));
   };
+  
   
   
 
@@ -338,21 +342,21 @@ export function ProductManagement({ product }: ProductProps) {
               </button>
 
               {newProduct.images?.length > 0 && (
-                <div className="mt-2">
-                  {newProduct.images.map((image: string, index: number) => (
-                    <div key={index} className="relative inline-block mr-2">
-                      <img src={image} alt={`Imagem ${index}`} className="w-32 h-32 rounded-md" />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+            <div className="mt-2">
+              {newProduct.images.map((image: string, index: number) => (
+                <div key={index} className="relative inline-block mr-2">
+                  <img src={image} alt={`Imagem ${index}`} className="w-32 h-32 rounded-md" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-              )}
+              ))}
+            </div>
+          )}
             </div>
           )}
 
