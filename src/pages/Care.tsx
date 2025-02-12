@@ -1,14 +1,13 @@
 import { Droplets, Sun, Wind, Thermometer } from 'lucide-react';
 import { CareCard } from '../components/care/CareCard';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
-import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
 import { CutePanda } from '../components/shared/KawaiiElements/CutePanda';
 
 const careInstructions = [
   {
     id: 1,
     title: 'Lavagem',
-    description: 'Lave suas peças de crochê à mão com água fria ou morna. Use sabão neutro e evite esfregar com força para não danificar as fibras. Não torcer e enxaguar com água corrente(tire o excesso da água com uma toalha).',
+    description: 'Lave suas peças de crochê à mão com água fria ou morna. Use sabão neutro e evite esfregar com força para não danificar as fibras. Não torcer e enxaguar com água corrente (tire o excesso da água com uma toalha).',
     Icon: Droplets
   },
   {

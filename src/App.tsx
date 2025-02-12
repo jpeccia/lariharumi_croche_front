@@ -8,6 +8,7 @@ import Contact from './pages/Contact';
 import LoginPage from './pages/Login';
 import AdminDashboard from './pages/admin/Dashboard';
 import { DonationPage } from './pages/DonationPage';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/admin" element={<AdminDashboard />} />  {/* Página de admin */}
       </Routes>
+      <ToastContainer />
     </div>
   );
 }

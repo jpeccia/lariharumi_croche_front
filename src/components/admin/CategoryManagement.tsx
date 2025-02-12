@@ -22,21 +22,21 @@ function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
   useEffect(() => {
     const fetchCategoryImage = async () => {
       try {
-        const response = await adminApi.getCategoryImage(category.ID); // Supondo que a resposta seja uma imagem binária
-        setCategoryImageUrl(response); // Salva a URL da imagem no estado
+        const response = await adminApi.getCategoryImage(category.ID); 
+        setCategoryImageUrl(response); 
       } catch (error) {
         console.error('Erro ao carregar imagem da categoria:', error);
       }
     };
 
-    fetchCategoryImage(); // Carrega a imagem da categoria quando o componente for montado
+    fetchCategoryImage();
   }, [category]);
 
   return (
     <div className="flex items-center justify-between p-4 bg-gray-100 rounded-md">
       <div className="flex items-center gap-4">
         <img
-          src={categoryImageUrl || category.image || '/default-image.png'} // Usando a URL de imagem de fallback
+          src={categoryImageUrl || category.image || '/default-image.png'}
           alt={category.name}
           className="w-12 h-12 object-cover rounded-md"
         />

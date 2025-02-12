@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Edit, Trash, X, ChevronLeft, ChevronRight, Instagram } from 'lucide-react'; // Adicionamos o ícone X para o botão de remover
+import { Package, Plus, Edit, Trash, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
 import { UploadProductImage } from './UploadProductImage';
 
-// Definindo o tipo para Category
 interface Category {
   ID: number;
   name: string;
@@ -19,20 +18,20 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product }: ProductCardProps) {
-  const [imageUrls, setImageUrls] = useState<string[]>([]); // Estado para múltiplas imagens
-  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Índice da imagem atual
+  const [imageUrls, setImageUrls] = useState<string[]>([]); 
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); 
 
   useEffect(() => {
     const fetchProductImages = async () => {
       try {
         const images = await adminApi.getProductImages(product.ID);
-        setImageUrls(images); // Salva as URLs completas das imagens no estado
+        setImageUrls(images); 
       } catch (error) {
         console.error('Erro ao carregar imagens:', error);
       }
     };
 
-    fetchProductImages(); // Carrega as imagens quando o componente for montado
+    fetchProductImages();
   }, [product.ID]);
 
   const handlePrevImage = () => {
@@ -77,9 +76,9 @@ function ProductCard({ product }: ProductCardProps) {
   </>
 ) : (
   <img
-    src="/default-image.jpg" // Imagem padrão se nenhuma estiver disponível
+    src="/default-image.jpg" 
     alt={product.name}
-    className="w-full h-full object-cover"  // Imagem padrão preenchendo o espaço
+    className="w-full h-full object-cover" 
   />
 )}
       </div>
@@ -107,7 +106,6 @@ export function ProductManagement({ product }: ProductProps) {
   useEffect(() => {
     loadCategories();
     loadProducts();
-    // Verifique se o produto está presente antes de tentar buscar imagens
   }, [product]);
 
   const loadProducts = async () => {
@@ -123,7 +121,7 @@ export function ProductManagement({ product }: ProductProps) {
   const loadCategories = async () => {
     try {
       const data = await adminApi.getCategories();
-      setCategories(data); // Supondo que response.data seja a lista de categorias
+      setCategories(data); 
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
       alert('Falha ao carregar as categorias.');
@@ -133,7 +131,7 @@ export function ProductManagement({ product }: ProductProps) {
   };
 
   useEffect(() => {
-    if (!product?.ID) return; // Não roda o efeito se product ou product.ID não estiver definido
+    if (!product?.ID) return; 
   
     const fetchProductImage = async () => {
       try {
@@ -155,20 +153,19 @@ export function ProductManagement({ product }: ProductProps) {
     }
   
     try {
-      // Encontre o índice da imagem a ser removida
       const imageIndex = imageUrls.indexOf(imageUrl);
       if (imageIndex === -1) {
         console.error('Imagem não encontrada.');
         return;
       }
   
-      // Faça a chamada para a API para remover a imagem
+      
       await adminApi.deleteProductImage(product.ID, imageIndex);
   
-      // Atualize o estado para refletir a remoção
+      
       setImageUrls(imageUrls.filter((url) => url !== imageUrl));
   
-      // Se a imagem removida for a imagem principal, limpar o campo de imagem
+      
       if (newProduct.image === imageUrl) {
         setNewProduct({ ...newProduct, image: '' });
       }
