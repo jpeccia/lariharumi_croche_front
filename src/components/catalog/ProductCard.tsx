@@ -9,27 +9,20 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageUrls, setImageUrls] = useState<string[]>([]); // Estado para múltiplas imagens
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Índice da imagem atual
 
   useEffect(() => {
-    const cachedImages = sessionStorage.getItem(`productImages-${product.ID}`);
-
-    if (cachedImages) {
-      setImageUrls(JSON.parse(cachedImages));
-    } else {
-      const fetchProductImages = async () => {
-        try {
-          const images = await adminApi.getProductImages(product.ID);
-          setImageUrls(images);
-          sessionStorage.setItem(`productImages-${product.ID}`, JSON.stringify(images));
-        } catch (error) {
-          console.error('Erro ao carregar imagens:', error);
-        }
-      };
-
-      fetchProductImages();
-    }
+    const fetchProductImages = async () => {
+      try {
+        const images = await adminApi.getProductImages(product.ID);
+        setImageUrls(images); // Salva as URLs completas das imagens no estado
+      } catch (error) {
+        console.error('Erro ao carregar imagens:', error);
+      }
+    };
+  
+    fetchProductImages();
   }, [product.ID]);
 
   const handlePrevImage = () => {
@@ -49,35 +42,38 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="relative w-full h-48 flex items-center justify-center">
-        {imageUrls.length > 0 ? (
-          <>
-            <button
-              onClick={handlePrevImage}
-              className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-            >
-              <ChevronLeft size={24} />
-            </button>
+      {imageUrls.length > 0 ? (
+  <>
+    {/* Botão para imagem anterior */}
+    <button
+      onClick={handlePrevImage}
+      className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+    >
+      <ChevronLeft size={24} />
+    </button>
 
-            <img
-              src={imageUrls[currentImageIndex]}
-              alt={product.name}
-              className="w-full h-full object-fill"
-            />
+    {/* Imagem atual */}
+    <img
+      src={imageUrls[currentImageIndex]}
+      alt={product.name}
+      className="w-full h-full object-fill"  
+    />
 
-            <button
-              onClick={handleNextImage}
-              className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </>
-        ) : (
-          <img
-            src="/default-image.jpg"
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
-        )}
+    {/* Botão para próxima imagem */}
+    <button
+      onClick={handleNextImage}
+      className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+    >
+      <ChevronRight size={24} />
+    </button>
+  </>
+) : (
+  <img
+    src="/default-image.jpg" // Imagem padrão se nenhuma estiver disponível
+    alt={product.name}
+    className="w-full h-full object-cover"  // Imagem padrão preenchendo o espaço
+  />
+)}
 
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
           <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
