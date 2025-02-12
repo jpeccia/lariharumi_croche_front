@@ -7,12 +7,10 @@ import Contact from './pages/Contact';
 import LoginPage from './pages/Login';
 import AdminDashboard from './pages/admin/Dashboard';
 import { DonationPage } from './pages/DonationPage';
-import { ToastContainer } from 'react-toastify';
 
 function App() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
-      <ToastContainer />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
