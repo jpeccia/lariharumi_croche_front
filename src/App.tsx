@@ -1,4 +1,3 @@
-import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -13,6 +12,7 @@ import { ToastContainer } from 'react-toastify';
 function App() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+      <ToastContainer />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -23,7 +23,6 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/admin" element={<AdminDashboard />} />  {/* Página de admin */}
       </Routes>
-      <ToastContainer />
     </div>
   );
 }
