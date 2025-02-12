@@ -264,14 +264,13 @@ export function ProductManagement({ product }: ProductProps) {
 
   const handleImageChange = (files: FileList | null) => {
     if (!files) return;
-  
-    const newImages = Array.from(files).map((file) => URL.createObjectURL(file));
-  
+    const newImages = Array.from(files);
     setNewProduct((prev) => ({
       ...prev,
-      images: [...prev.images, ...newImages], // Mantendo as imagens existentes
+      images: [...prev.images, ...newImages.map(file => URL.createObjectURL(file))],
     }));
   };
+  
   
 
   const resetForm = () => {
