@@ -47,8 +47,8 @@ export const adminApi = {
     };
   
     const response = await api.post('/products', dataToSend, { headers });
-    toast.success("Produto criado com sucesso!")
     window.location.reload();
+    toast.success("Produto criado com sucesso!")
     return response.data;
   },
 
@@ -78,8 +78,8 @@ export const adminApi = {
   updateProduct: async (productId: number, data: any) => {
     const headers = getAuthHeaders();
     const response = await api.patch(`/products/${productId}`, data, { headers }); 
-    toast.success("Produto atualizado com sucesso!")
     window.location.reload();
+    toast.success("Produto atualizado com sucesso!")
     return response.data;
   },
   
@@ -103,8 +103,8 @@ uploadProductImages: async (files: File[], productId: number) => {
     const response = await api.post(`/products/${productId}/upload-image`, formData, {
       headers,
     });
-    toast.success("Imagem enviada com sucesso!")
     window.location.reload();
+    toast.success("Imagem enviada com sucesso!")
   } catch (error) {
     console.error('Erro ao enviar as imagens:', error);
     throw new Error('Falha ao fazer upload das imagens');
@@ -132,8 +132,8 @@ uploadCategoryImage: async (
     } else {
       console.error('Resposta do servidor não contém a URL da imagem');
     }
-    toast.success("Imagem enviada com sucesso!");
     window.location.reload();
+    toast.success("Imagem enviada com sucesso!");
   } catch (error) {
     console.error('Erro ao enviar a imagem:', error);
     throw new Error('Falha ao fazer upload da imagem');
@@ -191,8 +191,8 @@ getProductImages: async (productId: number) => {
   deleteProductImage: async (productId: number, imageIndex: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
     await api.delete(`/products/${productId}/images/${imageIndex}`, { headers });
-    toast.success("Imagem do produto removida com sucesso!")
     window.location.reload();
+    toast.success("Imagem do produto removida com sucesso!")
   },  
   // Deletar uma categoria
   deleteCategory: async (categoryId: number) => {
