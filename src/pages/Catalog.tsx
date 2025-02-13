@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../services/api'; // Importando o axios configurado
+import api from '../services/api';
 import { CategoryCard } from '../components/catalog/CategoryCard';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
@@ -10,9 +10,8 @@ function Catalog() {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(6); // Definindo um limite fixo por página
-  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   const fetchCategories = async () => {
     try {
@@ -26,37 +25,30 @@ function Catalog() {
     }
   };
 
-  const fetchProducts = async (categoryId: number | null, pageNumber: number) => {
+  const fetchProducts = async (categoryId: number | null, page: number) => {
     try {
-      let url = '/products';
-      const params: any = { page: pageNumber, limit };
+      let url = `/products?page=${page}&limit=6`; // Ajuste conforme o backend
 
       if (categoryId) {
-        url = `/products/category/${categoryId}`;
+        url = `/products/category/${categoryId}?page=${page}&limit=6`;
       }
 
-      const response = await api.get(url, { params });
+      const response = await api.get(url);
       
-      const sortedProducts = response.data.products.sort((a: { name: string }, b: { name: string }) =>
-        a.name.localeCompare(b.name)
-      );
-
-      setProducts(sortedProducts);
-      setTotalPages(response.data.totalPages);
+      setProducts(response.data.products); // A API agora retorna um objeto { products, totalPages }
+      setTotalPages(response.data.totalPages || 1);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     }
   };
 
-  // Carregar categorias quando o componente for montado
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // Recarregar produtos ao mudar categoria ou página
   useEffect(() => {
-    fetchProducts(selectedCategory, page);
-  }, [selectedCategory, page]);
+    fetchProducts(selectedCategory, currentPage);
+  }, [selectedCategory, currentPage]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -69,24 +61,18 @@ function Catalog() {
       </div>
 
       <div className="mb-12">
-        <h2 className="font-handwritten text-6xl text-purple-800 mb-8 text-center">
-          - Categorias -
-        </h2>
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex-grow">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((category) => (
-                <CategoryCard
-                  key={category.ID}
-                  category={category}
-                  onClick={() => {
-                    setSelectedCategory(category.ID);
-                    setPage(1); // Reiniciar para página 1 ao mudar categoria
-                  }}
-                />
-              ))}
-            </div>
-          </div>
+        <h2 className="font-handwritten text-6xl text-purple-800 mb-8 text-center">- Categorias -</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map((category) => (
+            <CategoryCard
+              key={category.ID}
+              category={category}
+              onClick={() => {
+                setSelectedCategory(category.ID);
+                setCurrentPage(1); // Resetar a página ao mudar de categoria
+              }}
+            />
+          ))}
         </div>
       </div>
 
@@ -102,7 +88,7 @@ function Catalog() {
             <button
               onClick={() => {
                 setSelectedCategory(null);
-                setPage(1);
+                setCurrentPage(1);
               }}
               className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl font-medium hover:scale-105 transition-transform"
             >
@@ -116,38 +102,32 @@ function Catalog() {
             <p>Carregando produtos...</p>
           ) : (
             products.map((product) => (
-              <ProductCard
-                key={product.ID}
-                product={product}
-                instagramUsername="lhkowara"
-              />
+              <ProductCard key={product.ID} product={product} instagramUsername="lhkowara" />
             ))
           )}
         </div>
 
-        {/* Controles de Paginação */}
+        {/* Paginação */}
         {totalPages > 1 && (
           <div className="flex justify-center mt-8">
             <button
-              disabled={page === 1}
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              className={`px-4 py-2 mx-2 font-bold text-white bg-purple-500 rounded-lg ${
-                page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700'
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 mx-2 text-white bg-purple-600 rounded-lg ${
+                currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700'
               }`}
             >
               Anterior
             </button>
-            
-            <span className="px-4 py-2 text-lg font-bold">{page} / {totalPages}</span>
-            
+            <span className="px-4 py-2 mx-2 text-lg font-bold">{currentPage} / {totalPages}</span>
             <button
-              disabled={page === totalPages}
-              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-              className={`px-4 py-2 mx-2 font-bold text-white bg-purple-500 rounded-lg ${
-                page === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700'
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 mx-2 text-white bg-purple-600 rounded-lg ${
+                currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700'
               }`}
             >
-              Próximo
+              Próxima
             </button>
           </div>
         )}
