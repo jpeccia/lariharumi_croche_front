@@ -1,9 +1,12 @@
-import { Instagram, X, Maximize2 } from 'lucide-react'; // Removi os ícones de navegação
+import { Instagram, X } from 'lucide-react';
 import { Product } from '../../types/product';
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
+
 import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/swiper-bundle.css';
+
+import 'swiper/css';
+import { Navigation } from 'swiper/modules';
 
 interface ProductCardProps {
   product: Product;
@@ -11,8 +14,9 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
-  const [imageUrls, setImageUrls] = useState<string[]>([]); // Estado para múltiplas imagens
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar a visibilidade do modal
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProductImages = async () => {
@@ -27,52 +31,58 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     fetchProductImages();
   }, [product.ID]);
 
-  const openModal = () => setIsModalOpen(true);
+  // Abre o modal definindo o slide inicial
+  const openModal = (index: number = 0) => {
+    setCurrentImageIndex(index);
+    setIsModalOpen(true);
+  };
+
   const closeModal = () => setIsModalOpen(false);
 
   const instagramUrl = `https://instagram.com/${instagramUsername}`;
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      {/* Slider principal */}
       <div className="relative w-full h-80 flex items-center justify-center">
         {imageUrls.length > 0 ? (
           <Swiper
-            spaceBetween={10}
-            slidesPerView={1}
             navigation
-            loop
+            modules={[Navigation]}
+            onSlideChange={(swiper) => setCurrentImageIndex(swiper.activeIndex)}
             className="w-full h-full"
           >
             {imageUrls.map((url, index) => (
               <SwiperSlide key={index}>
                 <img
-                  onClick={openModal}
+                  onClick={() => openModal(index)}
                   src={url}
                   alt={product.name}
-                  className="w-full h-full object-fill cursor-pointer" 
+                  className="w-full h-full object-fill cursor-pointer"
                 />
               </SwiperSlide>
             ))}
           </Swiper>
         ) : (
           <img
-            src="/default-image.jpg" 
+            src="/default-image.jpg"
             alt={product.name}
-            className="w-full h-full object-cover" 
+            className="w-full h-full object-cover"
           />
         )}
 
-        {/* Botão para abrir o modal */}
-        <button
-          onClick={openModal}
-          className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-        >
-          <Maximize2 size={20} /> {/* Ícone de fullscreen */}
-        </button>
+        <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
+          <span className="text-sm font-medium text-pink-600">
+            R$ {product.priceRange}
+          </span>
+        </div>
       </div>
 
+      {/* Informações do produto */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-purple-800 mb-2">{product.name}</h3>
+        <h3 className="text-lg font-semibold text-purple-800 mb-2">
+          {product.name}
+        </h3>
         <p className="text-gray-600 text-sm mb-4">{product.description}</p>
         <a
           href={instagramUrl}
@@ -85,11 +95,10 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
         </a>
       </div>
 
-      {/* Modal para visualizar a imagem em tamanho maior */}
+      {/* Modal com slider para visualização ampliada */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
           <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
-            {/* Botão de fechar com z-index maior */}
             <button
               onClick={closeModal}
               className="absolute top-2 right-2 z-50 text-gray-600 hover:text-gray-800 bg-white p-1 rounded-full shadow"
@@ -97,25 +106,23 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
               <X size={24} />
             </button>
 
-            <div className="relative w-full h-full flex items-center justify-center">
-              <Swiper
-                spaceBetween={10}
-                slidesPerView={1}
-                navigation
-                loop
-                className="w-full h-full"
-              >
-                {imageUrls.map((url, index) => (
-                  <SwiperSlide key={index}>
-                    <img
-                      src={url}
-                      alt={product.name}
-                      className="max-w-full max-h-[80vh] object-contain"
-                    />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
+            <Swiper
+              navigation
+              modules={[Navigation]}
+              initialSlide={currentImageIndex}
+              onSlideChange={(swiper) => setCurrentImageIndex(swiper.activeIndex)}
+              className="w-full h-full"
+            >
+              {imageUrls.map((url, index) => (
+                <SwiperSlide key={index}>
+                  <img
+                    src={url}
+                    alt={product.name}
+                    className="max-w-full max-h-[80vh] object-contain"
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
         </div>
       )}
