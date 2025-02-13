@@ -68,11 +68,15 @@ export const adminApi = {
   },
 
   // Obter todos os produtos
-  getProducts: async () => {
+  getProducts: async (page: number = 1, limit: number = 5) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
-    const response = await api.get('/products', { headers });
-    return response.data; // Retorna todos os produtos
+    const response = await api.get('/products', { 
+      headers,
+      params: { page, limit }, // Adiciona paginação na requisição
+    });
+    return response.data;
   },
+  
 
   // Atualizar um produto existente
   updateProduct: async (productId: number, data: any) => {

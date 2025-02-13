@@ -44,7 +44,6 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
       <div className="relative w-full h-48 flex items-center justify-center">
       {imageUrls.length > 0 ? (
   <>
-    {/* Botão para imagem anterior */}
     <button
       onClick={handlePrevImage}
       className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
@@ -52,14 +51,12 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
       <ChevronLeft size={24} />
     </button>
 
-    {/* Imagem atual */}
     <img
       src={imageUrls[currentImageIndex]}
       alt={product.name}
       className="w-full h-full object-fill"  
     />
 
-    {/* Botão para próxima imagem */}
     <button
       onClick={handleNextImage}
       className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
@@ -69,9 +66,9 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   </>
 ) : (
   <img
-    src="/default-image.jpg" // Imagem padrão se nenhuma estiver disponível
+    src="/default-image.jpg" 
     alt={product.name}
-    className="w-full h-full object-cover"  // Imagem padrão preenchendo o espaço
+    className="w-full h-full object-cover" 
   />
 )}
 

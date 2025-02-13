@@ -10,52 +10,53 @@ function Catalog() {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(6); // Definindo um limite fixo por página
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
-      
       const sortedCategories = response.data.sort((a: { name: string }, b: { name: string }) =>
         a.name.localeCompare(b.name)
       );
-  
       setCategories(sortedCategories);
     } catch (error) {
       console.error('Erro ao buscar categorias:', error);
     }
   };
-  
 
-  const fetchProducts = async (categoryId: number | null) => {
+  const fetchProducts = async (categoryId: number | null, pageNumber: number) => {
     try {
       let url = '/products';
+      const params: any = { page: pageNumber, limit };
+
       if (categoryId) {
         url = `/products/category/${categoryId}`;
       }
-  
-      const response = await api.get(url);  
-      // Ordena os produtos por nome antes de atualizar o estado
-      const sortedProducts = response.data.sort((a: { name: string }, b: { name: string }) =>
+
+      const response = await api.get(url, { params });
+      
+      const sortedProducts = response.data.products.sort((a: { name: string }, b: { name: string }) =>
         a.name.localeCompare(b.name)
       );
-  
-      setProducts(sortedProducts); // Atualiza o estado com os produtos ordenados
+
+      setProducts(sortedProducts);
+      setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     }
   };
-  
 
-  // Carregar categorias e produtos quando o componente for montado
+  // Carregar categorias quando o componente for montado
   useEffect(() => {
-    fetchCategories(); // Carregar categorias ao montar o componente
+    fetchCategories();
   }, []);
 
-  // Carregar os produtos de acordo com a categoria selecionada ou mostrar todos
+  // Recarregar produtos ao mudar categoria ou página
   useEffect(() => {
-    fetchProducts(selectedCategory); // Recarregar os produtos sempre que a categoria mudar
-  }, [selectedCategory]);
-
+    fetchProducts(selectedCategory, page);
+  }, [selectedCategory, page]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -74,17 +75,16 @@ function Catalog() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex-grow">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category) => (
-              <CategoryCard
-                key={category.ID}
-                category={category}
-                onClick={() => {
-                  console.log('Categoria selecionada:', category.ID); // Verifica se o ID está correto
-                  setSelectedCategory(category.ID);
-                }}
-              />
-            ))}
-
+              {categories.map((category) => (
+                <CategoryCard
+                  key={category.ID}
+                  category={category}
+                  onClick={() => {
+                    setSelectedCategory(category.ID);
+                    setPage(1); // Reiniciar para página 1 ao mudar categoria
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -100,8 +100,11 @@ function Catalog() {
           <FloatingHearts />
           {selectedCategory && (
             <button
-              onClick={() => setSelectedCategory(null)} // Limpa a categoria e exibe todos os produtos
-              className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl  font-medium hover:scale-105 transition-transform"
+              onClick={() => {
+                setSelectedCategory(null);
+                setPage(1);
+              }}
+              className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl font-medium hover:scale-105 transition-transform"
             >
               Ver todas as categorias
             </button>
@@ -110,7 +113,7 @@ function Catalog() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.length === 0 ? (
-            <p>Carregando produtos...</p> // Exibe mensagem de carregamento se não houver produtos
+            <p>Carregando produtos...</p>
           ) : (
             products.map((product) => (
               <ProductCard
@@ -121,6 +124,33 @@ function Catalog() {
             ))
           )}
         </div>
+
+        {/* Controles de Paginação */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-8">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              className={`px-4 py-2 mx-2 font-bold text-white bg-purple-500 rounded-lg ${
+                page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700'
+              }`}
+            >
+              Anterior
+            </button>
+            
+            <span className="px-4 py-2 text-lg font-bold">{page} / {totalPages}</span>
+            
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              className={`px-4 py-2 mx-2 font-bold text-white bg-purple-500 rounded-lg ${
+                page === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700'
+              }`}
+            >
+              Próximo
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
