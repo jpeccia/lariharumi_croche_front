@@ -61,7 +61,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
               onClick={openModal}
               src={imageUrls[currentImageIndex]}
               alt={product.name}
-              className="w-full h-full object-fill"  
+              className="w-full h-full object-contain"  
             />
           </Swiper>
 
