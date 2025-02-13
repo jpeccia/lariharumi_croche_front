@@ -14,11 +14,17 @@ function Catalog() {
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data); 
+      
+      const sortedCategories = response.data.sort((a: { name: string }, b: { name: string }) =>
+        a.name.localeCompare(b.name)
+      );
+  
+      setCategories(sortedCategories);
     } catch (error) {
       console.error('Erro ao buscar categorias:', error);
     }
   };
+  
 
   const fetchProducts = async (categoryId: number | null) => {
     try {
