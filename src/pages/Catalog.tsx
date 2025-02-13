@@ -111,7 +111,7 @@ function Catalog() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" ref={viewProductCatalogRef} >
           {products.length === 0 ? (
-            <p>Carregando produtos...</p> // Exibe mensagem de carregamento se não houver produtos
+            <p>Carregando produtos...</p>
           ) : (
             products.map((product) => (
               <ProductCard
