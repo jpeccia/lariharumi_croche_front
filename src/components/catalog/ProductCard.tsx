@@ -105,14 +105,13 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
       {/* Modal para visualizar a imagem em tamanho maior */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-                    <button
+          <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
+          <button
               onClick={closeModal}
-              className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+              className="absolute top-1 right-1 text-gray-600 hover:text-gray-800"
             >
               <X size={24} />
             </button>
-          <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
-
             <div className="relative w-full h-full flex items-center justify-center">
               <button
                 onClick={handlePrevImage}
