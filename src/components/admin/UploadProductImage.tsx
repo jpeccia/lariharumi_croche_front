@@ -33,23 +33,14 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
         setLoading(true);
         setError(null);
 
-        // Converte o FileList para um array
         const fileArray = Array.from(files);
 
-        // Envia as imagens para o backend
         const uploadedImageUrls = await adminApi.uploadProductImages(fileArray, productID);
 
-        // Verifica se o backend retornou URLs válidas
-        if (Array.isArray(uploadedImageUrls)) {
           // Atualiza a lista de imagens existentes
           const allImages = [...existingImages, ...uploadedImageUrls];
           setExistingImages(allImages);
-
-          // Notifica o componente pai com as novas URLs
           onImagesUploaded(allImages);
-        } else {
-          throw new Error('Formato de resposta inválido');
-        }
       } catch (err) {
         setError(`Falha ao fazer upload das imagens: ${err.message}`);
         console.error('Erro no upload:', err);

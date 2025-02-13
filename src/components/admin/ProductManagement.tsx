@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Package, Plus, Edit, Trash, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
@@ -102,6 +102,7 @@ export function ProductManagement({ product }: ProductProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [productImageUrl, setProductImageUrl] = useState<string>('');
+  const editFormRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     loadCategories();
@@ -156,33 +157,6 @@ export function ProductManagement({ product }: ProductProps) {
   }, [product?.ID]);
   
 
-  const handleRemoveImage = async (imageUrl: string) => {
-    if (!editingProduct?.ID) {
-      console.error('Produto não encontrado para remover imagem.');
-      return;
-    }
-  
-    try {
-      const imageIndex = newProduct.images.indexOf(imageUrl);
-      if (imageIndex === -1) {
-        console.error('Imagem não encontrada.');
-        toast.error('Imagem não encontrada.');
-        return;
-      }
-  
-      await adminApi.deleteProductImage(editingProduct.ID, imageIndex);
-  
-      setNewProduct((prev) => ({
-        ...prev,
-        images: prev.images.filter((url) => url !== imageUrl),
-      }));
-    } catch (error) {
-      console.error('Erro ao remover imagem:', error);
-      toast.error('Falha ao remover imagem.');
-    }
-  };
-  
-
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
   
@@ -220,6 +194,9 @@ export function ProductManagement({ product }: ProductProps) {
       categoryId: product.categoryId,
     });
     setIsCreating(true);
+    if (editFormRef.current) {
+      editFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const handleUpdateProduct = async (e: React.FormEvent) => {
@@ -271,21 +248,6 @@ export function ProductManagement({ product }: ProductProps) {
     }
   };
 
-  const handleImageChange = async (files: FileList | null) => {
-    if (!files) return;
-  
-    try {
-      const uploadedImages = await adminApi.uploadProductImages(files, editingProduct?.ID || newProduct.ID);
-      setNewProduct((prev) => ({
-        ...prev,
-        images: [...prev.images, ...uploadedImages], // URLs reais do servidor
-      }));
-    } catch (error) {
-      console.error('Erro ao fazer upload das imagens:', error);
-      toast.error('Falha ao fazer upload das imagens.');
-    }
-  };
-  
   
   
 
@@ -319,7 +281,7 @@ export function ProductManagement({ product }: ProductProps) {
       </div>
 
       {(isCreating || editingProduct) && (
-        <form onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct} className="space-y-4 mb-6">
+        <form ref={editFormRef} onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct} className="space-y-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Nome</label>
             <input

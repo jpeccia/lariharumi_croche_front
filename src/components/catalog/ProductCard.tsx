@@ -16,7 +16,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     const fetchProductImages = async () => {
       try {
         const images = await adminApi.getProductImages(product.ID);
-        setImageUrls(images); // Salva as URLs completas das imagens no estado
+        setImageUrls(images);
       } catch (error) {
         console.error('Erro ao carregar imagens:', error);
       }
