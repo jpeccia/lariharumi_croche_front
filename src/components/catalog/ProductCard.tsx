@@ -3,7 +3,7 @@ import { Product } from '../../types/product';
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/swiper-bundle.min.css';
+import 'swiper/swiper-bundle.css';
 
 interface ProductCardProps {
   product: Product;
