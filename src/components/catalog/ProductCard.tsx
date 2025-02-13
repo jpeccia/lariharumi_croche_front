@@ -56,6 +56,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
             </button>
 
             <img
+              onClick={openModal}
               src={imageUrls[currentImageIndex]}
               alt={product.name}
               className="w-full h-full object-fill"  
