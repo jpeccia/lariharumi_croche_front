@@ -44,7 +44,7 @@ const messages = [
     author: "Maria Paula",
   },
   {
-    message: "Você é simplesmente incrível! Cada detalhe das suas peças, cada ponto único que você faz, o carinho, a delicadeza e a atenção que você coloca em cada trabalho são impressionantes. Isso é o que mais me chama a atenção e me encanta. Você é maravilhosa! Parabéns pelo talento e pelo amor que transmite em cada criação. 😍💖",
+    message: "Você é simplesmente incrível! Cada detalhe das suas peças, cada ponto único que você faz, o carinho, a delicadeza e a atenção que você coloca em cada trabalho são impressionantes. Parabéns pelo talento e pelo amor que transmite em cada criação. 😍💖",
     author: "Anônimo.",
   },
 ];
