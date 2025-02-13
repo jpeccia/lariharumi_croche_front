@@ -1,4 +1,4 @@
-import { Instagram, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Instagram, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react'; // Adicionei o ícone Maximize2
 import { Product } from '../../types/product';
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
@@ -11,6 +11,7 @@ interface ProductCardProps {
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const [imageUrls, setImageUrls] = useState<string[]>([]); // Estado para múltiplas imagens
   const [currentImageIndex, setCurrentImageIndex] = useState(0); // Índice da imagem atual
+  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar a visibilidade do modal
 
   useEffect(() => {
     const fetchProductImages = async () => {
@@ -37,40 +38,51 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     );
   };
 
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
   const instagramUrl = `https://instagram.com/${instagramUsername}`;
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="relative w-full h-80 flex items-center justify-center">
-      {imageUrls.length > 0 ? (
-  <>
-    <button
-      onClick={handlePrevImage}
-      className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-    >
-      <ChevronLeft size={24} />
-    </button>
+        {imageUrls.length > 0 ? (
+          <>
+            <button
+              onClick={handlePrevImage}
+              className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <ChevronLeft size={24} />
+            </button>
 
-    <img
-      src={imageUrls[currentImageIndex]}
-      alt={product.name}
-      className="w-full h-full object-fill"  
-    />
+            <img
+              src={imageUrls[currentImageIndex]}
+              alt={product.name}
+              className="w-full h-full object-fill"  
+            />
 
-    <button
-      onClick={handleNextImage}
-      className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-    >
-      <ChevronRight size={24} />
-    </button>
-  </>
-) : (
-  <img
-    src="/default-image.jpg" 
-    alt={product.name}
-    className="w-full h-full object-cover" 
-  />
-)}
+            <button
+              onClick={handleNextImage}
+              className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <ChevronRight size={24} />
+            </button>
+
+            {/* Botão para abrir o modal */}
+            <button
+              onClick={openModal}
+              className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <Maximize2 size={20} /> {/* Ícone de fullscreen */}
+            </button>
+          </>
+        ) : (
+          <img
+            src="/default-image.jpg" 
+            alt={product.name}
+            className="w-full h-full object-cover" 
+          />
+        )}
 
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
           <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
@@ -89,6 +101,42 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           <span>Encomendar no Instagram</span>
         </a>
       </div>
+
+      {/* Modal para visualizar a imagem em tamanho maior */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
+            <button
+              onClick={closeModal}
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+            >
+              <X size={24} />
+            </button>
+
+            <div className="relative w-full h-full flex items-center justify-center">
+              <button
+                onClick={handlePrevImage}
+                className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+              >
+                <ChevronLeft size={24} />
+              </button>
+
+              <img
+                src={imageUrls[currentImageIndex]}
+                alt={product.name}
+                className="max-w-full max-h-[80vh] object-contain"
+              />
+
+              <button
+                onClick={handleNextImage}
+                className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

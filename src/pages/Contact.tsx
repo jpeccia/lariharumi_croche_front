@@ -59,7 +59,7 @@ function Contact() {
 
         {/* Social Media Links in Footer */}
         <div className="text-center">
-          <p className="text-sm text-gray-600">Conheça meu trabalho também:</p>
+          <p className="text-sm text-gray-600">Conheça meu trabalho em:</p>
           <div className="flex justify-center space-x-6 mt-2">
           <a href="https://github.com/jpeccia" target="_blank" rel="noopener noreferrer">
               <Github size={24} className="text-gray-800 hover:text-gray-900" />
