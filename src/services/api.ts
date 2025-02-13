@@ -189,7 +189,6 @@ getProductImages: async (productId: number) => {
   deleteProductImage: async (productId: number, imageIndex: number) => {
     const headers = getAuthHeaders(); // Cabeçalhos com token
     await api.delete(`/products/${productId}/images/${imageIndex}`, { headers });
-    window.location.reload();
     toast.success("Imagem do produto removida com sucesso!")
   },  
   // Deletar uma categoria
