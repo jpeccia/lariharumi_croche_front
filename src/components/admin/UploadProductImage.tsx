@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
+import { toast } from 'react-toastify';
 
 interface UploadProductImagesProps {
   productID: number;
-  onImagesUploaded: (imageUrls: string[]) => void;  // Mudança para múltiplas URLs de imagens
+  onImagesUploaded: (imageUrls: string[]) => void;  // Callback para notificar o componente pai
 }
 
 export function UploadProductImage({ productID, onImagesUploaded }: UploadProductImagesProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [existingImages, setExistingImages] = useState<string[]>([]); // Estado para imagens existentes
+  const [existingImages, setExistingImages] = useState<string[]>([]);
 
-  // Função para carregar as imagens existentes ao montar o componente
+  // Carrega as imagens existentes ao montar o componente
   useEffect(() => {
     const fetchExistingImages = async () => {
       try {
-        const images = await adminApi.getProductImages(productID);  // Supondo que exista uma função para buscar as imagens do produto
+        const images = await adminApi.getProductImages(productID);
         setExistingImages(images);
       } catch (err) {
         setError('Falha ao carregar imagens existentes');
@@ -27,71 +28,75 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-  
+
     if (files && files.length > 0) {
       try {
         setLoading(true);
         setError(null);
-  
-        // Convertendo o FileList para um array
+
+        // Converte o FileList para um array
         const fileArray = Array.from(files);
-  
-        // Enviando todas as imagens de uma vez para o backend
-        const imageUrls = await adminApi.uploadProductImages(fileArray, productID);
-  
-        // Verificando se o backend retornou as URLs corretamente
-        if (Array.isArray(imageUrls)) {
-          // Atualizando as imagens existentes com as novas imagens
-          const allImages = [...existingImages, ...imageUrls];
+
+        // Envia as imagens para o backend
+        const uploadedImageUrls = await adminApi.uploadProductImages(fileArray, productID);
+
+        // Verifica se o backend retornou URLs válidas
+        if (Array.isArray(uploadedImageUrls)) {
+          // Atualiza a lista de imagens existentes
+          const allImages = [...existingImages, ...uploadedImageUrls];
           setExistingImages(allImages);
-  
-          // Chamando o callback para notificar o componente pai
+
+          // Notifica o componente pai com as novas URLs
           onImagesUploaded(allImages);
         } else {
           throw new Error('Formato de resposta inválido');
         }
-  
-        setLoading(false);
       } catch (err) {
+        setError('Falha ao fazer upload das imagens');
+      } finally {
         setLoading(false);
       }
     }
   };
-  
 
   const handleRemoveImage = async (imageUrl: string) => {
     try {
       setLoading(true);
       setError(null);
-  
+
       // Encontra o índice da imagem na lista
       const imageIndex = existingImages.indexOf(imageUrl);
-  
+
       if (imageIndex === -1) {
         throw new Error('Imagem não encontrada');
       }
-  
-      // Chamando a API para remover a imagem passando o índice
+
+      // Remove a imagem do backend
       await adminApi.deleteProductImage(productID, imageIndex);
-  
-      // Atualiza a lista de imagens, removendo a imagem excluída
+
+      // Atualiza a lista de imagens existentes
       const updatedImages = existingImages.filter((image) => image !== imageUrl);
       setExistingImages(updatedImages);
-  
-      // Chama o callback para notificar o componente pai
+
+      // Notifica o componente pai com a lista atualizada
       onImagesUploaded(updatedImages);
-  
-      setLoading(false);
     } catch (err) {
+      toast.error("Falha ao remover a imagem")
       setError('Falha ao remover a imagem');
+    } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <div>
-      <input type="file" accept="image/*" multiple onChange={handleFileChange} /> {/* Permite múltiplos arquivos */}
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleFileChange}
+        disabled={loading} // Desabilita o input durante o upload
+      />
       
       {loading && <p>Carregando...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -103,7 +108,11 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
             {existingImages.map((imageUrl, index) => (
               <div key={index} style={{ display: 'inline-block', margin: '10px' }}>
                 <img src={imageUrl} alt={`Imagem ${index}`} width="100" />
-                <button onClick={() => handleRemoveImage(imageUrl)} style={{ display: 'block', marginTop: '5px' }}>
+                <button
+                  onClick={() => handleRemoveImage(imageUrl)}
+                  disabled={loading} // Desabilita o botão durante o carregamento
+                  style={{ display: 'block', marginTop: '5px' }}
+                >
                   Remover
                 </button>
               </div>

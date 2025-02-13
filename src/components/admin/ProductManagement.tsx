@@ -453,24 +453,30 @@ export function ProductManagement({ product }: ProductProps) {
 
 
 
-      {isImageModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-sm w-96">
-            <UploadProductImage
-              productID={editingProduct ? editingProduct.ID : newProduct.ID}
-              onImagesUploaded={handleImageChange}
-            />
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => setIsImageModalOpen(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+{isImageModalOpen && (
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+    <div className="bg-white p-6 rounded-lg shadow-sm w-96">
+      <UploadProductImage
+        productID={editingProduct ? editingProduct.ID : newProduct.ID}
+        onImagesUploaded={(uploadedImages) => {
+          setNewProduct((prev) => ({
+            ...prev,
+            images: [...prev.images, ...uploadedImages],
+          }));
+          setIsImageModalOpen(false);
+        }}
+      />
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={() => setIsImageModalOpen(false)}
+          className="bg-gray-500 text-white px-4 py-2 rounded-md"
+        >
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
