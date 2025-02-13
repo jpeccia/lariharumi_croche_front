@@ -52,6 +52,7 @@ function ProductCard({ product }: ProductCardProps) {
       <div className="relative w-full h-32 flex items-center justify-center">
       {imageUrls.length > 0 ? (
   <>
+    {/* Botão para imagem anterior */}
     <button
       onClick={handlePrevImage}
       className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
@@ -59,12 +60,14 @@ function ProductCard({ product }: ProductCardProps) {
       <ChevronLeft size={12} />
     </button>
 
+    {/* Imagem atual */}
     <img
       src={imageUrls[currentImageIndex]}
       alt={product.name}
       className="w-full h-full object-fill"  
     />
 
+    {/* Botão para próxima imagem */}
     <button
       onClick={handleNextImage}
       className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
@@ -91,15 +94,14 @@ export function ProductManagement({ product }: ProductProps) {
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
-    images: [] as string[],
+    images: [] as string[], // Inicializando como um array de strings
     priceRange: '',
     categoryId: 1,
   });
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]); // Usando o tipo Category
   const [loading, setLoading] = useState<boolean>(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [productImageUrl, setProductImageUrl] = useState<string>('');
-  const [isManagementVisible, setIsManagementVisible] = useState(false); // Novo estado para controlar a visibilidade do gerenciamento
   const editFormRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -158,7 +160,7 @@ export function ProductManagement({ product }: ProductProps) {
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
   
-    console.log(newProduct);
+    console.log(newProduct); // Adicione isto para depurar o valor de newProduct
     
     if (!newProduct.name || !newProduct.description || !newProduct.priceRange || !newProduct.categoryId ) {
       toast.error('Por favor, preencha todos os campos.');
@@ -187,7 +189,7 @@ export function ProductManagement({ product }: ProductProps) {
     setNewProduct({
       name: product.name,
       description: product.description,
-      images: Array.isArray(product.images) ? product.images : [],
+      images: Array.isArray(product.images) ? product.images : [], // Garante que seja um array
       priceRange: product.priceRange,
       categoryId: product.categoryId,
     });
@@ -214,14 +216,16 @@ export function ProductManagement({ product }: ProductProps) {
   
       console.log("Dados para atualização:", updatedProduct);
     
+      // Atualiza os dados do produto sem a imagem
       await adminApi.updateProduct(editingProduct.ID, updatedProduct);
   
+      // Se houver imagens, fazer o upload delas
       if (newProduct.images.length > 0) {
         const imageFiles = newProduct.images.map((imageUrl) => new File([imageUrl], "image.jpg"));
         await adminApi.uploadProductImages(imageFiles, editingProduct.ID);
       }
   
-      loadProducts();
+      loadProducts(); // Recarrega a lista de produtos
       setEditingProduct(null);
       setIsCreating(false);
       resetForm();
@@ -231,6 +235,9 @@ export function ProductManagement({ product }: ProductProps) {
     }
   };
   
+  
+
+
   const handleDeleteProduct = async (productId: number) => {
     try {
       await adminApi.deleteProduct(productId);
@@ -241,11 +248,14 @@ export function ProductManagement({ product }: ProductProps) {
     }
   };
 
+  
+  
+
   const resetForm = () => {
     setNewProduct({
       name: '',
       description: '',
-      images: [] as string[],
+      images: [] as string[], // Inicializando como um array de strings
       priceRange: '',
       categoryId: 1,
     });
@@ -259,15 +269,18 @@ export function ProductManagement({ product }: ProductProps) {
           <h2 className="text-xl font-semibold text-purple-800">Gerenciar Produtos</h2>
         </div>
         <button
-          onClick={() => setIsManagementVisible(!isManagementVisible)}
+          onClick={() => {
+            setIsCreating(!isCreating);
+            setEditingProduct(null);
+          }}
           className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
         >
-          {isManagementVisible ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {isManagementVisible ? 'Fechar' : 'Novo Produto'}
+          <Plus className="w-4 h-4" />
+          Novo Produto
         </button>
       </div>
 
-      {isManagementVisible && (
+      {(isCreating || editingProduct) && (
         <form ref={editFormRef} onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct} className="space-y-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Nome</label>
@@ -347,66 +360,71 @@ export function ProductManagement({ product }: ProductProps) {
         </form>
       )}
 
-      <div className="space-y-6">
-        {products.map((product) => (
-          <div
-            key={product.ID}
-            className="flex items-center justify-between p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105"
-          >
-            <div className="flex items-center gap-6">
-              <div className="w-32 h-32 flex-shrink-0">
-                <ProductCard key={product.ID} product={product} />
-              </div>
-              <div className="space-y-2">
-                <p className="text-xl font-semibold text-gray-800">{product.name}</p>
-                <p className="text-sm text-gray-500">{product.description}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => handleEditProduct(product)}
-                className="text-blue-600 hover:text-blue-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
-              >
-                <Edit className="w-6 h-6" />
-              </button>
-              <button
-                onClick={() => handleDeleteProduct(product.ID)}
-                className="text-red-600 hover:text-red-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
-              >
-                <Trash className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      {isImageModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-sm w-96">
-            <UploadProductImage
-              productID={editingProduct ? editingProduct.ID : newProduct.ID}
-              onImagesUploaded={(uploadedImages) => {
-                setNewProduct((prev) => ({
-                  ...prev,
-                  images: [...prev.images, ...uploadedImages],
-                }));
-                setIsImageModalOpen(false);
-              }}
-            />
-            <div className="mt-4 flex justify-end">
-            <button
-              onClick={() => {
-                setIsImageModalOpen(false);
-                window.location.reload();
-              }}
-              className="bg-gray-500 text-white px-4 py-2 rounded-md"
-            >
-              Fechar
-            </button>
-            </div>
-          </div>
+<div className="space-y-6">
+  {products.map((product) => (
+    <div
+      key={product.ID}
+      className="flex items-center justify-between p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105"
+    >
+      <div className="flex items-center gap-6">
+        {/* Container responsivo para a imagem */}
+        <div className="w-32 h-32 flex-shrink-0">
+          <ProductCard key={product.ID} product={product} />
         </div>
-      )}
+        <div className="space-y-2">
+          <p className="text-xl font-semibold text-gray-800">{product.name}</p>
+          <p className="text-sm text-gray-500">{product.description}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => handleEditProduct(product)}
+          className="text-blue-600 hover:text-blue-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
+        >
+          <Edit className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => handleDeleteProduct(product.ID)}
+          className="text-red-600 hover:text-red-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
+        >
+          <Trash className="w-6 h-6" />
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+
+
+
+
+{isImageModalOpen && (
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+    <div className="bg-white p-6 rounded-lg shadow-sm w-96">
+      <UploadProductImage
+        productID={editingProduct ? editingProduct.ID : newProduct.ID}
+        onImagesUploaded={(uploadedImages) => {
+          setNewProduct((prev) => ({
+            ...prev,
+            images: [...prev.images, ...uploadedImages],
+          }));
+          setIsImageModalOpen(false);
+        }}
+      />
+      <div className="mt-4 flex justify-end">
+      <button
+        onClick={() => {
+          setIsImageModalOpen(false);
+          window.location.reload(); // Recarrega a página
+        }}
+        className="bg-gray-500 text-white px-4 py-2 rounded-md"
+      >
+        Fechar
+      </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
