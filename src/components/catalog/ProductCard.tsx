@@ -54,7 +54,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     <img
       src={imageUrls[currentImageIndex]}
       alt={product.name}
-      className="w-full h-full object-cover"  
+      className="w-full h-full object-contain"  
     />
 
     <button
