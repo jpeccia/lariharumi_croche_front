@@ -25,7 +25,6 @@ function Catalog() {
       console.error('Erro ao buscar categorias:', error);
     }
   };
-  
 
   const fetchProducts = async (categoryId: number | null) => {
     try {
@@ -45,7 +44,6 @@ function Catalog() {
       console.error('Erro ao buscar produtos:', error);
     }
   };
-  
 
   // Carregar categorias e produtos quando o componente for montado
   useEffect(() => {
@@ -57,6 +55,12 @@ function Catalog() {
     fetchProducts(selectedCategory); // Recarregar os produtos sempre que a categoria mudar
   }, [selectedCategory]);
 
+  // Rolagem automática para a seção de produtos quando uma categoria é selecionada
+  useEffect(() => {
+    if (selectedCategory !== null && viewProductCatalogRef.current) {
+      viewProductCatalogRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedCategory]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -75,17 +79,16 @@ function Catalog() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex-grow">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category) => (
-              <CategoryCard
-                key={category.ID}
-                category={category}
-                onClick={() => {
-                  console.log('Categoria selecionada:', category.ID); // Verifica se o ID está correto
-                  setSelectedCategory(category.ID);
-                }}
-              />
-            ))}
-
+              {categories.map((category) => (
+                <CategoryCard
+                  key={category.ID}
+                  category={category}
+                  onClick={() => {
+                    console.log('Categoria selecionada:', category.ID); // Verifica se o ID está correto
+                    setSelectedCategory(category.ID);
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -109,7 +112,7 @@ function Catalog() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" ref={viewProductCatalogRef} >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" ref={viewProductCatalogRef}>
           {products.length === 0 ? (
             <p>Carregando produtos...</p>
           ) : (
