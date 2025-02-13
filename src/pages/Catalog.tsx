@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import api from '../services/api';
+import { useState, useEffect, useRef } from 'react';
+import api from '../services/api'; // Importando o axios configurado
 import { CategoryCard } from '../components/catalog/CategoryCard';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
@@ -10,45 +10,53 @@ function Catalog() {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
+  const viewProductCatalogRef = useRef<HTMLDivElement>(null);
 
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
+      
       const sortedCategories = response.data.sort((a: { name: string }, b: { name: string }) =>
         a.name.localeCompare(b.name)
       );
+  
       setCategories(sortedCategories);
     } catch (error) {
       console.error('Erro ao buscar categorias:', error);
     }
   };
+  
 
-  const fetchProducts = async (categoryId: number | null, page: number) => {
+  const fetchProducts = async (categoryId: number | null) => {
     try {
-      let url = `/products?page=${page}&limit=6`; // Ajuste conforme o backend
-
+      let url = '/products';
       if (categoryId) {
-        url = `/products/category/${categoryId}?page=${page}&limit=6`;
+        url = `/products/category/${categoryId}`;
       }
-
-      const response = await api.get(url);
-      
-      setProducts(response.data.products); // A API agora retorna um objeto { products, totalPages }
-      setTotalPages(response.data.totalPages || 1);
+  
+      const response = await api.get(url);  
+      // Ordena os produtos por nome antes de atualizar o estado
+      const sortedProducts = response.data.sort((a: { name: string }, b: { name: string }) =>
+        a.name.localeCompare(b.name)
+      );
+  
+      setProducts(sortedProducts); // Atualiza o estado com os produtos ordenados
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     }
   };
+  
 
+  // Carregar categorias e produtos quando o componente for montado
   useEffect(() => {
-    fetchCategories();
+    fetchCategories(); // Carregar categorias ao montar o componente
   }, []);
 
+  // Carregar os produtos de acordo com a categoria selecionada ou mostrar todos
   useEffect(() => {
-    fetchProducts(selectedCategory, currentPage);
-  }, [selectedCategory, currentPage]);
+    fetchProducts(selectedCategory); // Recarregar os produtos sempre que a categoria mudar
+  }, [selectedCategory]);
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -61,18 +69,25 @@ function Catalog() {
       </div>
 
       <div className="mb-12">
-        <h2 className="font-handwritten text-6xl text-purple-800 mb-8 text-center">- Categorias -</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((category) => (
-            <CategoryCard
-              key={category.ID}
-              category={category}
-              onClick={() => {
-                setSelectedCategory(category.ID);
-                setCurrentPage(1); // Resetar a página ao mudar de categoria
-              }}
-            />
-          ))}
+        <h2 className="font-handwritten text-6xl text-purple-800 mb-8 text-center">
+          - Categorias -
+        </h2>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex-grow">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((category) => (
+              <CategoryCard
+                key={category.ID}
+                category={category}
+                onClick={() => {
+                  console.log('Categoria selecionada:', category.ID); // Verifica se o ID está correto
+                  setSelectedCategory(category.ID);
+                }}
+              />
+            ))}
+
+            </div>
+          </div>
         </div>
       </div>
 
@@ -86,51 +101,27 @@ function Catalog() {
           <FloatingHearts />
           {selectedCategory && (
             <button
-              onClick={() => {
-                setSelectedCategory(null);
-                setCurrentPage(1);
-              }}
-              className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl font-medium hover:scale-105 transition-transform"
+              onClick={() => setSelectedCategory(null)} // Limpa a categoria e exibe todos os produtos
+              className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl  font-medium hover:scale-105 transition-transform"
             >
               Ver todas as categorias
             </button>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" ref={viewProductCatalogRef} >
           {products.length === 0 ? (
-            <p>Carregando produtos...</p>
+            <p>Carregando produtos...</p> // Exibe mensagem de carregamento se não houver produtos
           ) : (
             products.map((product) => (
-              <ProductCard key={product.ID} product={product} instagramUsername="lhkowara" />
+              <ProductCard
+                key={product.ID}
+                product={product}
+                instagramUsername="lhkowara"
+              />
             ))
           )}
         </div>
-
-        {/* Paginação */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 mx-2 text-white bg-purple-600 rounded-lg ${
-                currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700'
-              }`}
-            >
-              Anterior
-            </button>
-            <span className="px-4 py-2 mx-2 text-lg font-bold">{currentPage} / {totalPages}</span>
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 mx-2 text-white bg-purple-600 rounded-lg ${
-                currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700'
-              }`}
-            >
-              Próxima
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
