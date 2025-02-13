@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api'; // Importando o axios configurado
 import { CategoryCard } from '../components/catalog/CategoryCard';
 import { ProductCard } from '../components/catalog/ProductCard';
@@ -7,11 +7,16 @@ import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHear
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 
 function Catalog() {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]); // Estado para categorias
+  const [products, setProducts] = useState<any[]>([]); // Estado para produtos
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [page, setPage] = useState<number>(1); // Para carregar mais produtos conforme o scroll
 
   const fetchCategories = async () => {
+    if (categories.length > 0) return; // Evitar nova requisição se as categorias já foram carregadas
+
     try {
       const response = await api.get('/categories');
       setCategories(response.data); 
@@ -20,31 +25,53 @@ function Catalog() {
     }
   };
 
-  const fetchProducts = async (categoryId: number | null) => {
+  const fetchProducts = async (categoryId: number | null, page: number) => {
+    setLoading(true); // Ativa o estado de carregamento
     try {
       let url = '/products';
       if (categoryId) {
-        url = `/products/category/${categoryId}`; 
+        url = `/products/category/${categoryId}`;
       }
-  
-      const response = await api.get(url);
-      console.log('Produtos filtrados ou todos:', response.data); // Log para verificar o que está sendo retornado
-      setProducts(response.data); // Atualiza o estado com os produtos filtrados ou todos
+
+      const response = await api.get(url, { params: { page } });
+      const fetchedProducts = response.data;
+
+      // Se não houver mais produtos, atualiza o estado
+      if (fetchedProducts.length < 20) {
+        setHasMore(false);
+      }
+
+      setProducts((prev) => [...prev, ...fetchedProducts]); // Adiciona os novos produtos
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
+    } finally {
+      setLoading(false); // Desativa o estado de carregamento
     }
   };
 
-  // Carregar categorias e produtos quando o componente for montado
+  const loadMoreProducts = () => {
+    if (!hasMore || loading) return; // Não carrega mais produtos se já tiver carregado tudo
+    setPage((prev) => prev + 1); // Aumenta a página para carregar mais
+  };
+
+  // Carregar categorias ao montar o componente
   useEffect(() => {
-    fetchCategories(); // Carregar categorias ao montar o componente
+    fetchCategories(); 
   }, []);
 
-  // Carregar os produtos de acordo com a categoria selecionada ou mostrar todos
+  // Carregar produtos da categoria selecionada ou mostrar todos
   useEffect(() => {
-    fetchProducts(selectedCategory); // Recarregar os produtos sempre que a categoria mudar
+    setProducts([]); // Limpa os produtos ao mudar a categoria
+    setPage(1); // Reinicia a página
+    setHasMore(true); // Permite carregar mais produtos
+    fetchProducts(selectedCategory, 1); // Carrega os produtos da categoria selecionada ou todos
   }, [selectedCategory]);
 
+  // Carregar mais produtos quando a página mudar
+  useEffect(() => {
+    if (page === 1) return; // Evita chamada para a primeira página
+    fetchProducts(selectedCategory, page); 
+  }, [page, selectedCategory]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -63,17 +90,16 @@ function Catalog() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex-grow">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category) => (
-              <CategoryCard
-                key={category.ID}
-                category={category}
-                onClick={() => {
-                  console.log('Categoria selecionada:', category.ID); // Verifica se o ID está correto
-                  setSelectedCategory(category.ID);
-                }}
-              />
-            ))}
-
+              {categories.map((category) => (
+                <CategoryCard
+                  key={category.ID}
+                  category={category}
+                  onClick={() => {
+                    console.log('Categoria selecionada:', category.ID);
+                    setSelectedCategory(category.ID); // Muda a categoria selecionada
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -99,7 +125,7 @@ function Catalog() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.length === 0 ? (
-            <p>Carregando produtos...</p> // Exibe mensagem de carregamento se não houver produtos
+            <p>Carregando produtos...</p>
           ) : (
             products.map((product) => (
               <ProductCard
@@ -110,6 +136,17 @@ function Catalog() {
             ))
           )}
         </div>
+
+        {/* Carregar mais produtos */}
+        {loading && <p>Carregando mais produtos...</p>}
+        {!loading && hasMore && (
+          <button
+            onClick={loadMoreProducts}
+            className="w-full bg-purple-600 text-white py-2 rounded-md"
+          >
+            Carregar mais
+          </button>
+        )}
       </div>
     </div>
   );

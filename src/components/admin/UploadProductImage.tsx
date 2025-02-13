@@ -27,20 +27,33 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-
+  
     if (files && files.length > 0) {
       try {
         setLoading(true);
         setError(null);
-
+  
         const fileArray = Array.from(files);
-
+  
+        // Adiciona as imagens temporariamente enquanto o upload é processado
+        const newImageUrls = fileArray.map(file => URL.createObjectURL(file));
+        const allImages = [...existingImages, ...newImageUrls];
+        setExistingImages(allImages);
+        onImagesUploaded(allImages);  // Notifica o componente pai com as imagens atuais
+  
+        // Agora faz o upload real para o backend
         const uploadedImageUrls = await adminApi.uploadProductImages(fileArray, productID);
-
-          // Atualiza a lista de imagens existentes
-          const allImages = [...existingImages, ...uploadedImageUrls];
-          setExistingImages(allImages);
-          onImagesUploaded(allImages);
+  
+        // Verifica se o retorno é um array
+        if (!Array.isArray(uploadedImageUrls)) {
+          throw new Error('O retorno do upload não é um array válido');
+        }
+  
+        // Atualiza as imagens com as URLs retornadas pelo backend
+        const finalImages = [...existingImages, ...uploadedImageUrls];
+        setExistingImages(finalImages);
+        onImagesUploaded(finalImages);
+  
       } catch (err) {
         setError(`Falha ao fazer upload das imagens: ${err.message}`);
         console.error('Erro no upload:', err);
@@ -49,6 +62,8 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
       }
     }
   };
+  
+  
 
   const handleRemoveImage = async (imageUrl: string) => {
     try {
