@@ -41,7 +41,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="relative w-full h-32 flex items-center justify-center">
+      <div className="relative w-full h-full flex items-center justify-center">
       {imageUrls.length > 0 ? (
   <>
     <button
