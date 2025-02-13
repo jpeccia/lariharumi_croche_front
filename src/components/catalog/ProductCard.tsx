@@ -1,9 +1,9 @@
-import { Instagram, X, Maximize2 } from 'lucide-react'; // Adicionei o ícone Maximize2
+import { Instagram, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react'; // Adicionei o ícone Maximize2
 import { Product } from '../../types/product';
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
-import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/react';
 
 interface ProductCardProps {
   product: Product;
@@ -27,7 +27,6 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     fetchProductImages();
   }, [product.ID]);
 
-
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
@@ -35,7 +34,8 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="relative w-full h-80 flex items-center justify-center">
+      {/* Contêiner da imagem com Swiper */}
+      <div className="relative w-full h-80">
         {imageUrls.length > 0 ? (
           <>
             <Swiper
@@ -55,7 +55,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
                     onClick={openModal}
                     src={url}
                     alt={product.name}
-                    className="w-full h-full object-fill"
+                    className="w-full h-full object-cover"
                   />
                 </SwiperSlide>
               ))}
@@ -81,6 +81,8 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
         </div>
       </div>
+
+      {/* Informações do produto */}
       <div className="p-4">
         <h3 className="text-lg font-semibold text-purple-800 mb-2">{product.name}</h3>
         <p className="text-gray-600 text-sm mb-4">{product.description}</p>
