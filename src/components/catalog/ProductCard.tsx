@@ -2,8 +2,6 @@ import { Instagram, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react
 import { Product } from '../../types/product';
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination } from 'swiper/modules';
 
 interface ProductCardProps {
   product: Product;
@@ -48,46 +46,44 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="relative w-full h-80 flex items-center justify-center">
-  {imageUrls.length > 0 ? (
-    <>
-      <Swiper
-        navigation={{
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        }}
-        pagination={{
-          clickable: true,
-        }}
-        modules={[Navigation, Pagination]}
-        className="w-full h-full"
-      >
-        {imageUrls.map((url, index) => (
-          <SwiperSlide key={index}>
+        {imageUrls.length > 0 ? (
+          <>
+            <button
+              onClick={handlePrevImage}
+              className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <ChevronLeft size={24} />
+            </button>
+
             <img
               onClick={openModal}
-              src={url}
+              src={imageUrls[currentImageIndex]}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-fill"  
             />
-          </SwiperSlide>
-        ))}
-      </Swiper>
 
-      {/* Botão para abrir o modal */}
-      <button
-        onClick={openModal}
-        className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-      >
-        <Maximize2 size={20} /> {/* Ícone de fullscreen */}
-      </button>
-    </>
-  ) : (
-    <img
-      src="/default-image.jpg"
-      alt={product.name}
-      className="w-full h-full object-cover"
-    />
-  )}
+            <button
+              onClick={handleNextImage}
+              className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <ChevronRight size={24} />
+            </button>
+
+            {/* Botão para abrir o modal */}
+            <button
+              onClick={openModal}
+              className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <Maximize2 size={20} /> {/* Ícone de fullscreen */}
+            </button>
+          </>
+        ) : (
+          <img
+            src="/default-image.jpg" 
+            alt={product.name}
+            className="w-full h-full object-cover" 
+          />
+        )}
 
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
           <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
