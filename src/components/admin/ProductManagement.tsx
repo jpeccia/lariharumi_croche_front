@@ -412,12 +412,15 @@ export function ProductManagement({ product }: ProductProps) {
         }}
       />
       <div className="mt-4 flex justify-end">
-        <button
-          onClick={() => setIsImageModalOpen(false)}
-          className="bg-gray-500 text-white px-4 py-2 rounded-md"
-        >
-          Fechar
-        </button>
+      <button
+        onClick={() => {
+          setIsImageModalOpen(false);
+          window.location.reload(); // Recarrega a página
+        }}
+        className="bg-gray-500 text-white px-4 py-2 rounded-md"
+      >
+        Fechar
+      </button>
       </div>
     </div>
   </div>
