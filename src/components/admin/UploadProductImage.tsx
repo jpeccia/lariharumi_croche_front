@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
-import { toast } from 'react-toastify';
 
 interface UploadProductImagesProps {
   productID: number;
@@ -52,7 +51,8 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
           throw new Error('Formato de resposta inválido');
         }
       } catch (err) {
-        setError('Falha ao fazer upload das imagens');
+        setError(`Falha ao fazer upload das imagens: ${err.message}`);
+        console.error('Erro no upload:', err);
       } finally {
         setLoading(false);
       }
@@ -81,8 +81,7 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
       // Notifica o componente pai com a lista atualizada
       onImagesUploaded(updatedImages);
     } catch (err) {
-      toast.error("Falha ao remover a imagem")
-      setError('Falha ao remover a imagem');
+      setError(`Falha ao remover a imagem: ${err.message}`);
     } finally {
       setLoading(false);
     }
