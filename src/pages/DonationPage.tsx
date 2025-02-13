@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Coffee, IceCream, Cake, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DonationTier } from '../components/home/DonationBox/DonationTier';
 import { KawaiiMascot } from '../components/home/DonationBox/KawaiiMascot';
-import { SupportMessage } from '../components/home/DonationBox/SupportMessage';
 import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 
@@ -40,12 +39,18 @@ const messages = [
     message: "Nossa, ficou incrível, ficou mtt lindo Larih. Superou oq eu estava imaginando",
     author: "Lucas B.",
   },
+  {
+    message: "Oi, tudo bem? Sou a Maria Paula! Encomendei a Invejinha e o Grinch com você, e eu só queria dizer que você é extremamente talentosa! 🌟💖",
+    author: "Lucas B.",
+  },
 ];
 
 export function DonationPage() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 2;
+  const qrCodeRef = useRef<HTMLDivElement | null>(null); // Referência para o QR Code
+
 
   const totalPages = Math.ceil(messages.length / itemsPerPage);
 
@@ -64,7 +69,14 @@ export function DonationPage() {
 
   const handlePixDonation = (amount: number) => {
     setSelectedAmount(amount);
+
+    if (qrCodeRef.current) {
+      qrCodeRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+
   };
+
+  
 
   return (
     <div className="relative bg-gradient-to-br from-pink-50 via-purple-50 to-pink-50 rounded-3xl p-8 shadow-sm overflow-hidden">
@@ -120,7 +132,7 @@ export function DonationPage() {
 
         {/* Exibição do QR Code */}
         {selectedAmount !== null && (
-          <div className="text-center mt-8 my-12">
+          <div className="text-center mt-8 my-12" ref={qrCodeRef}>
             <h3 className="text-xl font-bold text-purple-800 mb-4">
               Escaneie o QR Code para doar R$ {selectedAmount},00 💖
             </h3>
