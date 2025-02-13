@@ -104,38 +104,40 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
 
       {/* Modal para visualizar a imagem em tamanho maior */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
-          <button
-              onClick={closeModal}
-              className="absolute top-1 right-1 text-gray-600 hover:text-gray-800"
-            >
-              <X size={24} />
-            </button>
-            <div className="relative w-full h-full flex items-center justify-center">
-              <button
-                onClick={handlePrevImage}
-                className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-              >
-                <ChevronLeft size={24} />
-              </button>
+  <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+    <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
+      {/* Botão de fechar com z-index maior */}
+      <button
+        onClick={closeModal}
+        className="absolute top-2 right-2 z-50 text-gray-600 hover:text-gray-800 bg-white p-1 rounded-full shadow"
+      >
+        <X size={24} />
+      </button>
 
-              <img
-                src={imageUrls[currentImageIndex]}
-                alt={product.name}
-                className="max-w-full max-h-[80vh] object-contain"
-              />
+      <div className="relative w-full h-full flex items-center justify-center">
+        <button
+          onClick={handlePrevImage}
+          className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+        >
+          <ChevronLeft size={24} />
+        </button>
 
-              <button
-                onClick={handleNextImage}
-                className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        <img
+          src={imageUrls[currentImageIndex]}
+          alt={product.name}
+          className="max-w-full max-h-[80vh] object-contain"
+        />
+
+        <button
+          onClick={handleNextImage}
+          className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+        >
+          <ChevronRight size={24} />
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
