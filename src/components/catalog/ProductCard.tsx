@@ -48,47 +48,22 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
     <div className="relative w-full h-80 flex items-center justify-center">
       {imageUrls.length > 0 ? (
-        <>
-          {/* Swiper com navegação customizada */}
-          <Swiper
-            navigation={{
-              prevEl: '.swiper-button-prev-custom',
-              nextEl: '.swiper-button-next-custom',
-            }}
-            className="w-full h-full"
-          >
-            {imageUrls.map((url, index) => (
-              <SwiperSlide key={index}>
-                <img
-                  onClick={openModal}
-                  src={url}
-                  alt={product.name}
-                  className="w-full h-full object-fill cursor-pointer"
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-  
-          {/* Botões customizados para navegação */}
-          <button
-            className="swiper-button-prev-custom absolute left-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <button
-            className="swiper-button-next-custom absolute right-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-          >
-            <ChevronRight size={24} />
-          </button>
-  
-          {/* Botão para abrir o modal (fullscreen) */}
-          <button
-            onClick={openModal}
-            className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-          >
-            <Maximize2 size={20} />
-          </button>
-        </>
+        <Swiper
+          navigation
+          onSlideChange={(swiper) => setCurrentImageIndex(swiper.activeIndex)}
+          className="w-full h-full"
+        >
+          {imageUrls.map((url, index) => (
+            <SwiperSlide key={index}>
+              <img
+                onClick={() => openModal()}
+                src={url}
+                alt={product.name}
+                className="w-full h-full object-fill cursor-pointer"
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
       ) : (
         <img
           src="/default-image.jpg"
@@ -96,6 +71,14 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           className="w-full h-full object-cover"
         />
       )}
+          {/* Botão para abrir o modal */}
+    <button
+      onClick={openModal}
+      className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+    >
+      <Maximize2 size={20} />
+      </button>
+
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
           <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
         </div>
