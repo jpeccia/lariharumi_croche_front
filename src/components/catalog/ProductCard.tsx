@@ -1,9 +1,7 @@
-import { Instagram, X, Maximize2 } from 'lucide-react'; // Adicionei o ícone Maximize2
+import { Instagram, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react'; // Adicionei o ícone Maximize2
 import { Product } from '../../types/product';
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +10,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const [imageUrls, setImageUrls] = useState<string[]>([]); // Estado para múltiplas imagens
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Índice da imagem atual
   const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar a visibilidade do modal
 
   useEffect(() => {
@@ -27,6 +26,17 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     fetchProductImages();
   }, [product.ID]);
 
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? imageUrls.length - 1 : prevIndex - 1
+    );
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
+    );
+  };
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -37,35 +47,44 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="relative w-full h-80 flex items-center justify-center">
         {imageUrls.length > 0 ? (
-          <Swiper
-            navigation
-            modules={[Navigation]}
-            className="w-full h-full"
-          >
-            {imageUrls.map((url, index) => (
-              <SwiperSlide key={index}>
-                <img
-                  onClick={openModal}
-                  src={url}
-                  alt={product.name}
-                  className="w-full h-full object-fill"
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          <>
+            <button
+              onClick={handlePrevImage}
+              className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <ChevronLeft size={24} />
+            </button>
+
+            <img
+              onClick={openModal}
+              src={imageUrls[currentImageIndex]}
+              alt={product.name}
+              className="w-full h-full object-fill"  
+            />
+
+            <button
+              onClick={handleNextImage}
+              className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <ChevronRight size={24} />
+            </button>
+
+            {/* Botão para abrir o modal */}
+            <button
+              onClick={openModal}
+              className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+            >
+              <Maximize2 size={20} /> {/* Ícone de fullscreen */}
+            </button>
+          </>
         ) : (
           <img
-            src="/default-image.jpg"
+            src="/default-image.jpg" 
             alt={product.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover" 
           />
         )}
-        <button
-          onClick={openModal}
-          className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-        >
-          <Maximize2 size={20} />
-        </button>
+
         <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full">
           <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
         </div>
@@ -83,29 +102,43 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           <span>Encomendar no Instagram</span>
         </a>
       </div>
+
+      {/* Modal para visualizar a imagem em tamanho maior */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
-            <button
-              onClick={closeModal}
-              className="absolute top-2 right-2 z-50 text-gray-600 hover:text-gray-800 bg-white p-1 rounded-full shadow"
-            >
-              <X size={24} />
-            </button>
-            <Swiper navigation modules={[Navigation]} className="w-full max-h-[80vh]">
-              {imageUrls.map((url, index) => (
-                <SwiperSlide key={index}>
-                  <img
-                    src={url}
-                    alt={product.name}
-                    className="max-w-full max-h-[80vh] object-contain"
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+    <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
+      {/* Botão de fechar com z-index maior */}
+      <button
+        onClick={closeModal}
+        className="absolute top-2 right-2 z-50 text-gray-600 hover:text-gray-800 bg-white p-1 rounded-full shadow"
+      >
+        <X size={24} />
+      </button>
+
+      <div className="relative w-full h-full flex items-center justify-center">
+        <button
+          onClick={handlePrevImage}
+          className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+        >
+          <ChevronLeft size={24} />
+        </button>
+
+        <img
+          src={imageUrls[currentImageIndex]}
+          alt={product.name}
+          className="max-w-full max-h-[80vh] object-contain"
+        />
+
+        <button
+          onClick={handleNextImage}
+          className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+        >
+          <ChevronRight size={24} />
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
