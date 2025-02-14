@@ -37,32 +37,31 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     <div className="bg-white rounded-lg shadow-sm overflow-hidden relative">
       <div className="relative w-full h-80 flex items-center justify-center overflow-hidden">
         {imageUrls.length > 0 ? (
-          <Swiper
-            navigation={{
-              nextEl: '.swiper-button-next',
-              prevEl: '.swiper-button-prev',
-            }}
-            modules={[Navigation]}
-            className="w-full h-full"
-            style={{ position: 'relative', zIndex: 0 }}
-          >
-            {imageUrls.map((url, index) => (
-              <SwiperSlide key={index} className="flex items-center justify-center">
-                <img
-                  onClick={openModal}
-                  src={url}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              </SwiperSlide>
-            ))}
+          <>
+            <Swiper
+              navigation={true}
+              modules={[Navigation]}
+              className="w-full h-full"
+              style={{ position: 'relative', zIndex: 0 }}
+            >
+              {imageUrls.map((url, index) => (
+                <SwiperSlide key={index} className="flex items-center justify-center">
+                  <img
+                    onClick={openModal}
+                    src={url}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
             <button className="swiper-button-prev absolute left-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow">
               <ChevronLeft size={24} />
             </button>
             <button className="swiper-button-next absolute right-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow">
               <ChevronRight size={24} />
             </button>
-          </Swiper>
+          </>
         ) : (
           <img
             src="/default-image.jpg"
@@ -103,10 +102,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
               <X size={24} />
             </button>
             <Swiper
-              navigation={{
-                nextEl: '.swiper-button-next-modal',
-                prevEl: '.swiper-button-prev-modal',
-              }}
+              navigation={true}
               modules={[Navigation]}
               className="w-full max-h-[80vh]"
             >
@@ -119,13 +115,13 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
                   />
                 </SwiperSlide>
               ))}
-              <button className="swiper-button-prev-modal absolute left-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow">
-                <ChevronLeft size={24} />
-              </button>
-              <button className="swiper-button-next-modal absolute right-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow">
-                <ChevronRight size={24} />
-              </button>
             </Swiper>
+            <button className="swiper-button-prev absolute left-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow">
+              <ChevronLeft size={24} />
+            </button>
+            <button className="swiper-button-next absolute right-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow">
+              <ChevronRight size={24} />
+            </button>
           </div>
         </div>
       )}
