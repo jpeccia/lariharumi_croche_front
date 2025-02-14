@@ -32,7 +32,8 @@ export function CategoryCard({ category, onClick }: CategoryCardProps) {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="relative h-48">
           <img
-            src={categoryImageUrl || category.image} // Se a imagem da categoria não for carregada, usa a imagem default da categoria
+            loading="lazy"
+            src={categoryImageUrl ? categoryImageUrl : `${category.image}.webp`}
             alt={category.name}
             className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
           />
