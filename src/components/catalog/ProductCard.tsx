@@ -1,6 +1,6 @@
 import { Instagram, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react'; // Adicionei o ícone Maximize2
 import { Product } from '../../types/product';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { adminApi } from '../../services/api';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
@@ -12,8 +12,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const [imageUrls, setImageUrls] = useState<string[]>([]); // Estado para múltiplas imagens
-  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Índice da imagem atual
   const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar a visibilidade do modal
+  const swiperRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchProductImages = async () => {
@@ -31,28 +31,55 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+  const handlePrevImage = () => {
+    if (swiperRef.current) {
+      swiperRef.current.slidePrev();
+    }
+  };
+  
+  const handleNextImage = () => {
+    if (swiperRef.current) {
+      swiperRef.current.slideNext();
+    }
+  };
+
   const instagramUrl = `https://instagram.com/${instagramUsername}`;
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden relative">
       <div className="relative w-full h-80 flex items-center justify-center overflow-hidden">
-        {imageUrls.length > 0 ? (
-          <Swiper
-            navigation
-            modules={[Navigation]}
-            className="w-full h-full"
-          >
-            {imageUrls.map((url, index) => (
-              <SwiperSlide key={index} className="flex items-center justify-center">
-                <img
-                  onClick={openModal}
-                  src={url}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
+      {imageUrls.length > 0 ? (
+          <>
+            <button
+              onClick={handlePrevImage}
+              className="absolute left-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <Swiper
+              onSwiper={(swiper) => (swiperRef.current = swiper)}
+              navigation={false}
+              modules={[Navigation]}
+              className="w-full h-full"
+            >
+              {imageUrls.map((url, index) => (
+                <SwiperSlide key={index} className="flex items-center justify-center">
+                  <img
+                    onClick={openModal}
+                    src={url}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+            <button
+              onClick={handleNextImage}
+              className="absolute right-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
         ) : (
           <img
             src="/default-image.jpg"
@@ -93,8 +120,10 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
             >
               <X size={24} />
             </button>
+            <div className="relative w-full h-full flex items-center justify-center">
             <Swiper
-              navigation
+              onSwiper={(swiper) => (swiperRef.current = swiper)}
+              navigation={false}
               modules={[Navigation]}
               className="w-full max-h-[80vh]"
             >
@@ -108,9 +137,25 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
                 </SwiperSlide>
               ))}
             </Swiper>
+            <button
+              onClick={handlePrevImage}
+              className="absolute left-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              onClick={handleNextImage}
+              className="absolute right-2 z-10 text-purple-600 hover:text-purple-800 bg-white p-2 rounded-full shadow"
+            >
+              <ChevronRight size={24} />
+            </button>
+            </div>
           </div>
         </div>
-      )}
+        )}
     </div>
   );
 }
+
+
+
