@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Category } from '../../types/product';
 import { adminApi } from '../../services/api';
-import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 interface CategoryCardProps {
   category: Category;
@@ -32,10 +31,10 @@ export function CategoryCard({ category, onClick }: CategoryCardProps) {
     >
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="relative h-48">
-        <LazyLoadImage
-            alt={category.name}
+          <img
+            loading="lazy"
             src={categoryImageUrl ? categoryImageUrl : `${category.image}.webp`}
-            effect="blur" // Efeito de blur enquanto carrega
+            alt={category.name}
             className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
           />
         </div>
