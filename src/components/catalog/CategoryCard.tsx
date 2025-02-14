@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Category } from '../../types/product';
+import { useEffect, useState } from 'react';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { adminApi } from '../../services/api';
+import { Category } from '../../types/product';
 
 interface CategoryCardProps {
   category: Category;
@@ -8,7 +10,7 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category, onClick }: CategoryCardProps) {
-  const [categoryImageUrl, setCategoryImageUrl] = useState<string>(''); // Estado para armazenar a URL da imagem
+  const [categoryImageUrl, setCategoryImageUrl] = useState<string>(''); // URL da imagem
 
   useEffect(() => {
     const fetchCategoryImage = async () => {
@@ -19,10 +21,9 @@ export function CategoryCard({ category, onClick }: CategoryCardProps) {
         console.error('Erro ao carregar imagem da categoria:', error);
       }
     };
-  
-    fetchCategoryImage(); // Carrega a imagem da categoria quando o componente for montado
+
+    fetchCategoryImage();
   }, [category.ID]);
-  
 
   return (
     <div 
@@ -31,10 +32,10 @@ export function CategoryCard({ category, onClick }: CategoryCardProps) {
     >
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="relative h-48">
-          <img
-            loading="lazy"
-            src={categoryImageUrl ? categoryImageUrl : `${category.image}.webp`}
+          <LazyLoadImage
             alt={category.name}
+            src={categoryImageUrl || category.image} // Usa imagem carregada ou default
+            effect="blur" // Efeito de blur enquanto carrega
             className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
           />
         </div>
