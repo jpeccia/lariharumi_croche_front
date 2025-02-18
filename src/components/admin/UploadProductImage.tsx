@@ -36,15 +36,15 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
         const fileArray = Array.from(files);
   
         // Adiciona as imagens temporariamente enquanto o upload é processado
-        const newImageUrls = fileArray.map(file => URL.createObjectURL(file));
+        const newImageUrls = fileArray.map((file) => URL.createObjectURL(file));
         const allImages = [...existingImages, ...newImageUrls];
         setExistingImages(allImages);
         onImagesUploaded(allImages);  // Notifica o componente pai com as imagens atuais
   
-        // Agora faz o upload real para o backend
+        // Faz o upload real para o backend
         const uploadedImageUrls = await adminApi.uploadProductImages(fileArray, productID);
   
-        // Verifica se o retorno é um array
+        // Verifica se o retorno é um array válido de URLs
         if (!Array.isArray(uploadedImageUrls)) {
           throw new Error('O retorno do upload não é um array válido');
         }
@@ -55,11 +55,13 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
         onImagesUploaded(finalImages);
   
       } catch (err) {
-        setError(`Falha ao fazer upload das imagens: ${err.message}`);
+        setError(`Falha ao fazer upload das imagens: ${err.message || err}`);
         console.error('Erro no upload:', err);
       } finally {
         setLoading(false);
       }
+    } else {
+      setError('Nenhuma imagem foi selecionada');
     }
   };
   

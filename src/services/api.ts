@@ -92,23 +92,29 @@ export const adminApi = {
     return response.data;
   },
 
-uploadProductImages: async (files: File[], productId: number) => {
-  const formData = new FormData();
-  files.forEach((file) => formData.append("images[]", file)); 
-
-  const headers = getAuthHeaders();
-
-  try {
-    const response = await api.post(`/products/${productId}/upload-images`, formData, {
-      headers,
-    });
-    toast.success("Imagens enviadas com sucesso!");
-    return response.data;
-  } catch (error) {
-    console.error("Erro ao enviar as imagens:", error);
-    throw new Error("Falha ao fazer upload das imagens");
-  }
-},
+  uploadProductImages: async (files: File[], productId: number) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("images[]", file)); 
+  
+    const headers = getAuthHeaders();
+  
+    try {
+      const response = await api.post(`/products/${productId}/upload-images`, formData, {
+        headers,
+      });
+      
+      if (!response.data.paths || !Array.isArray(response.data.paths)) {
+        throw new Error('O retorno do upload não é um array válido');
+      }
+  
+      toast.success("Imagens enviadas com sucesso!");
+      return response.data.paths;  // Retorna as URLs das imagens enviadas
+    } catch (error) {
+      console.error("Erro ao enviar as imagens:", error);
+      throw new Error("Falha ao fazer upload das imagens");
+    }
+  },
+  
 
 uploadCategoryImage: async (
   file: File,
@@ -160,7 +166,7 @@ getProductImages: async (productId: number) => {
   }
 },
   // Função para buscar a imagem de um produto
-  getCategoryImage: async (categoryId: number) => {
+getCategoryImage: async (categoryId: number) => {
     if (!categoryId) {
       console.error("ID da categoria não definido");
       return "";
