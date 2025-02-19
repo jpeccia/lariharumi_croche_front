@@ -2,9 +2,6 @@ import { Instagram, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react
 import { Product } from '../../types/product';
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
-
 interface ProductCardProps {
   product: Product;
   instagramUsername: string;
@@ -56,18 +53,13 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           >
             <ChevronLeft size={24} />
           </button>
-          <Swiper
-            navigation
-            modules={[Navigation]}
-            className="w-full h-full"
-          >
                 <img
+                  loading="lazy"
                   onClick={openModal}
                   src={imageUrls[currentImageIndex]}
                   alt={product.name}
                   className="w-full h-full object-fill"  
                 />
-          </Swiper>
           <button
             onClick={handleNextImage}
             className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
@@ -77,6 +69,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           </>
         ) : (
           <img
+            loading="lazy"
             src="/default-image.jpg"
             alt={product.name}
             className="w-full h-full object-cover"
