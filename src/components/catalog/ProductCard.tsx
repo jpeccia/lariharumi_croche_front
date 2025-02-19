@@ -54,10 +54,12 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
             <ChevronLeft size={24} />
           </button>
                 <img
-                loading="lazy"
-                onClick={openModal}
-                srcSet={`${imageUrls[currentImageIndex]}.webp 1x, ${imageUrls[currentImageIndex]} 1x`}
-                src={imageUrls[currentImageIndex]}
+                  loading="lazy"
+                  onClick={openModal}
+                  srcSet={`${imageUrls[currentImageIndex]}.webp 1x, ${imageUrls[currentImageIndex]} 1x`}
+                  src={imageUrls[currentImageIndex]}
+                  alt={product.name}
+                  className="w-full h-full object-fill"  
                 />
           <button
             onClick={handleNextImage}
