@@ -13,10 +13,19 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar a visibilidade do modal
 
   useEffect(() => {
+    const cacheKey = `product-images-${product.ID}`;
+    const cachedImages = sessionStorage.getItem(cacheKey);
+  
+    if (cachedImages) {
+      setImageUrls(JSON.parse(cachedImages));
+      return;
+    }
+  
     const fetchProductImages = async () => {
       try {
         const images = await adminApi.getProductImages(product.ID);
         setImageUrls(images);
+        sessionStorage.setItem(cacheKey, JSON.stringify(images)); // Cacheando
       } catch (error) {
         console.error('Erro ao carregar imagens:', error);
       }
@@ -24,6 +33,28 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   
     fetchProductImages();
   }, [product.ID]);
+
+  useEffect(() => {
+    const nextIndex = (currentImageIndex + 1) % imageUrls.length;
+    const img = new Image();
+    img.src = imageUrls[nextIndex];
+  }, [currentImageIndex, imageUrls]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeModal();
+      }
+    };
+  
+    if (isModalOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+  
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isModalOpen]);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -56,10 +87,10 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
                 <img
                   loading="lazy"
                   onClick={openModal}
-                  srcSet={`${imageUrls[currentImageIndex]}.webp 1x, ${imageUrls[currentImageIndex]} 1x`}
+                  srcSet={`${imageUrls[currentImageIndex].replace(/\.(jpg|png)$/, '.webp')} 1x, ${imageUrls[currentImageIndex]} 1x`}
                   src={imageUrls[currentImageIndex]}
                   alt={product.name}
-                  className="w-full h-full object-fill"  
+                  className="w-full h-full object-fill" 
                 />
           <button
             onClick={handleNextImage}
@@ -122,7 +153,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
               <img
                 src={imageUrls[currentImageIndex]}
                 alt={product.name}
-                className="max-w-full max-h-[80vh] object-contain"
+                className="max-w-[90vw] max-h-[80vh] object-contain"
               />
 
               <button
@@ -134,7 +165,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
             </div>
           </div>
         </div>
-        )}
+      )}
     </div>
   );
 }

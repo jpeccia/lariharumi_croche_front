@@ -6,6 +6,69 @@ import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 
+function getPromotionEndTime() {
+  const now = new Date();
+  // Define 18:00 de hoje
+  const promotionStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    18,
+    0,
+    0
+  );
+  // Mesmo que o usuário acesse antes das 18:00, a promoção termina 48h após as 18:00.
+  return new Date(promotionStart.getTime() + 48 * 60 * 60 * 1000);
+}
+
+// Componente que exibe o countdown da promoção
+function CountdownTimer() {
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const promotionEnd = getPromotionEndTime();
+    return promotionEnd.getTime() - Date.now();
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const promotionEnd = getPromotionEndTime();
+      const newTimeLeft = promotionEnd.getTime() - Date.now();
+      setTimeLeft(newTimeLeft);
+      if (newTimeLeft <= 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Formata o tempo restante para dd hh:mm:ss ou hh:mm:ss
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (days > 0) {
+      return `${days}d ${hours.toString().padStart(2, '0')}:${minutes
+        .toString()
+        .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      return `${hours.toString().padStart(2, '0')}:${minutes
+        .toString()
+        .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+  };
+
+  return (
+    <span className="text-2xl text-purple-800 mb-4">
+      Promoção acaba em {formatTime(timeLeft)}!<br />
+      - 5% OFF nas compras acima de R$30<br />
+      - 10% OFF nas compras de R$100-R$200
+    </span>
+  );
+}
+
+
 function Catalog() {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -61,6 +124,7 @@ function Catalog() {
       viewProductCatalogRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [selectedCategory]);
+  
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -73,6 +137,8 @@ function Catalog() {
       </div>
 
       <div className="mb-12">
+      <CountdownTimer />
+
         <h2 className="font-handwritten text-6xl text-purple-800 mb-8 text-center">
           - Categorias -
         </h2>

@@ -104,21 +104,29 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
         onChange={handleFileChange}
         disabled={loading} // Desabilita o input durante o upload
       />
-      
+  
       {loading && <p>Carregando...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
-
+  
       <div>
         <h3>Imagens do produto</h3>
         {existingImages.length > 0 ? (
-          <div>
+          <div
+            style={{
+              display: "flex",
+              overflowX: "auto", // Ativa o scroll horizontal
+              whiteSpace: "nowrap",
+              gap: "10px", // Espaçamento entre imagens
+              paddingBottom: "10px", // Evita que a rolagem fique muito colada
+            }}
+          >
             {existingImages.map((imageUrl, index) => (
-              <div key={index} style={{ display: 'inline-block', margin: '10px' }}>
+              <div key={index} style={{ flexShrink: 0, textAlign: "center" }}>
                 <img src={imageUrl} alt={`Imagem ${index}`} width="100" />
                 <button
                   onClick={() => handleRemoveImage(imageUrl)}
                   disabled={loading} // Desabilita o botão durante o carregamento
-                  style={{ display: 'block', marginTop: '5px' }}
+                  style={{ display: "block", marginTop: "5px" }}
                 >
                   Remover
                 </button>
