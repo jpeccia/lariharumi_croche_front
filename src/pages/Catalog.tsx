@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import api from '../services/api'; // Importando o axios configurado
+import api, { adminApi } from '../services/api'; // Importando o axios configurado
 import { CategoryCard } from '../components/catalog/CategoryCard';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
@@ -11,6 +11,9 @@ function Catalog() {
   const [products, setProducts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const viewProductCatalogRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
 
   const fetchCategories = async () => {
     try {
@@ -26,43 +29,76 @@ function Catalog() {
     }
   };
 
-  const fetchProducts = async (categoryId: number | null) => {
+  const [page, setPage] = useState(1);
+  const limit = 12;
+  
+  const fetchProducts = async (categoryId: number | null, reset = false) => {
+    if (isLoading || (!hasMore && !reset)) return;
+  
     try {
-      let url = '/products';
-      if (categoryId) {
-        url = `/products/category/${categoryId}`;
+      setIsLoading(true);
+  
+      const currentPage = reset ? 1 : page;
+      const productsFetched = await adminApi.getProductsByPage(categoryId, currentPage, limit);
+      const sorted = productsFetched.sort((a, b) => a.name.localeCompare(b.name));
+  
+      if (reset) {
+        setProducts(sorted);
+        setPage(2);
+        setHasMore(productsFetched.length === limit);
+      } else {
+        setProducts((prev) => [...prev, ...sorted]);
+        setPage((prev) => prev + 1);
+        setHasMore(productsFetched.length === limit);
       }
-  
-      const response = await api.get(url);  
-      // Ordena os produtos por nome antes de atualizar o estado
-      const sortedProducts = response.data.sort((a: { name: string }, b: { name: string }) =>
-        a.name.localeCompare(b.name)
-      );
-  
-      setProducts(sortedProducts); // Atualiza o estado com os produtos ordenados
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
+  
+  
+  
 
   // Carregar categorias e produtos quando o componente for montado
   useEffect(() => {
-    fetchCategories(); // Carregar categorias ao montar o componente
+    fetchCategories(); 
   }, []);
 
-  // Carregar os produtos de acordo com a categoria selecionada ou mostrar todos
   useEffect(() => {
-    fetchProducts(selectedCategory); // Recarregar os produtos sempre que a categoria mudar
+    setHasMore(true); // Reinicia o controle sempre que a categoria muda
+    fetchProducts(selectedCategory, true);
   }, [selectedCategory]);
+  
+  
 
-  // Rolagem automática para a seção de produtos quando uma categoria é selecionada
   useEffect(() => {
     if (selectedCategory !== null && viewProductCatalogRef.current) {
       viewProductCatalogRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [selectedCategory]);
   
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    if (!loadMoreRef.current || isLoading || !hasMore) return;
+  
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        fetchProducts(selectedCategory);
+      }
+    }, {
+      rootMargin: '200px', // começa a carregar um pouco antes
+    });
+  
+    observer.observe(loadMoreRef.current);
+  
+    return () => {
+      if (loadMoreRef.current) observer.unobserve(loadMoreRef.current);
+    };
+  }, [loadMoreRef.current, isLoading, hasMore, selectedCategory]);
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <FloatingHearts />
@@ -126,6 +162,11 @@ function Catalog() {
               />
             ))
           )}
+        <div ref={loadMoreRef} className="col-span-full flex justify-center mt-8">
+          {isLoading && (
+            <span className="text-purple-600 font-kawaii text-xl">Carregando mais peças...</span>
+          )}
+        </div>
         </div>
       </div>
     </div>

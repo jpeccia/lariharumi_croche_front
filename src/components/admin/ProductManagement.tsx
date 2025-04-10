@@ -4,6 +4,7 @@ import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
 import { UploadProductImage } from './UploadProductImage';
 import { toast } from 'react-toastify';
+import { useDebounce } from 'use-debounce';
 
 interface Category {
   ID: number;
@@ -101,11 +102,22 @@ export function ProductManagement({ product }: ProductProps) {
   const [productImageUrl, setProductImageUrl] = useState<string>('');
   const [isSectionVisible, setIsSectionVisible] = useState(true); // Novo estado para controlar a visibilidade da seção
   const editFormRef = useRef<HTMLFormElement>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+  const [isSearching, setIsSearching] = useState(false);
 
+  
   useEffect(() => {
     loadCategories();
-    loadProducts();
-  }, [product]);
+  }, []);
+  
+  useEffect(() => {
+    if (!isSearching) {
+      fetchProducts();
+    }
+  }, [isSearching]);
+  
+  
 
   useEffect(() => {
     if (editingProduct) {
@@ -117,15 +129,31 @@ export function ProductManagement({ product }: ProductProps) {
     }
   }, [editingProduct]);
 
-  const loadProducts = async () => {
+  const [page, setPage] = useState(1);
+  const limit = 12;
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const fetchProducts = async () => {
+    if (isLoading) return;
+  
     try {
-      const data = await adminApi.getProducts();
-      setProducts(data);
+      setIsLoading(true);
+  
+      const productsFetched = await adminApi.getProductsByPage(null, page, limit);
+      const sorted = productsFetched.sort((a, b) => a.name.localeCompare(b.name));
+  
+      setProducts(prev => page === 1 ? sorted : [...prev, ...sorted]);
+      setHasMore(productsFetched.length === limit);
     } catch (error) {
-      console.error('Falha ao carregar produtos:', error);
-      alert('Falha ao carregar os produtos.');
+      console.error('Erro ao buscar produtos:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
+  
+  
+  
 
   const loadCategories = async () => {
     try {
@@ -154,6 +182,7 @@ export function ProductManagement({ product }: ProductProps) {
     fetchProductImage();
   }, [product?.ID]);
   
+  
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,7 +202,7 @@ export function ProductManagement({ product }: ProductProps) {
         categoryId: newProduct.categoryId,
       });
   
-      loadProducts();
+      fetchProducts();
       setIsCreating(false);
       resetForm();
     } catch (error) {
@@ -223,7 +252,7 @@ export function ProductManagement({ product }: ProductProps) {
         await adminApi.uploadProductImages(imageFiles, editingProduct.ID);
       }
   
-      loadProducts(); // Recarrega a lista de produtos
+      fetchProducts();
       setEditingProduct(null);
       setIsCreating(false);
       resetForm();
@@ -236,7 +265,7 @@ export function ProductManagement({ product }: ProductProps) {
   const handleDeleteProduct = async (productId: number) => {
     try {
       await adminApi.deleteProduct(productId);
-      loadProducts();
+      fetchProducts();
     } catch (error) {
       console.error('Falha ao excluir o produto:', error);
       alert('Falha ao excluir o produto.');
@@ -253,6 +282,52 @@ export function ProductManagement({ product }: ProductProps) {
     });
   };
 
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const ref = loadMoreRef.current;
+    if (!ref || isLoading || !hasMore) return;
+  
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setPage((prev) => prev + 1);
+      }
+    }, { rootMargin: '200px' });
+  
+    observer.observe(ref);
+  
+    return () => {
+      if (ref) observer.unobserve(ref);
+    };
+  }, [isLoading, hasMore]);
+  
+  useEffect(() => {
+    const search = async () => {
+      if (!debouncedSearchTerm) {
+        // saiu do modo de busca
+        setIsSearching(false);
+        setProducts([]); // limpa os resultados da busca
+        setPage(1); // reseta paginação
+        return;
+      }
+  
+      try {
+        setIsSearching(true);
+        const result = await adminApi.searchProducts(debouncedSearchTerm, 0);
+        setProducts(result);
+        setHasMore(false); // desliga paginação enquanto busca
+      } catch (err) {
+        console.error("Erro ao buscar produtos:", err);
+      }
+    };
+  
+    search();
+  }, [debouncedSearchTerm]);
+  
+  
+
+  
+  
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <div className="flex items-center justify-between mb-6">
@@ -285,12 +360,13 @@ export function ProductManagement({ product }: ProductProps) {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nome</label>
                 <input
-                  type="text"
-                  value={newProduct.name}
-                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  required
+                type="text"
+                placeholder="Buscar produtos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="input"
                 />
+
               </div>
 
               <div>
@@ -359,9 +435,21 @@ export function ProductManagement({ product }: ProductProps) {
               </button>
             </form>
           )}
-
           <div className="space-y-6">
-            {products.map((product) => (
+          <div className="mb-4">
+        <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+          Buscar produto
+        </label>
+        <input
+          type="text"
+          id="search"
+          placeholder="Digite o nome do produto"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+        />
+      </div>
+              {products.map((product) => (
               <div
                 key={product.ID}
                 className="flex items-center justify-between p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105"
@@ -391,6 +479,12 @@ export function ProductManagement({ product }: ProductProps) {
                 </div>
               </div>
             ))}
+        <div ref={loadMoreRef} className="col-span-full flex justify-center mt-8">
+          {isLoading && (
+            <span className="text-purple-600 font-kawaii text-xl">Carregando mais peças...</span>
+          )}
+        </div>
+
           </div>
 
           {isImageModalOpen && (

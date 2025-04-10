@@ -68,10 +68,25 @@ export const adminApi = {
   },
 
   // Obter todos os produtos
-  getProducts: async () => {
-    const headers = getAuthHeaders(); // Cabeçalhos com token
-    const response = await api.get('/products', { headers });
-    return response.data; // Retorna todos os produtos
+  getProductsByPage: async (categoryId: number | null, page = 1, limit = 12) => {
+    const url = categoryId
+      ? `/products/category/${categoryId}?page=${page}&limit=${limit}`
+      : `/products?page=${page}&limit=${limit}`;
+  
+    const headers = getAuthHeaders();
+    const response = await api.get(url, { headers });
+    return response.data;
+  },
+
+  searchProducts: async (search: string, page = 1, limit?: number) => {
+    let url = `/products/search?search=${encodeURIComponent(search)}`;
+    if (limit && limit > 0) {
+      url += `&page=${page}&limit=${limit}`;
+    }
+  
+    const headers = getAuthHeaders();
+    const response = await api.get(url, { headers });
+    return response.data;
   },
 
   // Atualizar um produto existente
