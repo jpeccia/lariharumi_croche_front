@@ -111,13 +111,6 @@ export function ProductManagement({ product }: ProductProps) {
     loadCategories();
   }, []);
   
-  useEffect(() => {
-    if (!isSearching) {
-      fetchProducts();
-    }
-  }, [isSearching]);
-  
-  
 
   useEffect(() => {
     if (editingProduct) {
@@ -133,7 +126,21 @@ export function ProductManagement({ product }: ProductProps) {
   const limit = 12;
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-
+  
+  useEffect(() => {
+    if (!debouncedSearchTerm) {
+      fetchProducts();
+    }
+  }, [page]);
+  
+  useEffect(() => {
+    // Carrega a primeira página quando a busca termina
+    if (!debouncedSearchTerm) {
+      setPage(1);
+      setProducts([]);
+      fetchProducts();
+    }
+  }, [debouncedSearchTerm]);
   const fetchProducts = async () => {
     if (isLoading) return;
   
