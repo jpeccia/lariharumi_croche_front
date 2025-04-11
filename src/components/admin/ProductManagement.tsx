@@ -367,13 +367,13 @@ export function ProductManagement({ product }: ProductProps) {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nome</label>
                 <input
-                type="text"
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="input"
+                  type="text"
+                  placeholder="Nome do produto"
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                  required
                 />
-
               </div>
 
               <div>
