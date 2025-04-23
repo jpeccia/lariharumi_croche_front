@@ -122,7 +122,6 @@ function Catalog() {
                   key={category.ID}
                   category={category}
                   onClick={() => {
-                    console.log('Categoria selecionada:', category.ID); // Verifica se o ID está correto
                     setSelectedCategory(category.ID);
                   }}
                 />
