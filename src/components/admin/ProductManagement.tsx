@@ -5,6 +5,8 @@ import { Product } from '../../types/product';
 import { UploadProductImage } from './UploadProductImage';
 import { showProductSuccess, showError } from '../../utils/toast';
 import { useDebounce } from 'use-debounce';
+import { productSchema, ProductFormData } from '../../schemas/validationSchemas';
+import { useAnalytics } from '../../services/analytics';
 
 interface Category {
   ID: number;

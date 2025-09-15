@@ -1,12 +1,13 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { authApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { showError } from '../../utils/toast';
+import { loginSchema, LoginFormData } from '../../schemas/validationSchemas';
+import { useAnalytics } from '../../services/analytics';
 
 interface JwtPayload {
   role: string;
@@ -15,28 +16,19 @@ interface JwtPayload {
   iss: string;
 }
 
-const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
-});
-
-interface LoginData {
-  email: string;
-  password: string;
-}
-
 export function LoginForm() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const { trackConversion, trackError } = useAnalytics();
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginData>({
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginData) => {
+  const onSubmit = async (data: LoginFormData) => {
     try {
       const response = await authApi.login(data.email, data.password);
   
@@ -56,6 +48,9 @@ export function LoginForm() {
       // Armazene os dados no Zustand
       setAuth(response.user, token, isAdmin);
   
+      // Rastrear conversão de login bem-sucedido
+      trackConversion('login_success', undefined, { isAdmin });
+      
       if (isAdmin) {
         navigate('/admin');
       } else {
@@ -64,6 +59,9 @@ export function LoginForm() {
     } catch (error) {
       console.error('Login failed:', error);
       showError('Erro de login, verifique suas credenciais.');
+      
+      // Rastrear erro de login
+      trackError(error as Error);
     }
   };
   

@@ -3,6 +3,8 @@ import { Package, Plus, Edit, Trash } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { UploadCategoryImage } from './UploadCategoryImage';
 import { showError } from '../../utils/toast';
+import { categorySchema, CategoryFormData } from '../../schemas/validationSchemas';
+import { useAnalytics } from '../../services/analytics';
 
 interface Category {
   ID: number;

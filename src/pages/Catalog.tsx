@@ -8,6 +8,10 @@ import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 import { preloadImages } from '../hooks/useImageCache';
 import { showCatalogError, showCategoryLoadError, showProductLoadError } from '../utils/toast';
 import { Category, Product } from '../types/product';
+import { useMobileOptimization } from '../hooks/useMobileOptimization';
+import { usePerformanceOptimization } from '../hooks/usePerformanceOptimization';
+import { useAnalytics } from '../services/analytics';
+import { MobileOptimizedLoading } from '../components/MobileOptimizedLoading';
 
 function Catalog() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -16,6 +20,11 @@ function Catalog() {
   const viewProductCatalogRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  
+  // Hooks de otimização
+  const { deviceInfo, getOptimalGridColumns, getAnimationConfig } = useMobileOptimization();
+  const { startRenderMeasurement, endRenderMeasurement, createThrottledCallback } = usePerformanceOptimization();
+  const { trackPageView, trackClick } = useAnalytics();
 
 
   const fetchCategories = async () => {
@@ -76,8 +85,11 @@ function Catalog() {
 
   // Carregar categorias e produtos quando o componente for montado
   useEffect(() => {
-    fetchCategories(); 
-  }, []);
+    startRenderMeasurement();
+    fetchCategories();
+    trackPageView('catalog');
+    endRenderMeasurement('Catalog');
+  }, [startRenderMeasurement, endRenderMeasurement, trackPageView]);
 
   useEffect(() => {
     setHasMore(true); // Reinicia o controle sempre que a categoria muda
@@ -85,6 +97,22 @@ function Catalog() {
   }, [selectedCategory]);
   
   
+
+  // Callbacks otimizados
+  const handleCategoryClick = createThrottledCallback((categoryId: number) => {
+    setSelectedCategory(categoryId);
+    trackClick('category', 'catalog');
+  }, 300);
+
+  const handleShowAllProducts = createThrottledCallback(() => {
+    setSelectedCategory(null);
+    trackClick('show_all_products', 'catalog');
+  }, 300);
+
+  const scrollToProducts = createThrottledCallback(() => {
+    viewProductCatalogRef.current?.scrollIntoView({ behavior: 'smooth' });
+    trackClick('scroll_to_products', 'catalog');
+  }, 300);
 
   useEffect(() => {
     if (selectedCategory !== null && viewProductCatalogRef.current) {
@@ -131,12 +159,12 @@ function Catalog() {
 
         <div className="flex items-center justify-between mb-8">
           <div className="flex-grow">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={`grid gap-6 ${getOptimalGridColumns(3) === 1 ? 'grid-cols-1' : getOptimalGridColumns(3) === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
               {categories.map((category) => (
                 <CategoryCard
                   key={category.ID}
                   category={category}
-                  onClick={() => setSelectedCategory(category.ID)}
+                  onClick={() => handleCategoryClick(category.ID)}
                 />
               ))}
             </div>
@@ -152,14 +180,14 @@ function Catalog() {
               : 'Todas as Peças'}
           </h2>
           <FloatingHearts />
-          {selectedCategory && (
-            <button
-              onClick={() => setSelectedCategory(null)} // Limpa a categoria e exibe todos os produtos
-              className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl  font-medium hover:scale-105 transition-transform"
-            >
-              Ver todas as categorias
-            </button>
-          )}
+           {selectedCategory && (
+             <button
+               onClick={handleShowAllProducts}
+               className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl font-medium hover:scale-105 transition-transform"
+             >
+               Ver todas as categorias
+             </button>
+           )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" ref={viewProductCatalogRef}>
@@ -167,10 +195,7 @@ function Catalog() {
             if (isLoading && products.length === 0) {
               return (
                 <div className="col-span-full flex justify-center items-center py-12">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                    <p className="text-purple-600 font-kawaii text-xl">Carregando produtos...</p>
-                  </div>
+                  <MobileOptimizedLoading size="medium" text="Carregando produtos..." />
                 </div>
               );
             }
@@ -196,7 +221,7 @@ function Catalog() {
           })()}
         <div ref={loadMoreRef} className="col-span-full flex justify-center mt-8">
           {isLoading && (
-            <span className="text-purple-600 font-kawaii text-xl">Carregando mais peças...</span>
+            <MobileOptimizedLoading size="small" text="Carregando mais peças..." />
           )}
         </div>
         </div>
