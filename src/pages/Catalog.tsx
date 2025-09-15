@@ -6,7 +6,6 @@ import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 import { preloadImages } from '../hooks/useImageCache';
-import { Filter } from 'lucide-react';
 import { showCatalogError, showCategoryLoadError, showProductLoadError } from '../utils/toast';
 
 function Catalog() {
@@ -16,7 +15,6 @@ function Catalog() {
   const viewProductCatalogRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
 
 
   const fetchCategories = async () => {
@@ -129,49 +127,6 @@ function Catalog() {
           - Categorias -
         </h2>
         
-        {/* Filtros */}
-        <div className="mb-8">
-          <div className="flex justify-center">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
-            >
-              <Filter size={20} />
-              Filtros por Categoria
-            </button>
-          </div>
-          
-          {/* Filtros */}
-          {showFilters && (
-            <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
-              <div className="flex flex-wrap gap-2 justify-center">
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className={`px-4 py-2 rounded-full transition-colors ${
-                    !selectedCategory
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Todas as Peças
-                </button>
-                {categories.map((category) => (
-                  <button
-                    key={category.ID}
-                    onClick={() => setSelectedCategory(category.ID)}
-                    className={`px-4 py-2 rounded-full transition-colors ${
-                      selectedCategory === category.ID
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {category.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
 
         <div className="flex items-center justify-between mb-8">
           <div className="flex-grow">
