@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { UploadCategoryImage } from './UploadCategoryImage';
-import { toast } from 'react-toastify';
+import { showCategorySuccess, showError } from '../../utils/toast';
 
 interface Category {
   ID: number;
@@ -85,7 +85,7 @@ export function CategoryManagement() {
       setCategories(data);
     } catch (error) {
       console.error('Falha ao carregar categorias:', error);
-      toast.error('Falha ao carregar as categorias.');
+      showError('Falha ao carregar as categorias.');
     }
   };
 
@@ -108,7 +108,7 @@ export function CategoryManagement() {
       });
     } catch (error) {
       console.error('Falha ao criar a categoria:', error);
-      toast.error('Falha ao criar a categoria. Verifique os dados.');
+      showError('Falha ao criar a categoria. Verifique os dados.');
     }
     window.location.reload();
   };
@@ -126,9 +126,9 @@ export function CategoryManagement() {
   const handleUpdateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!editingCategory || !editingCategory.ID) {
+    if (!editingCategory?.ID) {
       console.error('Categoria não selecionada ou id inválido');
-      toast.error('Categoria não selecionada ou id inválido');
+      showError('Categoria não selecionada ou id inválido');
       return;
     }
 
@@ -152,7 +152,7 @@ export function CategoryManagement() {
       });
     } catch (error) {
       console.error('Falha ao atualizar a categoria:', error);
-      toast.error('Falha ao atualizar a categoria. Verifique os dados.');
+      showError('Falha ao atualizar a categoria. Verifique os dados.');
     }
     window.location.reload();
   };
@@ -163,7 +163,7 @@ export function CategoryManagement() {
       loadCategories();
     } catch (error) {
       console.error('Falha ao excluir a categoria:', error);
-      toast.error('Falha ao excluir a categoria. Tente novamente.');
+      showError('Falha ao excluir a categoria. Tente novamente.');
     }
   };
 

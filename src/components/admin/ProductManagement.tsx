@@ -3,7 +3,7 @@ import { Package, Plus, Edit, Trash, X, ChevronLeft, ChevronRight, ChevronDown, 
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
 import { UploadProductImage } from './UploadProductImage';
-import { toast } from 'react-toastify';
+import { showProductSuccess, showError } from '../../utils/toast';
 import { useDebounce } from 'use-debounce';
 
 interface Category {
@@ -197,7 +197,7 @@ export function ProductManagement({ product }: ProductProps) {
     console.log(newProduct); // Adicione isto para depurar o valor de newProduct
     
     if (!newProduct.name || !newProduct.description || !newProduct.priceRange || !newProduct.categoryId ) {
-      toast.error('Por favor, preencha todos os campos.');
+      showError('Por favor, preencha todos os campos.');
       return;
     }
   
@@ -214,7 +214,7 @@ export function ProductManagement({ product }: ProductProps) {
       resetForm();
     } catch (error) {
       console.error('Falha ao criar o produto:', error);
-      toast.error('Falha ao criar o produto.');
+      showError('Falha ao criar o produto.');
     }
   };
 
@@ -265,7 +265,7 @@ export function ProductManagement({ product }: ProductProps) {
       resetForm();
     } catch (error) {
       console.error('Falha ao atualizar o produto:', error);
-      toast.error('Falha ao atualizar o produto.');
+      showError('Falha ao atualizar o produto.');
     }
   };
   

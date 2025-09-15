@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import api from '../services/api';
+import api, { adminApi } from '../services/api';
 import CategoryCard from '../components/catalog/CategoryCard';
 import ProductCard from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
@@ -44,12 +44,7 @@ function Catalog() {
       setIsLoading(true);
   
       const currentPage = reset ? 1 : page;
-      const url = categoryId
-        ? `/products/category/${categoryId}?page=${currentPage}&limit=${limit}`
-        : `/products?page=${currentPage}&limit=${limit}`;
-      
-      const response = await api.get(url);
-      const productsFetched = response.data;
+      const productsFetched = await adminApi.getProductsByPage(categoryId, currentPage, limit);
       const sorted = productsFetched.sort((a: any, b: any) => a.name.localeCompare(b.name));
   
       if (reset) {
