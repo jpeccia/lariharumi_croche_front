@@ -12,35 +12,31 @@ import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { usePerformanceOptimization } from '../hooks/usePerformanceOptimization';
 import { useAnalytics } from '../services/analytics';
 import { LoadingSpinner, CardSkeleton } from '../components/shared/LoadingStates';
+import { useCategoriesCache } from '../hooks/useApiCache';
 
 function Catalog() {
-  const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const viewProductCatalogRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   
   // Hooks de otimização
   const { deviceInfo, getOptimalGridColumns, getAnimationConfig } = useMobileOptimization();
   const { startRenderMeasurement, endRenderMeasurement, createThrottledCallback } = usePerformanceOptimization();
   const { trackPageView, trackClick } = useAnalytics();
-
-
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('/categories');
-      
-      const sortedCategories = response.data.sort((a: Category, b: Category) =>
-        a.name.localeCompare(b.name)
-      );
   
-      setCategories(sortedCategories);
-    } catch (error) {
-      console.error('Erro ao buscar categorias:', error);
-      showCategoryLoadError();
+  // Cache de categorias
+  const { data: categories, loading: categoriesLoading, error: categoriesError } = useCategoriesCache();
+
+
+  // Monitorar quando categorias são carregadas
+  useEffect(() => {
+    if (categories && !categoriesLoading) {
+      setCategoriesLoaded(true);
     }
-  };
+  }, [categories, categoriesLoading]);
 
   const [page, setPage] = useState(1);
   const limit = 12;
@@ -83,17 +79,27 @@ function Catalog() {
   
   
 
-  // Carregar categorias e produtos quando o componente for montado
+  // Carregar produtos apenas após categorias estarem carregadas
   useEffect(() => {
     startRenderMeasurement();
-    fetchCategories();
     trackPageView('catalog');
     endRenderMeasurement('Catalog');
   }, [startRenderMeasurement, endRenderMeasurement, trackPageView]);
 
+  // Carregar produtos iniciais após categorias estarem prontas
   useEffect(() => {
-    setHasMore(true); // Reinicia o controle sempre que a categoria muda
-    fetchProducts(selectedCategory, true);
+    if (categoriesLoaded && !isLoading) {
+      setHasMore(true);
+      fetchProducts(selectedCategory, true);
+    }
+  }, [categoriesLoaded]);
+
+  // Carregar produtos quando categoria muda (apenas se categorias já carregaram)
+  useEffect(() => {
+    if (categoriesLoaded) {
+      setHasMore(true);
+      fetchProducts(selectedCategory, true);
+    }
   }, [selectedCategory]);
   
   
@@ -159,15 +165,33 @@ function Catalog() {
 
         <div className="flex items-center justify-between mb-8">
           <div className="flex-grow">
-            <div className={`grid gap-6 ${getOptimalGridColumns(3) === 1 ? 'grid-cols-1' : getOptimalGridColumns(3) === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
-              {categories.map((category) => (
-                <CategoryCard
-                  key={category.ID}
-                  category={category}
-                  onClick={() => handleCategoryClick(category.ID)}
-                />
-              ))}
-            </div>
+            {categoriesLoading ? (
+              <div className={`grid gap-6 ${getOptimalGridColumns(3) === 1 ? 'grid-cols-1' : getOptimalGridColumns(3) === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <CardSkeleton key={index} />
+                ))}
+              </div>
+            ) : categoriesError ? (
+              <div className="text-center py-8">
+                <p className="text-red-600 mb-4">Erro ao carregar categorias</p>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            ) : (
+              <div className={`grid gap-6 ${getOptimalGridColumns(3) === 1 ? 'grid-cols-1' : getOptimalGridColumns(3) === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+                {categories?.map((category) => (
+                  <CategoryCard
+                    key={category.ID}
+                    category={category}
+                    onClick={() => handleCategoryClick(category.ID)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -192,6 +216,17 @@ function Catalog() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" ref={viewProductCatalogRef}>
           {(() => {
+            // Não mostrar produtos até categorias carregarem
+            if (!categoriesLoaded) {
+              return (
+                <div className="col-span-full text-center py-12">
+                  <div className="text-gray-500">
+                    <LoadingSpinner size="medium" text="Carregando categorias..." />
+                  </div>
+                </div>
+              );
+            }
+            
             if (isLoading && products.length === 0) {
               return (
                 <div className="col-span-full">
