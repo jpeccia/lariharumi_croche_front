@@ -1,8 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { Package, Upload, Image as ImageIcon, X, Plus, Sparkles, Heart } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Package, Upload, Image as ImageIcon, X, Plus, Sparkles, Heart, Edit3 } from 'lucide-react';
 import { Product } from '../../types/product';
 import { EnhancedImageUpload } from './EnhancedImageUpload';
 import { ImageEditor } from './ImageEditor';
+import { ProductImageManager } from './ProductImageManager';
 
 interface Category {
   ID: number;
@@ -39,6 +40,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     categoryId: product?.categoryId || categories[0]?.ID || 1,
     images: []
   });
+  
+  const [isEditing, setIsEditing] = useState(!!product);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
@@ -123,11 +126,21 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 <Package className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">
-                  {product ? 'Editar Produto' : 'Novo Produto'}
+                <h2 className="text-2xl font-bold flex items-center">
+                  {isEditing ? (
+                    <>
+                      <Edit3 className="h-6 w-6 mr-2" />
+                      Editar Produto
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-6 w-6 mr-2" />
+                      Novo Produto
+                    </>
+                  )}
                 </h2>
                 <p className="text-purple-100">
-                  {product ? 'Atualize as informações do produto' : 'Adicione um novo produto ao catálogo'}
+                  {isEditing ? 'Atualize as informações e gerencie as imagens do produto' : 'Adicione um novo produto ao catálogo'}
                 </p>
               </div>
             </div>
@@ -267,17 +280,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
             {/* Upload de Imagens */}
             <div className="space-y-6">
-              <div className="bg-gradient-to-br from-pink-50 to-purple-50 p-4 rounded-xl border border-pink-100">
-                <h3 className="text-lg font-semibold text-pink-800 mb-4 flex items-center">
-                  <ImageIcon className="h-5 w-5 mr-2" />
-                  Imagens do Produto
-                </h3>
-                
-                <EnhancedImageUpload
-                  onImagesChange={(images) => handleInputChange('images', images)}
-                  maxImages={5}
+              {isEditing && product ? (
+                <ProductImageManager
+                  productId={product.ID}
+                  onImagesChange={(images) => {
+                    // Atualizar quando imagens mudarem
+                    console.log('Imagens atualizadas:', images);
+                  }}
                 />
-              </div>
+              ) : (
+                <div className="bg-gradient-to-br from-pink-50 to-purple-50 p-4 rounded-xl border border-pink-100">
+                  <h3 className="text-lg font-semibold text-pink-800 mb-4 flex items-center">
+                    <ImageIcon className="h-5 w-5 mr-2" />
+                    Imagens do Produto
+                  </h3>
+                  
+                  <EnhancedImageUpload
+                    onImagesChange={(images) => handleInputChange('images', images)}
+                    maxImages={5}
+                  />
+                </div>
+              )}
 
               {/* Dicas */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">

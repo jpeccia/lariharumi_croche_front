@@ -260,6 +260,7 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
       showProductSuccess('criado');
       fetchProducts();
       setIsFormOpen(false);
+      setEditingProduct(null);
       resetForm();
       refreshCategories();
       onDataChange?.();
@@ -271,56 +272,41 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
     }
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setNewProduct({
-      name: product.name,
-      description: product.description,
-      images: Array.isArray(product.images) ? product.images : [], // Garante que seja um array
-      priceRange: product.priceRange,
-      categoryId: product.categoryId,
-    });
-    setIsCreating(true);
-    if (editFormRef.current) {
-      editFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
-  const handleUpdateProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdateProduct = async (formData: any) => {
     if (!editingProduct?.ID) {
       showError('Produto não selecionado ou ID inválido');
       return;
     }
-  
+
     try {
-      const updatedProduct = {
-        name: newProduct.name,
-        description: newProduct.description,
-        price: newProduct.priceRange,  
-        categoryId: newProduct.categoryId,
-      };
-  
-    
-      // Atualiza os dados do produto sem a imagem
-      await adminApi.updateProduct(editingProduct.ID, updatedProduct);
-  
-      // Se houver imagens, fazer o upload delas
-      if (newProduct.images.length > 0) {
-        const imageFiles = newProduct.images.map((imageUrl) => new File([imageUrl], "image.jpg"));
-        await adminApi.uploadProductImages(imageFiles, editingProduct.ID);
-      }
-  
+      setIsSubmitting(true);
+      
+      await adminApi.updateProduct(editingProduct.ID, {
+        name: formData.name,
+        description: formData.description,
+        price: formData.priceRange,
+        categoryId: formData.categoryId,
+      });
+
+      showProductSuccess('atualizado');
       fetchProducts();
+      setIsFormOpen(false);
       setEditingProduct(null);
-      setIsCreating(false);
-      resetForm();
-      onDataChange?.(); // Atualizar estatísticas do dashboard
+      refreshCategories();
+      onDataChange?.();
     } catch (error) {
       console.error('Falha ao atualizar o produto:', error);
       showError('Falha ao atualizar o produto.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsFormOpen(true);
+  };
+
   
   const handleDeleteProduct = async (productId: number) => {
     try {
@@ -612,9 +598,13 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
       {/* Product Form Modal */}
       {isFormOpen && (
         <ProductForm
+          product={editingProduct}
           categories={categories || []}
-          onSubmit={handleCreateProduct}
-          onCancel={() => setIsFormOpen(false)}
+          onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct}
+          onCancel={() => {
+            setIsFormOpen(false);
+            setEditingProduct(null);
+          }}
           isLoading={isSubmitting}
         />
       )}

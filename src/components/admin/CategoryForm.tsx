@@ -18,7 +18,6 @@ interface CategoryFormProps {
 
 interface CategoryFormData {
   name: string;
-  description: string;
   image: string;
 }
 
@@ -30,7 +29,6 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<CategoryFormData>({
     name: category?.name || '',
-    description: category?.description || '',
     image: category?.image || ''
   });
   
@@ -43,12 +41,6 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
       newErrors.name = 'Nome da categoria é obrigatório';
     } else if (formData.name.length < 2) {
       newErrors.name = 'Nome deve ter pelo menos 2 caracteres';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'Descrição é obrigatória';
-    } else if (formData.description.length < 5) {
-      newErrors.description = 'Descrição deve ter pelo menos 5 caracteres';
     }
 
     setErrors(newErrors);
@@ -146,30 +138,6 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
                   )}
                 </div>
 
-                {/* Descrição */}
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                    Descrição *
-                  </label>
-                  <textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    rows={3}
-                    className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none ${
-                      errors.description 
-                        ? 'border-red-300 bg-red-50' 
-                        : 'border-gray-200 focus:border-pink-500'
-                    }`}
-                    placeholder="Descreva o tipo de produtos que pertencem a esta categoria..."
-                  />
-                  {errors.description && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                      <Heart className="h-4 w-4 mr-1" />
-                      {errors.description}
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
 
@@ -209,10 +177,10 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
               </h4>
               <ul className="text-sm text-blue-700 space-y-1">
                 <li>🏷️ Use nomes claros e descritivos</li>
-                <li>📝 Descreva o tipo de produtos da categoria</li>
                 <li>🖼️ Escolha uma imagem representativa</li>
                 <li>🎨 Mantenha consistência visual</li>
                 <li>📂 Organize produtos de forma lógica</li>
+                <li>✨ Nomes simples facilitam a navegação</li>
               </ul>
             </div>
           </div>
