@@ -7,6 +7,7 @@ import { showProductSuccess, showError } from '../../utils/toast';
 import { useDebounce } from 'use-debounce';
 import { productSchema, ProductFormData } from '../../schemas/validationSchemas';
 import { useAnalytics } from '../../services/analytics';
+import { ImageEditor } from './ImageEditor';
 
 interface Category {
   ID: number;
@@ -81,7 +82,19 @@ function ProductCard({ product }: ProductCardProps) {
     alt={product.name}
     className="w-full h-full object-cover" 
   />
-)}
+        )}
+
+        {/* Image Editor Modal */}
+        <ImageEditor
+          isOpen={isImageEditorOpen}
+          onClose={() => {
+            setIsImageEditorOpen(false);
+            setImageToEdit(null);
+          }}
+          onSave={handleImageEditorSave}
+          initialImage={imageToEdit}
+          title="Editor de Imagem do Produto"
+        />
       </div>
     </div>
   );
@@ -103,6 +116,8 @@ export function ProductManagement({ product }: ProductProps) {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [productImageUrl, setProductImageUrl] = useState<string>('');
   const [isSectionVisible, setIsSectionVisible] = useState(true); // Novo estado para controlar a visibilidade da seção
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const editFormRef = useRef<HTMLFormElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
@@ -276,6 +291,25 @@ export function ProductManagement({ product }: ProductProps) {
     } catch (error) {
       console.error('Falha ao excluir o produto:', error);
       showError('Falha ao excluir o produto.');
+    }
+  };
+
+  const handleImageEdit = (file: File) => {
+    setImageToEdit(file);
+    setIsImageEditorOpen(true);
+  };
+
+  const handleImageEditorSave = async (editedImage: File) => {
+    if (!editingProduct) return;
+    
+    try {
+      // Upload da imagem editada
+      await adminApi.uploadProductImages([editedImage], editingProduct.ID);
+      showProductSuccess('imagem editada');
+      fetchProducts();
+    } catch (error) {
+      console.error('Erro ao salvar imagem editada:', error);
+      showError('Erro ao salvar imagem editada.');
     }
   };
 
@@ -523,6 +557,18 @@ export function ProductManagement({ product }: ProductProps) {
           )}
         </>
       )}
+
+      {/* Image Editor Modal */}
+      <ImageEditor
+        isOpen={isImageEditorOpen}
+        onClose={() => {
+          setIsImageEditorOpen(false);
+          setImageToEdit(null);
+        }}
+        onSave={handleImageEditorSave}
+        initialImage={imageToEdit}
+        title="Editor de Imagem do Produto"
+      />
     </div>
   );
 }

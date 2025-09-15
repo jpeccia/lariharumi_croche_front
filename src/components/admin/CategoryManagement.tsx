@@ -5,6 +5,7 @@ import { UploadCategoryImage } from './UploadCategoryImage';
 import { showError } from '../../utils/toast';
 import { categorySchema, CategoryFormData } from '../../schemas/validationSchemas';
 import { useAnalytics } from '../../services/analytics';
+import { ImageEditor } from './ImageEditor';
 
 interface Category {
   ID: number;
