@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { authApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate } from 'react-router-dom';
-  import {jwtDecode} from 'jwt-decode'; // Corrigido para usar default import
+import { jwtDecode } from 'jwt-decode';
+import { showError } from '../../utils/toast';
 
 interface JwtPayload {
   role: string;
@@ -35,25 +36,19 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LoginData) => {
     try {
       const response = await authApi.login(data.email, data.password);
   
-      // Imprima a resposta completa da API
-      console.log('API Response:', response);
-      
       // Aqui, estamos assumindo que o token está diretamente na resposta
       const token = response.token; 
-  
+
       if (!token || typeof token !== 'string') {
         throw new Error('Token inválido');
       }
-  
-      console.log('Received token:', token);
-  
+
       // Decodifique o token JWT
-      const decodedToken = jwtDecode<JwtPayload>(token); // Tipagem do payload
-      console.log('Decoded token:', decodedToken);
+      const decodedToken = jwtDecode<JwtPayload>(token);
   
       // Verifique o papel do usuário
       const isAdmin = decodedToken.role === 'ADMIN';
@@ -68,7 +63,7 @@ export function LoginForm() {
       }
     } catch (error) {
       console.error('Login failed:', error);
-      alert('Erro de login, verifique suas credenciais.');
+      showError('Erro de login, verifique suas credenciais.');
     }
   };
   
@@ -76,8 +71,9 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700">Email</label>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
         <input
+          id="email"
           type="email"
           {...register('email')}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
@@ -88,8 +84,9 @@ export function LoginForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Senha</label>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Senha</label>
         <input
+          id="password"
           type="password"
           {...register('password')}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"

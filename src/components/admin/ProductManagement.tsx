@@ -194,7 +194,6 @@ export function ProductManagement({ product }: ProductProps) {
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
   
-    console.log(newProduct); // Adicione isto para depurar o valor de newProduct
     
     if (!newProduct.name || !newProduct.description || !newProduct.priceRange || !newProduct.categoryId ) {
       showError('Por favor, preencha todos os campos.');
@@ -236,7 +235,7 @@ export function ProductManagement({ product }: ProductProps) {
   const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct?.ID) {
-      alert('Produto não selecionado ou ID inválido');
+      showError('Produto não selecionado ou ID inválido');
       return;
     }
   
@@ -248,7 +247,6 @@ export function ProductManagement({ product }: ProductProps) {
         categoryId: newProduct.categoryId,
       };
   
-      console.log("Dados para atualização:", updatedProduct);
     
       // Atualiza os dados do produto sem a imagem
       await adminApi.updateProduct(editingProduct.ID, updatedProduct);
@@ -275,7 +273,7 @@ export function ProductManagement({ product }: ProductProps) {
       fetchProducts();
     } catch (error) {
       console.error('Falha ao excluir o produto:', error);
-      alert('Falha ao excluir o produto.');
+      showError('Falha ao excluir o produto.');
     }
   };
 

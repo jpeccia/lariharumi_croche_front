@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { UploadCategoryImage } from './UploadCategoryImage';
-import { showCategorySuccess, showError } from '../../utils/toast';
+import { showError } from '../../utils/toast';
 
 interface Category {
   ID: number;
@@ -198,23 +198,27 @@ export function CategoryManagement() {
       {(isCreating || editingCategory) && (
         <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory} className="space-y-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Nome</label>
+            <label htmlFor="category-name" className="block text-sm font-medium text-gray-700">Nome</label>
             <input
+              id="category-name"
               type="text"
               value={newCategory.name}
               onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               required
+              aria-describedby="category-name-help"
             />
           </div>
 
           {editingCategory && (
             <div>
-              <label className="block text-sm font-medium text-gray-700">Imagem</label>
+              <label htmlFor="category-image-btn" className="block text-sm font-medium text-gray-700">Imagem</label>
               <button
+                id="category-image-btn"
                 type="button"
                 onClick={() => setIsImageModalOpen(true)}
                 className="mt-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                aria-describedby="category-image-help"
               >
                 Selecionar Imagem
               </button>

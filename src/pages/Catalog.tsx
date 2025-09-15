@@ -7,10 +7,11 @@ import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHear
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 import { preloadImages } from '../hooks/useImageCache';
 import { showCatalogError, showCategoryLoadError, showProductLoadError } from '../utils/toast';
+import { Category, Product } from '../types/product';
 
 function Catalog() {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const viewProductCatalogRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +22,7 @@ function Catalog() {
     try {
       const response = await api.get('/categories');
       
-      const sortedCategories = response.data.sort((a: { name: string }, b: { name: string }) =>
+      const sortedCategories = response.data.sort((a: Category, b: Category) =>
         a.name.localeCompare(b.name)
       );
   
@@ -43,7 +44,7 @@ function Catalog() {
   
       const currentPage = reset ? 1 : page;
       const productsFetched = await adminApi.getProductsByPage(categoryId, currentPage, limit);
-      const sorted = productsFetched.sort((a: any, b: any) => a.name.localeCompare(b.name));
+      const sorted = productsFetched.sort((a: Product, b: Product) => a.name.localeCompare(b.name));
   
       if (reset) {
         setProducts(sorted);
@@ -51,7 +52,7 @@ function Catalog() {
         setHasMore(productsFetched.length === limit);
         
         // Pré-carrega imagens dos produtos da primeira página
-        const productIds = sorted.map((product: any) => product.ID);
+        const productIds = sorted.map((product: Product) => product.ID);
         preloadImages(productIds);
       } else {
         setProducts((prev) => [...prev, ...sorted]);
@@ -59,7 +60,7 @@ function Catalog() {
         setHasMore(productsFetched.length === limit);
         
         // Pré-carrega imagens dos novos produtos
-        const productIds = sorted.map((product: any) => product.ID);
+        const productIds = sorted.map((product: Product) => product.ID);
         preloadImages(productIds);
       }
     } catch (error) {
