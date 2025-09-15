@@ -6,6 +6,8 @@ import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 import { preloadImages } from '../hooks/useImageCache';
+import { Search, Filter } from 'lucide-react';
+import { useDebounce } from 'use-debounce';
 
 function Catalog() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -14,6 +16,9 @@ function Catalog() {
   const viewProductCatalogRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+  const [showFilters, setShowFilters] = useState(false);
 
 
   const fetchCategories = async () => {
@@ -33,14 +38,21 @@ function Catalog() {
   const [page, setPage] = useState(1);
   const limit = 12;
   
-  const fetchProducts = useCallback(async (categoryId: number | null, reset = false) => {
+  const fetchProducts = useCallback(async (categoryId: number | null, reset = false, searchQuery?: string) => {
     if (isLoading || (!hasMore && !reset)) return;
   
     try {
       setIsLoading(true);
   
       const currentPage = reset ? 1 : page;
-      const productsFetched = await adminApi.getProductsByPage(categoryId, currentPage, limit);
+      let productsFetched;
+      
+      if (searchQuery?.trim()) {
+        productsFetched = await adminApi.searchProducts(searchQuery, currentPage, limit);
+      } else {
+        productsFetched = await adminApi.getProductsByPage(categoryId, currentPage, limit);
+      }
+      
       const sorted = productsFetched.sort((a: any, b: any) => a.name.localeCompare(b.name));
   
       if (reset) {
@@ -79,6 +91,17 @@ function Catalog() {
     setHasMore(true); // Reinicia o controle sempre que a categoria muda
     fetchProducts(selectedCategory, true);
   }, [selectedCategory]);
+
+  // Efeito para busca
+  useEffect(() => {
+    if (debouncedSearchTerm) {
+      setHasMore(true);
+      setSelectedCategory(null); // Limpa categoria quando busca
+      fetchProducts(null, true, debouncedSearchTerm);
+    } else if (!debouncedSearchTerm && !selectedCategory) {
+      fetchProducts(null, true);
+    }
+  }, [debouncedSearchTerm]);
   
   
 
@@ -120,10 +143,70 @@ function Catalog() {
       </div>
 
       <div className="mb-12">
-
         <h2 className="font-handwritten text-6xl text-purple-800 mb-8 text-center">
           - Categorias -
         </h2>
+        
+        {/* Barra de busca */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Buscar produtos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
+            >
+              <Filter size={20} />
+              Filtros
+            </button>
+          </div>
+          
+          {/* Filtros */}
+          {showFilters && (
+            <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedCategory(null);
+                    setSearchTerm('');
+                  }}
+                  className={`px-4 py-2 rounded-full transition-colors ${
+                    !selectedCategory && !searchTerm
+                      ? 'bg-purple-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Todos
+                </button>
+                {categories.map((category) => (
+                  <button
+                    key={category.ID}
+                    onClick={() => {
+                      setSelectedCategory(category.ID);
+                      setSearchTerm('');
+                    }}
+                    className={`px-4 py-2 rounded-full transition-colors ${
+                      selectedCategory === category.ID
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center justify-between mb-8">
           <div className="flex-grow">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -133,6 +216,7 @@ function Catalog() {
                   category={category}
                   onClick={() => {
                     setSelectedCategory(category.ID);
+                    setSearchTerm('');
                   }}
                 />
               ))}
@@ -144,9 +228,11 @@ function Catalog() {
       <div>
         <div className="flex justify-between items-center mb-8">
           <h2 className="font-handwritten text-6xl text-purple-800 mb-8">
-            {selectedCategory
-              ? `${categories.find((c) => c.ID === selectedCategory)?.name}`
-              : 'Todas as Peças'}
+            {(() => {
+              if (searchTerm) return `Resultados para "${searchTerm}"`;
+              if (selectedCategory) return categories.find((c) => c.ID === selectedCategory)?.name;
+              return 'Todas as Peças';
+            })()}
           </h2>
           <FloatingHearts />
           {selectedCategory && (
@@ -160,17 +246,37 @@ function Catalog() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" ref={viewProductCatalogRef}>
-          {products.length === 0 ? (
-            <p>Carregando produtos...</p>
-          ) : (
-            products.map((product) => (
+          {(() => {
+            if (isLoading && products.length === 0) {
+              return (
+                <div className="col-span-full flex justify-center items-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                    <p className="text-purple-600 font-kawaii text-xl">Carregando produtos...</p>
+                  </div>
+                </div>
+              );
+            }
+            
+            if (products.length === 0) {
+              return (
+                <div className="col-span-full text-center py-12">
+                  <div className="text-gray-500">
+                    <p className="text-xl mb-2">Nenhum produto encontrado</p>
+                    <p className="text-sm">Tente ajustar os filtros ou buscar por outro termo</p>
+                  </div>
+                </div>
+              );
+            }
+            
+            return products.map((product) => (
               <ProductCard
                 key={product.ID}
                 product={product}
                 instagramUsername="larifazcroche"
               />
-            ))
-          )}
+            ));
+          })()}
         <div ref={loadMoreRef} className="col-span-full flex justify-center mt-8">
           {isLoading && (
             <span className="text-purple-600 font-kawaii text-xl">Carregando mais peças...</span>

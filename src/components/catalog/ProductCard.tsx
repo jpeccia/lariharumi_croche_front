@@ -83,7 +83,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
                   srcSet={`${imageUrls[currentImageIndex].replace(/\.(jpg|png)$/, '.webp')} 1x, ${imageUrls[currentImageIndex]} 1x`}
                   src={imageUrls[currentImageIndex]}
                   alt={product.name}
-                  className="w-full h-full object-fill" 
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
                 />
           <button
             onClick={handleNextImage}

@@ -1,3 +1,26 @@
+/* Estilos para react-toastify */
+@import 'react-toastify/dist/ReactToastify.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Melhorias para foco */
+:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}

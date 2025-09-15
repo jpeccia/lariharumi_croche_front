@@ -31,7 +31,7 @@ export default function Navbar() {
           <div
             className={`${
               isMenuOpen ? 'block' : 'hidden'
-            } lg:flex lg:space-x-8 space-y-4 lg:space-y-0 absolute top-16 left-0 w-full bg-white p-4 lg:static lg:w-auto lg:p-0 transition-all duration-300 ease-in-out max-h-screen overflow-auto`}
+            } lg:flex lg:space-x-8 space-y-4 lg:space-y-0 absolute top-16 left-0 w-full bg-white/95 backdrop-blur-sm shadow-lg lg:shadow-none p-4 lg:static lg:w-auto lg:p-0 transition-all duration-300 ease-in-out max-h-screen overflow-auto z-40`}
           >
             <Link
               to="/"

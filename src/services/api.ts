@@ -15,6 +15,25 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Interceptor para tratamento de erros
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expirado ou inválido
+      useAuthStore.getState().logout();
+      toast.error('Sessão expirada. Faça login novamente.');
+    } else if (error.response?.status >= 500) {
+      toast.error('Erro interno do servidor. Tente novamente mais tarde.');
+    } else if (error.response?.status >= 400) {
+      toast.error('Erro na requisição. Verifique os dados e tente novamente.');
+    } else if (!navigator.onLine) {
+      toast.error('Sem conexão com a internet. Verifique sua conexão.');
+    }
+    return Promise.reject(new Error(error.message || 'Erro na requisição'));
+  }
+);
+
 export const authApi = {
   login: async (email: string, password: string) => {
     const response = await api.post('/auth/login', { email, password });
@@ -146,7 +165,7 @@ uploadCategoryImage: async (
       headers, 
     });
 
-    if (response.data && response.data.imageUrl) {
+    if (response.data?.imageUrl) {
       onImageUploaded(response.data.imageUrl); // Chama a função com a URL da imagem
     } else {
       console.error('Resposta do servidor não contém a URL da imagem');
@@ -166,9 +185,11 @@ getProductImages: async (productId: number) => {
 
     if (response.data && Array.isArray(response.data)) {
       const baseUrl = env.VITE_API_BASE_URL;
-      const images = response.data.map((url: string) =>
-        url.startsWith("http") ? url : `${baseUrl}${url.startsWith("/") ? url : "/" + url}`
-      );
+      const images = response.data.map((url: string) => {
+        if (url.startsWith("http")) return url;
+        const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
+        return `${baseUrl}${normalizedUrl}`;
+      });
 
       return images;
     } else {
