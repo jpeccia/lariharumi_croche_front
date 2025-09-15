@@ -72,3 +72,30 @@ export const MobileOptimizedLoading: React.FC<MobileOptimizedLoadingProps> = ({
     </div>
   );
 };
+
+// Componente de skeleton para cards de produto
+export const CardSkeleton: React.FC = () => {
+  const { getAnimationConfig } = useMobileOptimization();
+  const { enableAnimations } = getAnimationConfig();
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 animate-pulse">
+      {/* Container da imagem */}
+      <div className="relative w-full aspect-[4/5] bg-gradient-to-br from-gray-200 to-gray-300">
+        <div className="absolute top-3 left-3 bg-gray-400 h-6 w-16 rounded-full"></div>
+        <div className="absolute top-3 right-3 bg-gray-400 h-8 w-8 rounded-full"></div>
+      </div>
+      
+      {/* Conteúdo do card */}
+      <div className="p-6">
+        <div className="mb-3">
+          <div className="h-6 bg-gray-300 rounded mb-2"></div>
+          <div className="h-4 bg-gray-300 rounded mb-1"></div>
+          <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+        </div>
+        
+        <div className="h-12 bg-gray-300 rounded-xl"></div>
+      </div>
+    </div>
+  );
+};
