@@ -110,8 +110,8 @@ export function useCategoriesCache() {
   );
 }
 
-export function useProductsCache(page = 1, limit = 12, categoryId: number | null = null, config?: PaginationConfig) {
-  const key = `products-${page}-${limit}-${categoryId || 'all'}-${config?.sortBy || 'default'}-${config?.sortOrder || 'asc'}`;
+export function useProductsCache(page = 1, limit = 10, categoryId: number | null = null, config?: PaginationConfig) {
+  const key = `products-${page}-${limit}-${categoryId || 'all'}`;
   
   return useApiCache<Product[] | PaginatedResponse<Product>>(
     key,
@@ -121,8 +121,8 @@ export function useProductsCache(page = 1, limit = 12, categoryId: number | null
 }
 
 // Hook específico para busca de produtos
-export function useProductsSearchCache(query: string, page = 1, limit = 12, config?: PaginationConfig) {
-  const key = `products-search-${query}-${page}-${limit}-${config?.sortBy || 'default'}-${config?.sortOrder || 'asc'}`;
+export function useProductsSearchCache(query: string, page = 1, limit = 10, config?: PaginationConfig) {
+  const key = `products-search-${query}-${page}-${limit}`;
   
   return useApiCache(
     key,

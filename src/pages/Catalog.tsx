@@ -61,9 +61,7 @@ function Catalog() {
   
       const config: PaginationConfig = {
         page: page,
-        limit: 12,
-        sortBy: 'name',
-        sortOrder: 'asc'
+        limit: 10,
       };
       
       let response;
@@ -80,7 +78,7 @@ function Catalog() {
       let paginationInfo: PaginatedResponse<Product>['pagination'] | null = null;
       
       if (response && typeof response === 'object' && 'data' in response && 'metadata' in response) {
-        // Nova estrutura com data e metadata
+        // Nova estrutura com data e metadata (lista geral paginada)
         const apiResponse = response as { data: Product[]; metadata: any };
         productsFetched = apiResponse.data;
         paginationInfo = {
@@ -97,16 +95,23 @@ function Catalog() {
         productsFetched = paginatedResponse.data;
         paginationInfo = paginatedResponse.pagination;
       } else if (Array.isArray(response)) {
-        // Estrutura antiga: array direto
+        // Array simples (produtos por categoria ou busca sem paginação)
         productsFetched = response as Product[];
-        paginationInfo = {
-          page: page,
-          limit: config.limit,
-          total: productsFetched.length,
-          totalPages: Math.ceil(productsFetched.length / config.limit),
-          hasNext: productsFetched.length === config.limit,
-          hasPrev: page > 1
-        };
+        
+        if (categoryId) {
+          // Produtos por categoria: sem paginação
+          paginationInfo = null;
+        } else {
+          // Busca ou lista geral: criar paginação
+          paginationInfo = {
+            page: page,
+            limit: config.limit,
+            total: productsFetched.length,
+            totalPages: Math.ceil(productsFetched.length / config.limit),
+            hasNext: productsFetched.length === config.limit,
+            hasPrev: page > 1
+          };
+        }
       } else {
         console.error('Resposta da API:', response);
         throw new Error('Formato de resposta inválido da API');

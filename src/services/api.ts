@@ -102,44 +102,33 @@ export const authApi = {
 // Funções públicas (sem autenticação)
 export const publicApi = {
   // Buscar produtos com paginação (público)
-  searchProducts: async (query: string, config: PaginationConfig = { page: 1, limit: 12 }): Promise<Product[] | SearchResponse<Product>> => {
+  searchProducts: async (query: string, config: PaginationConfig = { page: 1, limit: 10 }): Promise<Product[] | SearchResponse<Product>> => {
     const params = new URLSearchParams({
       search: query,
       page: config.page.toString(),
       limit: config.limit.toString(),
     });
 
-    if (config.sortBy) {
-      params.append('sortBy', config.sortBy);
-    }
-    if (config.sortOrder) {
-      params.append('sortOrder', config.sortOrder);
-    }
-
     const response = await publicApiInstance.get(`/products/search?${params.toString()}`);
     return response.data;
   },
 
   // Obter produtos por página (público)
-  getProductsByPage: async (categoryId: number | null, config: PaginationConfig = { page: 1, limit: 12 }): Promise<Product[] | PaginatedResponse<Product>> => {
-    const params = new URLSearchParams({
-      page: config.page.toString(),
-      limit: config.limit.toString(),
-    });
+  getProductsByPage: async (categoryId: number | null, config: PaginationConfig = { page: 1, limit: 10 }): Promise<Product[] | PaginatedResponse<Product>> => {
+    if (categoryId) {
+      // Produtos por categoria: array simples (sem paginação)
+      const response = await publicApiInstance.get(`/products/category/${categoryId}`);
+      return response.data;
+    } else {
+      // Lista geral: paginada
+      const params = new URLSearchParams({
+        page: config.page.toString(),
+        limit: config.limit.toString(),
+      });
 
-    if (config.sortBy) {
-      params.append('sortBy', config.sortBy);
+      const response = await publicApiInstance.get(`/products?${params.toString()}`);
+      return response.data;
     }
-    if (config.sortOrder) {
-      params.append('sortOrder', config.sortOrder);
-    }
-
-    const url = categoryId
-      ? `/products/category/${categoryId}?${params.toString()}`
-      : `/products?${params.toString()}`;
-  
-    const response = await publicApiInstance.get(url);
-    return response.data;
   },
 
   // Obter todas as categorias (público)
