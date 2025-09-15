@@ -6,6 +6,7 @@ import { showError } from '../../utils/toast';
 import { categorySchema, CategoryFormData } from '../../schemas/validationSchemas';
 import { useAnalytics } from '../../services/analytics';
 import { ImageEditor } from './ImageEditor';
+import { CategoryForm } from './CategoryForm';
 
 interface Category {
   ID: number;
@@ -76,6 +77,8 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
@@ -100,29 +103,31 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
     }
   };
 
-  const handleCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleCreateCategory = async (formData: any) => {
     try {
+      setIsSubmitting(true);
+      
       const response = await adminApi.createCategory({
-        name: newCategory.name,
+        name: formData.name,
       });
 
       console.log('Categoria criada com sucesso:', response);
 
+      showCategorySuccess('criada');
       loadCategories();
-      setIsCreating(false);
+      setIsFormOpen(false);
       setNewCategory({
         name: '',
         description: '',
         image: '',
       });
-      onDataChange?.(); // Atualizar estatísticas do dashboard
+      onDataChange?.();
     } catch (error) {
       console.error('Falha ao criar a categoria:', error);
       showError('Falha ao criar a categoria. Verifique os dados.');
+    } finally {
+      setIsSubmitting(false);
     }
-    window.location.reload();
   };
 
   const handleEditCategory = (category: Category) => {
@@ -199,12 +204,12 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
         </div>
         <button
           onClick={() => {
-            setIsCreating(!isCreating);
+            setIsFormOpen(true);
             setEditingCategory(null);
           }}
-          className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+          className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
           Nova Categoria
         </button>
       </div>
@@ -277,6 +282,13 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
           </div>
         </div>
       )}
+
+      {/* Category Form Modal */}
+      <CategoryForm
+        onSubmit={handleCreateCategory}
+        onCancel={() => setIsFormOpen(false)}
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }

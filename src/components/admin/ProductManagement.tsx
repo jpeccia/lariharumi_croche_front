@@ -9,6 +9,7 @@ import { productSchema, ProductFormData } from '../../schemas/validationSchemas'
 import { useAnalytics } from '../../services/analytics';
 import { ImageEditor } from './ImageEditor';
 import { useCategoriesCache } from '../../hooks/useApiCache';
+import { ProductForm } from './ProductForm';
 
 interface Category {
   ID: number;
@@ -147,6 +148,8 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
   const [isSectionVisible, setIsSectionVisible] = useState(true); // Novo estado para controlar a visibilidade da seção
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const editFormRef = useRef<HTMLFormElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
@@ -238,31 +241,33 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
   
   
 
-  const handleCreateProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-  
-    
-    if (!newProduct.name || !newProduct.description || !newProduct.priceRange || !newProduct.categoryId ) {
-      showError('Por favor, preencha todos os campos.');
-      return;
-    }
-  
+  const handleCreateProduct = async (formData: any) => {
     try {
+      setIsSubmitting(true);
+      
       const response = await adminApi.createProduct({
-        name: newProduct.name,
-        description: newProduct.description,
-        price: newProduct.priceRange,
-        categoryId: newProduct.categoryId,
+        name: formData.name,
+        description: formData.description,
+        price: formData.priceRange,
+        categoryId: formData.categoryId,
       });
-  
+
+      // Upload das imagens se houver
+      if (formData.images && formData.images.length > 0) {
+        await adminApi.uploadProductImages(formData.images, response.ID);
+      }
+
+      showProductSuccess('criado');
       fetchProducts();
-      setIsCreating(false);
+      setIsFormOpen(false);
       resetForm();
-      refreshCategories(); // Atualizar cache de categorias
-      onDataChange?.(); // Atualizar estatísticas do dashboard
+      refreshCategories();
+      onDataChange?.();
     } catch (error) {
       console.error('Falha ao criar o produto:', error);
       showError('Falha ao criar o produto.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -418,12 +423,12 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
         </div>
         <button
           onClick={() => {
-            setIsCreating(!isCreating);
+            setIsFormOpen(true);
             setEditingProduct(null);
           }}
-          className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+          className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
           Novo Produto
         </button>
       </div>
@@ -602,6 +607,14 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
         onSave={handleImageEditorSave}
         initialImage={imageToEdit}
         title="Editor de Imagem do Produto"
+      />
+
+      {/* Product Form Modal */}
+      <ProductForm
+        categories={categories || []}
+        onSubmit={handleCreateProduct}
+        onCancel={() => setIsFormOpen(false)}
+        isLoading={isSubmitting}
       />
     </div>
   );
