@@ -284,11 +284,13 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
       )}
 
       {/* Category Form Modal */}
-      <CategoryForm
-        onSubmit={handleCreateCategory}
-        onCancel={() => setIsFormOpen(false)}
-        isLoading={isSubmitting}
-      />
+      {isFormOpen && (
+        <CategoryForm
+          onSubmit={handleCreateCategory}
+          onCancel={() => setIsFormOpen(false)}
+          isLoading={isSubmitting}
+        />
+      )}
     </div>
   );
 }

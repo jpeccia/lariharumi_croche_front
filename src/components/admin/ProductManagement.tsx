@@ -610,12 +610,14 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
       />
 
       {/* Product Form Modal */}
-      <ProductForm
-        categories={categories || []}
-        onSubmit={handleCreateProduct}
-        onCancel={() => setIsFormOpen(false)}
-        isLoading={isSubmitting}
-      />
+      {isFormOpen && (
+        <ProductForm
+          categories={categories || []}
+          onSubmit={handleCreateProduct}
+          onCancel={() => setIsFormOpen(false)}
+          isLoading={isSubmitting}
+        />
+      )}
     </div>
   );
 }
