@@ -24,7 +24,9 @@ interface ProductCardProps {
 
 function ProductCard({ product }: ProductCardProps) {
   const [imageUrls, setImageUrls] = useState<string[]>([]); 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0); 
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState<File | null>(null); 
 
   useEffect(() => {
     const fetchProductImages = async () => {
@@ -49,6 +51,25 @@ function ProductCard({ product }: ProductCardProps) {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
     );
+  };
+
+  const handleImageEdit = (file: File) => {
+    setImageToEdit(file);
+    setIsImageEditorOpen(true);
+  };
+
+  const handleImageEditorSave = async (editedImage: File) => {
+    try {
+      // Upload da imagem editada
+      await adminApi.uploadProductImages([editedImage], product.ID);
+      // Recarregar imagens do produto
+      const images = await adminApi.getProductImages(product.ID);
+      setImageUrls(images);
+      setIsImageEditorOpen(false);
+      setImageToEdit(null);
+    } catch (error) {
+      console.error('Erro ao salvar imagem editada:', error);
+    }
   };
 
   return (
