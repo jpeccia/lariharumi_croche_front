@@ -71,26 +71,26 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           </div>
         ) : imageUrls.length > 0 ? (
           <>
-          <button
-            onClick={handlePrevImage}
-            className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-          >
-            <ChevronLeft size={24} />
-          </button>
-                <img
-                  loading="lazy"
-                  onClick={openModal}
-                  srcSet={`${imageUrls[currentImageIndex].replace(/\.(jpg|png)$/, '.webp')} 1x, ${imageUrls[currentImageIndex]} 1x`}
-                  src={imageUrls[currentImageIndex]}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
-                />
-          <button
-            onClick={handleNextImage}
-            className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-          >
-            <ChevronRight size={24} />
-          </button>
+            <img
+              loading="lazy"
+              onClick={openModal}
+              srcSet={`${imageUrls[currentImageIndex].replace(/\.(jpg|png)$/, '.webp')} 1x, ${imageUrls[currentImageIndex]} 1x`}
+              src={imageUrls[currentImageIndex]}
+              alt={product.name}
+              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
+            />
+            <button
+              onClick={handlePrevImage}
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 text-purple-600 hover:text-purple-800 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg z-20 transition-all duration-200 hover:bg-white hover:scale-110"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              onClick={handleNextImage}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-purple-600 hover:text-purple-800 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg z-20 transition-all duration-200 hover:bg-white hover:scale-110"
+            >
+              <ChevronRight size={24} />
+            </button>
           </>
         ) : (
           <img
@@ -102,11 +102,11 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
         )}
         <button
           onClick={openModal}
-          className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow z-10"
+          className="absolute bottom-2 right-2 text-purple-600 hover:text-purple-800 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg z-20 transition-all duration-200 hover:bg-white hover:scale-110"
         >
           <Maximize2 size={20} />
         </button>
-        <div className="absolute top-2 right-2 bg-pink-100 px-3 py-1 rounded-full z-10">
+        <div className="absolute top-2 right-2 bg-pink-100/90 backdrop-blur-sm px-3 py-1 rounded-full z-15">
           <span className="text-sm font-medium text-pink-600">R$ {product.priceRange}</span>
         </div>
       </div>
