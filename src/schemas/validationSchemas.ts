@@ -9,7 +9,7 @@ export const loginSchema = z.object({
 // Schema para produtos
 export const productSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
-  description: z.string().min(10, 'Descrição deve ter no mínimo 10 caracteres').max(500, 'Descrição muito longa'),
+  description: z.string().min(1, 'Descrição é obrigatória').max(2000, 'Descrição muito longa'),
   price: z.union([
     z.string().min(1, 'Preço é obrigatório'),
     z.number().min(0, 'Preço deve ser positivo')

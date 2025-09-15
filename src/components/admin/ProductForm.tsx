@@ -59,8 +59,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     if (!formData.description.trim()) {
       newErrors.description = 'Descrição é obrigatória';
-    } else if (formData.description.length < 10) {
-      newErrors.description = 'Descrição deve ter pelo menos 10 caracteres';
     }
 
     if (!formData.priceRange.trim()) {
@@ -199,13 +197,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       id="description"
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
-                      rows={4}
-                      className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none ${
+                      rows={6}
+                      className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y ${
                         errors.description 
                           ? 'border-red-300 bg-red-50' 
                           : 'border-gray-200 focus:border-purple-500'
                       }`}
-                      placeholder="Descreva o produto, materiais utilizados, tamanho, etc..."
+                      placeholder="Descreva o produto em detalhes: materiais utilizados, tamanho, cores, características especiais, cuidados, etc..."
                     />
                     {errors.description && (
                       <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -313,7 +311,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   <li>📸 Tire fotos de diferentes ângulos</li>
                   <li>🎨 Mostre detalhes e texturas do crochê</li>
                   <li>✂️ Use o editor para cortar e ajustar</li>
-                  <li>💡 Seja específico na descrição</li>
+                  <li>📝 Descreva tudo em detalhes (sem limite de caracteres!)</li>
+                  <li>💡 Inclua materiais, tamanho, cores e cuidados</li>
                 </ul>
               </div>
             </div>
