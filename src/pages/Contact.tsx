@@ -39,7 +39,7 @@ function Contact() {
             <div className="space-y-4">
               <SocialLink
                 platform="Instagram"
-                username="lhkowara"
+                username="larifazcroche"
                 url="https://www.instagram.com/larifazcroche/"
                 Icon={Instagram}
               />

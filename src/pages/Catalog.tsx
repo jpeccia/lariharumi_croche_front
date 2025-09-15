@@ -157,7 +157,7 @@ function Catalog() {
               <ProductCard
                 key={product.ID}
                 product={product}
-                instagramUsername="lhkowara"
+                instagramUsername="larifazcroche"
               />
             ))
           )}
