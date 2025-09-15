@@ -25,6 +25,8 @@ function Catalog() {
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationInfo, setPaginationInfo] = useState<PaginatedResponse<Product>['pagination'] | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   
   // Hooks de otimização
   const { deviceInfo, getOptimalGridColumns, getAnimationConfig } = useMobileOptimization();
@@ -50,11 +52,12 @@ function Catalog() {
     }
   }, [categories, categoriesLoading]);
 
-  const fetchProducts = useCallback(async (categoryId: number | null, page: number = 1) => {
+  const fetchProducts = useCallback(async (categoryId: number | null, page: number = 1, searchQuery: string = '') => {
     if (isLoading) return;
   
     try {
       setIsLoading(true);
+      setIsSearching(!!searchQuery);
   
       const config: PaginationConfig = {
         page: page,
@@ -63,14 +66,33 @@ function Catalog() {
         sortOrder: 'asc'
       };
       
-      const response = await adminApi.getProductsByPage(categoryId, config);
+      let response;
+      if (searchQuery.trim()) {
+        // Usar busca se há termo de pesquisa
+        response = await adminApi.searchProducts(searchQuery, config);
+      } else {
+        // Usar listagem normal
+        response = await adminApi.getProductsByPage(categoryId, config);
+      }
       
-      // Compatibilidade: verificar se é a nova estrutura ou a antiga
+      // Compatibilidade: verificar diferentes estruturas de resposta
       let productsFetched: Product[];
       let paginationInfo: PaginatedResponse<Product>['pagination'] | null = null;
       
-      if (response && typeof response === 'object' && 'data' in response && 'pagination' in response) {
-        // Nova estrutura PaginatedResponse
+      if (response && typeof response === 'object' && 'data' in response && 'metadata' in response) {
+        // Nova estrutura com data e metadata
+        const apiResponse = response as { data: Product[]; metadata: any };
+        productsFetched = apiResponse.data;
+        paginationInfo = {
+          page: apiResponse.metadata.page || page,
+          limit: apiResponse.metadata.limit || config.limit,
+          total: apiResponse.metadata.total || productsFetched.length,
+          totalPages: apiResponse.metadata.totalPages || Math.ceil(productsFetched.length / config.limit),
+          hasNext: apiResponse.metadata.hasNext || false,
+          hasPrev: apiResponse.metadata.hasPrev || page > 1
+        };
+      } else if (response && typeof response === 'object' && 'data' in response && 'pagination' in response) {
+        // Estrutura PaginatedResponse
         const paginatedResponse = response as PaginatedResponse<Product>;
         productsFetched = paginatedResponse.data;
         paginationInfo = paginatedResponse.pagination;
@@ -86,6 +108,7 @@ function Catalog() {
           hasPrev: page > 1
         };
       } else {
+        console.error('Resposta da API:', response);
         throw new Error('Formato de resposta inválido da API');
       }
       
@@ -124,17 +147,17 @@ function Catalog() {
   useEffect(() => {
     if (categoriesLoaded && !isLoading) {
       setCurrentPage(1);
-      fetchProducts(selectedCategory, 1);
+      fetchProducts(selectedCategory, 1, searchTerm);
     }
-  }, [categoriesLoaded, fetchProducts]);
+  }, [categoriesLoaded, fetchProducts, searchTerm]);
 
   // Carregar produtos quando categoria muda (apenas se categorias já carregaram)
   useEffect(() => {
     if (categoriesLoaded) {
       setCurrentPage(1);
-      fetchProducts(selectedCategory, 1);
+      fetchProducts(selectedCategory, 1, searchTerm);
     }
-  }, [selectedCategory, fetchProducts]);
+  }, [selectedCategory, fetchProducts, searchTerm]);
   
   
 
@@ -151,11 +174,25 @@ function Catalog() {
 
   const handlePageChange = createThrottledCallback((page: number) => {
     setCurrentPage(page);
-    fetchProducts(selectedCategory, page);
+    fetchProducts(selectedCategory, page, searchTerm);
     trackClick('page_change', 'catalog');
     
     // Scroll para o topo dos produtos
     viewProductCatalogRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, 300);
+
+  const handleSearch = createThrottledCallback((query: string) => {
+    setSearchTerm(query);
+    setCurrentPage(1);
+    fetchProducts(selectedCategory, 1, query);
+    trackClick('search', 'catalog');
+  }, 500);
+
+  const handleClearSearch = createThrottledCallback(() => {
+    setSearchTerm('');
+    setCurrentPage(1);
+    fetchProducts(selectedCategory, 1, '');
+    trackClick('clear_search', 'catalog');
   }, 300);
 
   const scrollToProducts = createThrottledCallback(() => {
@@ -219,10 +256,49 @@ function Catalog() {
       </div>
 
       <div>
+        {/* Campo de Busca */}
+        <div className="mb-8">
+          <div className="relative max-w-md mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar peças de crochê..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full px-4 py-3 pl-12 pr-12 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            {isSearching && (
+              <div className="mt-2 text-center">
+                <span className="text-sm text-purple-600 font-medium">
+                  🔍 Buscando por "{searchTerm}"...
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-4">
             <h2 className="font-handwritten text-6xl text-purple-800 mb-8">
-              {selectedCategory
+              {searchTerm 
+                ? `Resultados para "${searchTerm}"`
+                : selectedCategory
                 ? categories.find((c) => c.ID === selectedCategory)?.name
                 : 'Todas as Peças'}
             </h2>
@@ -235,7 +311,7 @@ function Catalog() {
             )}
           </div>
           <FloatingHearts />
-           {selectedCategory && (
+           {selectedCategory && !searchTerm && (
              <button
                onClick={handleShowAllProducts}
                className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl font-medium hover:scale-105 transition-transform"
@@ -274,8 +350,26 @@ function Catalog() {
               return (
                 <div className="col-span-full text-center py-12">
                   <div className="text-gray-500">
-                    <p className="text-xl mb-2">Nenhum produto encontrado</p>
-                    <p className="text-sm">Tente ajustar os filtros ou buscar por outro termo</p>
+                    <p className="text-xl mb-2">
+                      {searchTerm 
+                        ? `Nenhum produto encontrado para "${searchTerm}"`
+                        : 'Nenhum produto encontrado'
+                      }
+                    </p>
+                    <p className="text-sm">
+                      {searchTerm 
+                        ? 'Tente buscar por outro termo ou limpar a busca'
+                        : 'Tente ajustar os filtros ou buscar por outro termo'
+                      }
+                    </p>
+                    {searchTerm && (
+                      <button
+                        onClick={handleClearSearch}
+                        className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                      >
+                        Limpar busca
+                      </button>
+                    )}
                   </div>
                 </div>
               );
