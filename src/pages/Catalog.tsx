@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import api, { adminApi } from '../services/api';
+import api, { publicApi } from '../services/api';
 import CategoryCard from '../components/catalog/CategoryCard';
 import ProductCard from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
@@ -69,10 +69,10 @@ function Catalog() {
       let response;
       if (searchQuery.trim()) {
         // Usar busca se há termo de pesquisa
-        response = await adminApi.searchProducts(searchQuery, config);
+        response = await publicApi.searchProducts(searchQuery, config);
       } else {
         // Usar listagem normal
-        response = await adminApi.getProductsByPage(categoryId, config);
+        response = await publicApi.getProductsByPage(categoryId, config);
       }
       
       // Compatibilidade: verificar diferentes estruturas de resposta
@@ -149,7 +149,7 @@ function Catalog() {
       setCurrentPage(1);
       fetchProducts(selectedCategory, 1, searchTerm);
     }
-  }, [categoriesLoaded, fetchProducts, searchTerm]);
+  }, [categoriesLoaded]);
 
   // Carregar produtos quando categoria muda (apenas se categorias já carregaram)
   useEffect(() => {
@@ -157,7 +157,15 @@ function Catalog() {
       setCurrentPage(1);
       fetchProducts(selectedCategory, 1, searchTerm);
     }
-  }, [selectedCategory, fetchProducts, searchTerm]);
+  }, [selectedCategory]);
+
+  // Carregar produtos quando termo de busca muda
+  useEffect(() => {
+    if (categoriesLoaded) {
+      setCurrentPage(1);
+      fetchProducts(selectedCategory, 1, searchTerm);
+    }
+  }, [searchTerm]);
   
   
 
@@ -302,13 +310,6 @@ function Catalog() {
                 ? categories.find((c) => c.ID === selectedCategory)?.name
                 : 'Todas as Peças'}
             </h2>
-            {paginationInfo && (
-              <CacheIndicator 
-                cached={false} // Será atualizado quando implementarmos cache no frontend
-                requestTime={0}
-                className="mb-8"
-              />
-            )}
           </div>
           <FloatingHearts />
            {selectedCategory && !searchTerm && (

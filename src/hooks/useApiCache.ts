@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { adminApi } from '../services/api';
+import { publicApi, adminApi } from '../services/api';
 import { PaginatedResponse, PaginationConfig } from '../types/api';
 import { Product, Category } from '../types/product';
 
@@ -105,7 +105,7 @@ export function useApiCache<T>(
 export function useCategoriesCache() {
   return useApiCache(
     'categories',
-    () => adminApi.getCategories(),
+    () => publicApi.getCategories(),
     { ttl: 10 * 60 * 1000 } // 10 minutos para categorias
   );
 }
@@ -115,7 +115,7 @@ export function useProductsCache(page = 1, limit = 12, categoryId: number | null
   
   return useApiCache<Product[] | PaginatedResponse<Product>>(
     key,
-    () => adminApi.getProductsByPage(categoryId, config || { page, limit }),
+    () => publicApi.getProductsByPage(categoryId, config || { page, limit }),
     { ttl: 2 * 60 * 1000 } // 2 minutos para produtos
   );
 }
@@ -126,7 +126,7 @@ export function useProductsSearchCache(query: string, page = 1, limit = 12, conf
   
   return useApiCache(
     key,
-    () => adminApi.searchProducts(query, config || { page, limit }),
+    () => publicApi.searchProducts(query, config || { page, limit }),
     { ttl: 1 * 60 * 1000 } // 1 minuto para busca (mais dinâmico)
   );
 }
