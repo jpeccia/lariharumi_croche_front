@@ -67,7 +67,7 @@ function Home() {
 
         {/* Botão para encomendar peça - link para DM do Instagram */}
         <a 
-          href="https://www.instagram.com/lhkowara/" 
+          href="https://www.instagram.com/larifazcroche/" 
           target="_blank" 
           rel="noopener noreferrer"
           className="bg-purple-400 hover:bg-purple-500 text-white px-6 py-3 rounded-full transition-all hover:scale-105"
