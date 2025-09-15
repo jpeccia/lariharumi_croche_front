@@ -306,7 +306,7 @@ export function ProductManagement({ product }: ProductProps) {
     return () => {
       if (ref) observer.unobserve(ref);
     };
-  }, [isLoading, hasMore]);
+  }, [isLoading, hasMore, page]);
   
   useEffect(() => {
     const search = async () => {

@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api, { adminApi } from '../services/api'; // Importando o axios configurado
-import { CategoryCard } from '../components/catalog/CategoryCard';
-import { ProductCard } from '../components/catalog/ProductCard';
+import CategoryCard from '../components/catalog/CategoryCard';
+import ProductCard from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
+import { preloadImages } from '../hooks/useImageCache';
 
 function Catalog() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -32,7 +33,7 @@ function Catalog() {
   const [page, setPage] = useState(1);
   const limit = 12;
   
-  const fetchProducts = async (categoryId: number | null, reset = false) => {
+  const fetchProducts = useCallback(async (categoryId: number | null, reset = false) => {
     if (isLoading || (!hasMore && !reset)) return;
   
     try {
@@ -40,23 +41,31 @@ function Catalog() {
   
       const currentPage = reset ? 1 : page;
       const productsFetched = await adminApi.getProductsByPage(categoryId, currentPage, limit);
-      const sorted = productsFetched.sort((a, b) => a.name.localeCompare(b.name));
+      const sorted = productsFetched.sort((a: any, b: any) => a.name.localeCompare(b.name));
   
       if (reset) {
         setProducts(sorted);
         setPage(2);
         setHasMore(productsFetched.length === limit);
+        
+        // Pré-carrega imagens dos produtos da primeira página
+        const productIds = sorted.map((product: any) => product.ID);
+        preloadImages(productIds);
       } else {
         setProducts((prev) => [...prev, ...sorted]);
         setPage((prev) => prev + 1);
         setHasMore(productsFetched.length === limit);
+        
+        // Pré-carrega imagens dos novos produtos
+        const productIds = sorted.map((product: any) => product.ID);
+        preloadImages(productIds);
       }
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoading, hasMore, page, limit]);
   
   
   
@@ -82,7 +91,8 @@ function Catalog() {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!loadMoreRef.current || isLoading || !hasMore) return;
+    const ref = loadMoreRef.current;
+    if (!ref || isLoading || !hasMore) return;
   
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
@@ -92,12 +102,12 @@ function Catalog() {
       rootMargin: '200px', // começa a carregar um pouco antes
     });
   
-    observer.observe(loadMoreRef.current);
+    observer.observe(ref);
   
     return () => {
-      if (loadMoreRef.current) observer.unobserve(loadMoreRef.current);
+      if (ref) observer.unobserve(ref);
     };
-  }, [loadMoreRef.current, isLoading, hasMore, selectedCategory]);
+  }, [isLoading, hasMore, selectedCategory, fetchProducts]);
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

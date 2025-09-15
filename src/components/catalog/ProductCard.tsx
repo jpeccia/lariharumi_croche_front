@@ -1,43 +1,26 @@
-import { Instagram, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react'; // Adicionei o ícone Maximize2
+import { Instagram, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
 import { Product } from '../../types/product';
-import { useState, useEffect } from 'react';
-import { adminApi } from '../../services/api';
+import { useState, useEffect, memo, useCallback } from 'react';
+import { useImageCache } from '../../hooks/useImageCache';
 interface ProductCardProps {
   product: Product;
   instagramUsername: string;
 }
 
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
-  const [imageUrls, setImageUrls] = useState<string[]>([]); // Estado para múltiplas imagens
-  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Índice da imagem atual
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar a visibilidade do modal
-
-  useEffect(() => {
-    const cacheKey = `product-images-${product.ID}`;
-    const cachedImages = sessionStorage.getItem(cacheKey);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-    if (cachedImages) {
-      setImageUrls(JSON.parse(cachedImages));
-      return;
+  // Usa o hook otimizado para carregar imagens
+  const { imageUrls, isLoading, error } = useImageCache(product.ID);
+
+  // Preload da próxima imagem apenas se há imagens carregadas
+  useEffect(() => {
+    if (imageUrls.length > 1) {
+      const nextIndex = (currentImageIndex + 1) % imageUrls.length;
+      const img = new Image();
+      img.src = imageUrls[nextIndex];
     }
-  
-    const fetchProductImages = async () => {
-      try {
-        const images = await adminApi.getProductImages(product.ID);
-        setImageUrls(images);
-        sessionStorage.setItem(cacheKey, JSON.stringify(images)); // Cacheando
-      } catch (error) {
-        console.error('Erro ao carregar imagens:', error);
-      }
-    };
-  
-    fetchProductImages();
-  }, [product.ID]);
-
-  useEffect(() => {
-    const nextIndex = (currentImageIndex + 1) % imageUrls.length;
-    const img = new Image();
-    img.src = imageUrls[nextIndex];
   }, [currentImageIndex, imageUrls]);
 
   useEffect(() => {
@@ -56,27 +39,37 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     };
   }, [isModalOpen]);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const openModal = useCallback(() => setIsModalOpen(true), []);
+  const closeModal = useCallback(() => setIsModalOpen(false), []);
 
-  const handlePrevImage = () => {
+  const handlePrevImage = useCallback(() => {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === 0 ? imageUrls.length - 1 : prevIndex - 1
     );
-  };
+  }, [imageUrls.length]);
   
-  const handleNextImage = () => {
+  const handleNextImage = useCallback(() => {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
     );
-  };
+  }, [imageUrls.length]);
 
   const instagramUrl = `https://instagram.com/${instagramUsername}`;
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden relative">
       <div className="relative w-full h-80 flex items-center justify-center overflow-hidden">
-        {imageUrls.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center w-full h-full bg-gray-100 rounded-lg">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center w-full h-full bg-gray-100 rounded-lg">
+            <div className="text-center text-gray-500">
+              <p className="text-sm">Erro ao carregar imagem</p>
+            </div>
+          </div>
+        ) : imageUrls.length > 0 ? (
           <>
           <button
             onClick={handlePrevImage}
@@ -170,4 +163,5 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   );
 }
 
-
+// Memoiza o componente para evitar re-renderizações desnecessárias
+export default memo(ProductCard);

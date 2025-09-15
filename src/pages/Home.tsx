@@ -1,40 +1,16 @@
 
-import { useState, useEffect } from 'react';
-import api from '../services/api';
-import ProductCarousel from '../components/ProductCarousel';
+import { Suspense, lazy } from 'react';
 import { Gift, Heart, MessageCircle } from 'lucide-react';
 import { DonationBox } from '../components/home/DonationBox';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
-import { CuteBunny } from '../components/shared/KawaiiElements/CuteBunny';
-import { CutePanda } from '../components/shared/KawaiiElements/CutePanda';
-import { CuteBear } from '../components/shared/KawaiiElements/CuteBear';
-import { StarWand } from '../components/shared/KawaiiElements/Starwand';
-import { CuteCinnamoroll } from '../components/shared/KawaiiElements/CuteCinnamoroll';
-import { CuteCinnamoroll2 } from '../components/shared/KawaiiElements/CuteCinnamoroll2';
-import { Harry } from '../components/shared/KawaiiElements/Harry';
-import { PokeBall } from '../components/shared/KawaiiElements/Pokeball';
+
+// Lazy loading para componentes Kawaii pesados
+const CuteBunny = lazy(() => import('../components/shared/KawaiiElements/CuteBunny').then(module => ({ default: module.CuteBunny })));
+const CutePanda = lazy(() => import('../components/shared/KawaiiElements/CutePanda').then(module => ({ default: module.CutePanda })));
+const CuteCinnamoroll = lazy(() => import('../components/shared/KawaiiElements/CuteCinnamoroll').then(module => ({ default: module.CuteCinnamoroll })));
 
 function Home() {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-
-
-  // Função para carregar categorias e produtos do back-end
-  const fetchData = async () => {
-    try {
-      const categoriesResponse = await api.get('/categories');
-      const productsResponse = await api.get('/products');
-      
-      setCategories(categoriesResponse.data);
-      setProducts(productsResponse.data);
-    } catch (error) {
-      console.error('Erro ao buscar dados:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // Removido carregamento desnecessário de dados não utilizados
 
 
   return (
@@ -45,11 +21,15 @@ function Home() {
     <div className="relative text-center mb-16">
 
         <div className="absolute -top-32 sm:-top-4 left-auto right-1 sm:left-auto sm:-right-4">
-  <CutePanda />
-</div>
+          <Suspense fallback={<div className="w-16 h-16 bg-pink-100 rounded-full animate-pulse"></div>}>
+            <CutePanda />
+          </Suspense>
+        </div>
         <div className="absolute top-[-160px] left-1/2 transform -translate-x-1/2">
-    <CuteCinnamoroll />
-  </div>
+          <Suspense fallback={<div className="w-16 h-16 bg-blue-100 rounded-full animate-pulse"></div>}>
+            <CuteCinnamoroll />
+          </Suspense>
+        </div>
       <h1 className="font-handwritten text-6xl text-purple-800 mb-4">
         Crochê da Lari
       </h1>
@@ -76,7 +56,9 @@ function Home() {
         </a>
       </div>
       <div className="absolute -top-32 sm:-top-4 left-1 right-auto sm:-left-4 sm:right-auto">
-      <CuteBunny />
+        <Suspense fallback={<div className="w-16 h-16 bg-pink-100 rounded-full animate-pulse"></div>}>
+          <CuteBunny />
+        </Suspense>
       </div>
     </div>
       {/* Features */}
