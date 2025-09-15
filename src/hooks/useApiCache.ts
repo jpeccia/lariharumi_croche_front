@@ -113,7 +113,7 @@ export function useCategoriesCache() {
 export function useProductsCache(page = 1, limit = 12, categoryId: number | null = null, config?: PaginationConfig) {
   const key = `products-${page}-${limit}-${categoryId || 'all'}-${config?.sortBy || 'default'}-${config?.sortOrder || 'asc'}`;
   
-  return useApiCache<PaginatedResponse<Product>>(
+  return useApiCache<Product[] | PaginatedResponse<Product>>(
     key,
     () => adminApi.getProductsByPage(categoryId, config || { page, limit }),
     { ttl: 2 * 60 * 1000 } // 2 minutos para produtos

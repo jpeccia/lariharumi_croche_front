@@ -15,13 +15,13 @@ import { useAnalytics } from '../services/analytics';
 import { LoadingSpinner, CardSkeleton } from '../components/shared/LoadingStates';
 import { useCategoriesCache, useProductsCache } from '../hooks/useApiCache';
 import { CacheIndicator } from '../components/shared/CacheIndicator';
+import { Pagination, CompactPagination } from '../components/shared/Pagination';
 
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const viewProductCatalogRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationInfo, setPaginationInfo] = useState<PaginatedResponse<Product>['pagination'] | null>(null);
@@ -50,52 +50,65 @@ function Catalog() {
     }
   }, [categories, categoriesLoading]);
 
-  const fetchProducts = useCallback(async (categoryId: number | null, reset = false) => {
-    if (isLoading || (!hasMore && !reset)) return;
+  const fetchProducts = useCallback(async (categoryId: number | null, page: number = 1) => {
+    if (isLoading) return;
   
     try {
       setIsLoading(true);
   
-      const pageToFetch = reset ? 1 : currentPage;
       const config: PaginationConfig = {
-        page: pageToFetch,
+        page: page,
         limit: 12,
         sortBy: 'name',
         sortOrder: 'asc'
       };
       
-      const response: PaginatedResponse<Product> = await adminApi.getProductsByPage(categoryId, config);
-      const productsFetched = response.data;
+      const response = await adminApi.getProductsByPage(categoryId, config);
       
-      // Filtrar produtos deletados (soft delete)
-      const activeProducts = productsFetched.filter(product => !product.isDeleted);
-  
-      if (reset) {
-        setProducts(activeProducts);
-        setCurrentPage(2);
-        setHasMore(response.pagination.hasNext);
-        setPaginationInfo(response.pagination);
-        
-        // Pré-carrega imagens dos produtos da primeira página
-        const productIds = activeProducts.map((product: Product) => product.ID);
-        preloadImages(productIds);
+      // Compatibilidade: verificar se é a nova estrutura ou a antiga
+      let productsFetched: Product[];
+      let paginationInfo: PaginatedResponse<Product>['pagination'] | null = null;
+      
+      if (response && typeof response === 'object' && 'data' in response && 'pagination' in response) {
+        // Nova estrutura PaginatedResponse
+        const paginatedResponse = response as PaginatedResponse<Product>;
+        productsFetched = paginatedResponse.data;
+        paginationInfo = paginatedResponse.pagination;
+      } else if (Array.isArray(response)) {
+        // Estrutura antiga: array direto
+        productsFetched = response as Product[];
+        paginationInfo = {
+          page: page,
+          limit: config.limit,
+          total: productsFetched.length,
+          totalPages: Math.ceil(productsFetched.length / config.limit),
+          hasNext: productsFetched.length === config.limit,
+          hasPrev: page > 1
+        };
       } else {
-        setProducts((prev) => [...prev, ...activeProducts]);
-        setCurrentPage((prev) => prev + 1);
-        setHasMore(response.pagination.hasNext);
-        setPaginationInfo(response.pagination);
-        
-        // Pré-carrega imagens dos novos produtos
-        const productIds = activeProducts.map((product: Product) => product.ID);
-        preloadImages(productIds);
+        throw new Error('Formato de resposta inválido da API');
       }
+      
+      // Filtrar produtos deletados (soft delete) - apenas se o campo existir
+      const activeProducts = productsFetched.filter(product => 
+        !product.isDeleted && !product.deletedAt
+      );
+  
+      setProducts(activeProducts);
+      setCurrentPage(page);
+      setPaginationInfo(paginationInfo);
+      
+      // Pré-carrega imagens dos produtos da página atual
+      const productIds = activeProducts.map((product: Product) => product.ID);
+      preloadImages(productIds);
+      
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
       showProductLoadError();
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, currentPage]);
+  }, [isLoading]);
   
   
   
@@ -110,18 +123,18 @@ function Catalog() {
   // Carregar produtos iniciais após categorias estarem prontas
   useEffect(() => {
     if (categoriesLoaded && !isLoading) {
-      setHasMore(true);
-      fetchProducts(selectedCategory, true);
+      setCurrentPage(1);
+      fetchProducts(selectedCategory, 1);
     }
-  }, [categoriesLoaded]);
+  }, [categoriesLoaded, fetchProducts]);
 
   // Carregar produtos quando categoria muda (apenas se categorias já carregaram)
   useEffect(() => {
     if (categoriesLoaded) {
-      setHasMore(true);
-      fetchProducts(selectedCategory, true);
+      setCurrentPage(1);
+      fetchProducts(selectedCategory, 1);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, fetchProducts]);
   
   
 
@@ -136,6 +149,15 @@ function Catalog() {
     trackClick('show_all_products', 'catalog');
   }, 300);
 
+  const handlePageChange = createThrottledCallback((page: number) => {
+    setCurrentPage(page);
+    fetchProducts(selectedCategory, page);
+    trackClick('page_change', 'catalog');
+    
+    // Scroll para o topo dos produtos
+    viewProductCatalogRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, 300);
+
   const scrollToProducts = createThrottledCallback(() => {
     viewProductCatalogRef.current?.scrollIntoView({ behavior: 'smooth' });
     trackClick('scroll_to_products', 'catalog');
@@ -146,27 +168,6 @@ function Catalog() {
       viewProductCatalogRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [selectedCategory]);
-  
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const ref = loadMoreRef.current;
-    if (!ref || isLoading || !hasMore) return;
-  
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        fetchProducts(selectedCategory);
-      }
-    }, {
-      rootMargin: '200px', // começa a carregar um pouco antes
-    });
-  
-    observer.observe(ref);
-  
-    return () => {
-      if (ref) observer.unobserve(ref);
-    };
-  }, [isLoading, hasMore, selectedCategory, fetchProducts]);
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -288,12 +289,35 @@ function Catalog() {
               />
             ));
           })()}
-        <div ref={loadMoreRef} className="col-span-full flex justify-center mt-8">
-          {isLoading && (
-            <LoadingSpinner size="small" text="Carregando mais peças..." />
-          )}
         </div>
-        </div>
+
+        {/* Paginação */}
+        {paginationInfo && paginationInfo.totalPages > 1 && (
+          <div className="mt-12">
+            {/* Paginação para desktop */}
+            <div className="hidden sm:block">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={paginationInfo.totalPages}
+                onPageChange={handlePageChange}
+                showInfo={true}
+                itemsPerPage={paginationInfo.limit}
+                totalItems={paginationInfo.total}
+                className="justify-center"
+              />
+            </div>
+            
+            {/* Paginação compacta para mobile */}
+            <div className="sm:hidden">
+              <CompactPagination
+                currentPage={currentPage}
+                totalPages={paginationInfo.totalPages}
+                onPageChange={handlePageChange}
+                className="justify-center"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

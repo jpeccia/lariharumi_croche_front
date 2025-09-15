@@ -99,7 +99,7 @@ export const adminApi = {
   },
 
   // Obter todos os produtos (com paginação melhorada)
-  getProductsByPage: async (categoryId: number | null, config: PaginationConfig = { page: 1, limit: 12 }): Promise<PaginatedResponse<Product>> => {
+  getProductsByPage: async (categoryId: number | null, config: PaginationConfig = { page: 1, limit: 12 }): Promise<Product[] | PaginatedResponse<Product>> => {
     const params = new URLSearchParams({
       page: config.page.toString(),
       limit: config.limit.toString(),
