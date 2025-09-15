@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Package, FolderOpen, BarChart3, Settings, Users, Image, Plus, Eye } from 'lucide-react';
 import { useAnalytics } from '../../services/analytics';
 import { LoadingSpinner, CardSkeleton } from '../../components/shared/LoadingStates';
-import { adminApi } from '../../services/api';
+import { useStatsCache } from '../../hooks/useApiCache';
 
 // Lazy loading para componentes administrativos pesados
 const ProductManagement = lazy(() => import('../../components/admin/ProductManagement').then(module => ({ default: module.ProductManagement })));
@@ -16,41 +16,14 @@ function AdminDashboard() {
   const user = useAuthStore((state) => state.user);
   const { trackPageView } = useAnalytics();
   const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'overview'>('overview');
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    totalCategories: 0,
-    recentActivity: []
-  });
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
-
-  const loadStats = async () => {
-    try {
-      setIsLoadingStats(true);
-      
-      // Carregar categorias
-      const categories = await adminApi.getCategories();
-      
-      // Carregar produtos (primeira página para contar)
-      const products = await adminApi.getProductsByPage(null, 1, 1000); // Buscar muitos produtos para contar
-      
-      setStats({
-        totalProducts: products.length,
-        totalCategories: categories.length,
-        recentActivity: [] // Por enquanto vazio, pode ser implementado depois
-      });
-    } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
-    } finally {
-      setIsLoadingStats(false);
-    }
-  };
+  // Usar cache para estatísticas
+  const { data: stats, loading: isLoadingStats, refresh: refreshStats } = useStatsCache();
 
   useEffect(() => {
     if (!isAdmin) {
       navigate('/');
     } else {
       trackPageView('admin_dashboard');
-      loadStats();
     }
   }, [isAdmin, navigate, trackPageView]);
 
@@ -99,7 +72,7 @@ function AdminDashboard() {
                     <div className="h-8 bg-gray-200 rounded w-16"></div>
                   </div>
                 ) : (
-                  <p className="text-2xl font-bold text-purple-800">{stats.totalProducts}</p>
+                  <p className="text-2xl font-bold text-purple-800">{stats?.totalProducts || 0}</p>
                 )}
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
@@ -117,7 +90,7 @@ function AdminDashboard() {
                     <div className="h-8 bg-gray-200 rounded w-16"></div>
                   </div>
                 ) : (
-                  <p className="text-2xl font-bold text-purple-800">{stats.totalCategories}</p>
+                  <p className="text-2xl font-bold text-purple-800">{stats?.totalCategories || 0}</p>
                 )}
               </div>
               <div className="p-3 bg-pink-100 rounded-lg">
@@ -136,7 +109,7 @@ function AdminDashboard() {
                   </div>
                 ) : (
                   <p className="text-2xl font-bold text-purple-800">
-                    {stats.totalCategories > 0 ? Math.round(stats.totalProducts / stats.totalCategories) : 0}
+                    {stats?.totalCategories && stats?.totalCategories > 0 ? Math.round((stats?.totalProducts || 0) / stats.totalCategories) : 0}
                   </p>
                 )}
               </div>
@@ -222,13 +195,13 @@ function AdminDashboard() {
 
             {activeTab === 'products' && (
               <Suspense fallback={<CardSkeleton />}>
-                <ProductManagement onDataChange={loadStats} />
+                <ProductManagement onDataChange={refreshStats} />
               </Suspense>
             )}
 
             {activeTab === 'categories' && (
               <Suspense fallback={<CardSkeleton />}>
-                <CategoryManagement onDataChange={loadStats} />
+                <CategoryManagement onDataChange={refreshStats} />
               </Suspense>
             )}
           </div>

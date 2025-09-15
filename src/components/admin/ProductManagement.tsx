@@ -8,6 +8,7 @@ import { useDebounce } from 'use-debounce';
 import { productSchema, ProductFormData } from '../../schemas/validationSchemas';
 import { useAnalytics } from '../../services/analytics';
 import { ImageEditor } from './ImageEditor';
+import { useCategoriesCache } from '../../hooks/useApiCache';
 
 interface Category {
   ID: number;
@@ -137,8 +138,10 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
     priceRange: '',
     categoryId: 1,
   });
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  
+  // Usar cache para categorias
+  const { data: categories, refresh: refreshCategories } = useCategoriesCache();
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [productImageUrl, setProductImageUrl] = useState<string>('');
   const [isSectionVisible, setIsSectionVisible] = useState(true); // Novo estado para controlar a visibilidade da seção
@@ -151,7 +154,19 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
 
   
   useEffect(() => {
-    loadCategories();
+    // Carregar produtos quando o componente monta
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        await fetchProducts();
+      } catch (error) {
+        console.error('Erro ao carregar dados iniciais:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadInitialData();
   }, []);
   
 
@@ -205,17 +220,6 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
   
   
 
-  const loadCategories = async () => {
-    try {
-      const data = await adminApi.getCategories();
-      setCategories(data); 
-    } catch (error) {
-      console.error('Erro ao carregar categorias:', error);
-      showError('Falha ao carregar as categorias.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (!product?.ID) return; 
@@ -254,6 +258,7 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
       fetchProducts();
       setIsCreating(false);
       resetForm();
+      refreshCategories(); // Atualizar cache de categorias
       onDataChange?.(); // Atualizar estatísticas do dashboard
     } catch (error) {
       console.error('Falha ao criar o produto:', error);

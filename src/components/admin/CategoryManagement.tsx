@@ -75,6 +75,7 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [loading, setLoading] = useState(true);
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
@@ -88,11 +89,14 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
 
   const loadCategories = async () => {
     try {
+      setLoading(true);
       const data = await adminApi.getCategories();
       setCategories(data);
     } catch (error) {
       console.error('Falha ao carregar categorias:', error);
       showError('Falha ao carregar as categorias.');
+    } finally {
+      setLoading(false);
     }
   };
 
