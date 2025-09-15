@@ -11,7 +11,7 @@ import { Category, Product } from '../types/product';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { usePerformanceOptimization } from '../hooks/usePerformanceOptimization';
 import { useAnalytics } from '../services/analytics';
-import { MobileOptimizedLoading } from '../components/MobileOptimizedLoading';
+import { LoadingSpinner, CardSkeleton } from '../components/shared/LoadingStates';
 
 function Catalog() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -194,8 +194,12 @@ function Catalog() {
           {(() => {
             if (isLoading && products.length === 0) {
               return (
-                <div className="col-span-full flex justify-center items-center py-12">
-                  <MobileOptimizedLoading size="medium" text="Carregando produtos..." />
+                <div className="col-span-full">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <CardSkeleton key={index} />
+                    ))}
+                  </div>
                 </div>
               );
             }
@@ -221,7 +225,7 @@ function Catalog() {
           })()}
         <div ref={loadMoreRef} className="col-span-full flex justify-center mt-8">
           {isLoading && (
-            <MobileOptimizedLoading size="small" text="Carregando mais peças..." />
+            <LoadingSpinner size="small" text="Carregando mais peças..." />
           )}
         </div>
         </div>

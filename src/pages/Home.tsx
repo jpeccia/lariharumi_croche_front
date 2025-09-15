@@ -3,6 +3,9 @@ import { Suspense, lazy } from 'react';
 import { Gift, Heart, MessageCircle } from 'lucide-react';
 import { DonationBox } from '../components/home/DonationBox';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
+import { useEntranceAnimation } from '../hooks/usePageTransition';
+import { useMobileOptimization } from '../hooks/useMobileOptimization';
+import { LoadingSpinner } from '../components/shared/LoadingStates';
 
 // Lazy loading para componentes Kawaii pesados
 const CuteBunny = lazy(() => import('../components/shared/KawaiiElements/CuteBunny').then(module => ({ default: module.CuteBunny })));
@@ -10,13 +13,15 @@ const CutePanda = lazy(() => import('../components/shared/KawaiiElements/CutePan
 const CuteCinnamoroll = lazy(() => import('../components/shared/KawaiiElements/CuteCinnamoroll').then(module => ({ default: module.CuteCinnamoroll })));
 
 function Home() {
-  // Removido carregamento desnecessário de dados não utilizados
-
+  const { deviceInfo, getAnimationConfig } = useMobileOptimization();
+  const { enableAnimations } = getAnimationConfig();
+  const heroVisible = useEntranceAnimation(100);
+  const featuresVisible = useEntranceAnimation(300);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <FloatingHearts />
-    <div className="relative w-40 h-40"></div>
+      <FloatingHearts />
+      <div className="relative w-40 h-40"></div>
     {/* Hero Section */}
     <div className="relative text-center mb-16">
 

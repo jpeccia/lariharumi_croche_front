@@ -1,10 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Heart, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { useMobileOptimization } from '../hooks/useMobileOptimization';
 
 export default function Navbar() {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { deviceInfo, getAnimationConfig } = useMobileOptimization();
+  const { enableAnimations } = getAnimationConfig();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -12,8 +15,13 @@ export default function Navbar() {
     <nav className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-50 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <Heart className="h-6 w-6 text-pink-400" />
+          <Link 
+            to="/" 
+            className={`flex items-center space-x-2 transition-all duration-300 hover:scale-105 ${
+              enableAnimations ? 'animate-fade-in' : ''
+            }`}
+          >
+            <Heart className={`h-6 w-6 text-pink-400 ${enableAnimations ? 'animate-heartbeat' : ''}`} />
             <span className="font-bold text-lg text-purple-800">Larissa Harumi</span>
           </Link>
 

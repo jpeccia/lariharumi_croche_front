@@ -30,23 +30,40 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      console.log('Tentando fazer login com:', data.email);
       const response = await authApi.login(data.email, data.password);
+      console.log('Resposta do backend:', response);
   
-      // Aqui, estamos assumindo que o token está diretamente na resposta
-      const token = response.token; 
+      // O backend retorna o token
+      const token = response.token;
 
       if (!token || typeof token !== 'string') {
+        console.error('Token inválido:', token);
         throw new Error('Token inválido');
       }
 
+      console.log('Token recebido:', token);
+      
       // Decodifique o token JWT
       const decodedToken = jwtDecode<JwtPayload>(token);
+      console.log('Token decodificado:', decodedToken);
   
       // Verifique o papel do usuário
       const isAdmin = decodedToken.role === 'ADMIN';
+      console.log('É admin?', isAdmin);
+      
+      // Crie o objeto user a partir dos dados do token e email fornecido
+      const user = {
+        ID: parseInt(decodedToken.sub), // Subject contém o ID do usuário
+        email: data.email, // Usamos o email fornecido no login
+        name: data.email.split('@')[0], // Nome temporário baseado no email
+        isAdmin: isAdmin
+      };
+      
+      console.log('Objeto user criado:', user);
   
       // Armazene os dados no Zustand
-      setAuth(response.user, token, isAdmin);
+      setAuth(user, token);
   
       // Rastrear conversão de login bem-sucedido
       trackConversion('login_success', undefined, { isAdmin });

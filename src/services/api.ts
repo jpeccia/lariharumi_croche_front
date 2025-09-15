@@ -34,9 +34,20 @@ api.interceptors.response.use(
   }
 );
 
+// Interface para resposta de login
+interface LoginResponse {
+  token: string;
+  user?: {
+    ID: number;
+    email: string;
+    name: string;
+    role: string;
+  };
+}
+
 // Funções de autenticação
 export const authApi = {
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string): Promise<LoginResponse> => {
     const response = await api.post('/auth/login', { email, password });
     return response.data;
   },
