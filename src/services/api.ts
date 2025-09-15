@@ -17,7 +17,12 @@ const api = axios.create({
   baseURL: env.VITE_API_BASE_URL,
 });
 
-// Interceptor para adicionar token de autenticação
+// API pública sem autenticação
+const publicApiInstance = axios.create({
+  baseURL: env.VITE_API_BASE_URL,
+});
+
+// Interceptor para adicionar token de autenticação (apenas para API administrativa)
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
   if (token) {
@@ -26,7 +31,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor para tratamento de erros
+// Interceptor para tratamento de erros (API administrativa)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -41,6 +46,29 @@ api.interceptors.response.use(
       useAuthStore.getState().logout();
       showAuthError();
     } else if (error.response?.status >= 500) {
+      showServerError();
+    } else if (error.response?.status >= 400) {
+      showServerError();
+    } else if (!navigator.onLine) {
+      showNetworkError();
+    }
+    
+    return Promise.reject(new Error(apiError.message || 'Erro na requisição'));
+  }
+);
+
+// Interceptor para tratamento de erros (API pública)
+publicApiInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const apiError: ApiError = error.response?.data || {
+      code: 'UNKNOWN_ERROR',
+      message: error.message || 'Erro na requisição',
+      timestamp: new Date().toISOString(),
+      retryable: false
+    };
+
+    if (error.response?.status >= 500) {
       showServerError();
     } else if (error.response?.status >= 400) {
       showServerError();
@@ -76,7 +104,7 @@ export const publicApi = {
   // Buscar produtos com paginação (público)
   searchProducts: async (query: string, config: PaginationConfig = { page: 1, limit: 12 }): Promise<Product[] | SearchResponse<Product>> => {
     const params = new URLSearchParams({
-      q: query,
+      search: query,
       page: config.page.toString(),
       limit: config.limit.toString(),
     });
@@ -88,7 +116,7 @@ export const publicApi = {
       params.append('sortOrder', config.sortOrder);
     }
 
-    const response = await api.get(`/products/search?${params.toString()}`);
+    const response = await publicApiInstance.get(`/products/search?${params.toString()}`);
     return response.data;
   },
 
@@ -110,13 +138,13 @@ export const publicApi = {
       ? `/products/category/${categoryId}?${params.toString()}`
       : `/products?${params.toString()}`;
   
-    const response = await api.get(url);
+    const response = await publicApiInstance.get(url);
     return response.data;
   },
 
   // Obter todas as categorias (público)
   getCategories: async () => {
-    const response = await api.get('/categories');
+    const response = await publicApiInstance.get('/categories');
     return response.data;
   },
 };
@@ -173,7 +201,7 @@ export const adminApi = {
   // Buscar produtos com paginação
   searchProducts: async (query: string, config: PaginationConfig = { page: 1, limit: 12 }): Promise<SearchResponse<Product>> => {
     const params = new URLSearchParams({
-      q: query,
+      search: query,
       page: config.page.toString(),
       limit: config.limit.toString(),
     });
