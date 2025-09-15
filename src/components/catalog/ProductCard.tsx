@@ -185,15 +185,15 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           </p>
         </div>
         
-        {/* Botão de ação melhorado */}
+        {/* Botão de ação suavizado */}
         <a
           href={instagramUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105 transform"
+          className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3 rounded-2xl font-medium transition-all duration-300 hover:shadow-md hover:scale-[1.02] transform border border-purple-300/20"
         >
-          <Instagram size={20} />
-          <span>Encomendar no Instagram</span>
+          <Instagram size={18} />
+          <span className="text-sm">Encomendar no Instagram</span>
         </a>
       </div>
 
@@ -266,10 +266,10 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
                   href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105 transform"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white px-8 py-3 rounded-2xl font-medium transition-all duration-300 hover:shadow-md hover:scale-[1.02] transform border border-purple-300/20"
                 >
-                  <Instagram size={20} />
-                  <span>Encomendar no Instagram</span>
+                  <Instagram size={18} />
+                  <span className="text-sm">Encomendar no Instagram</span>
                 </a>
               </div>
             </div>
