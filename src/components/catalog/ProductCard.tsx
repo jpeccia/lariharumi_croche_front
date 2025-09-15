@@ -13,6 +13,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isModalTransitioning, setIsModalTransitioning] = useState(false);
   
   // Usa o hook otimizado para carregar imagens
   const { imageUrls, isLoading, error } = useImageCache(product.ID);
@@ -34,16 +35,37 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
     };
   
     if (isModalOpen) {
+      // Prevenir scroll do body quando modal está aberto
+      document.body.style.overflow = 'hidden';
       document.addEventListener("keydown", handleKeyDown);
+    } else {
+      // Restaurar scroll do body quando modal fecha
+      document.body.style.overflow = 'unset';
     }
   
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = 'unset';
     };
   }, [isModalOpen]);
 
-  const openModal = useCallback(() => setIsModalOpen(true), []);
-  const closeModal = useCallback(() => setIsModalOpen(false), []);
+  const openModal = useCallback(() => {
+    if (!isModalTransitioning && !isModalOpen) {
+      setIsModalTransitioning(true);
+      setIsModalOpen(true);
+      // Reset do estado de transição após um pequeno delay
+      setTimeout(() => setIsModalTransitioning(false), 100);
+    }
+  }, [isModalTransitioning, isModalOpen]);
+
+  const closeModal = useCallback(() => {
+    if (!isModalTransitioning && isModalOpen) {
+      setIsModalTransitioning(true);
+      setIsModalOpen(false);
+      // Reset do estado de transição após um pequeno delay
+      setTimeout(() => setIsModalTransitioning(false), 100);
+    }
+  }, [isModalTransitioning, isModalOpen]);
 
   const handlePrevImage = useCallback(() => {
     setCurrentImageIndex((prevIndex) =>
@@ -84,10 +106,13 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           <>
             <img
               loading="lazy"
-              onClick={openModal}
+              onClick={(e) => {
+                e.stopPropagation();
+                openModal();
+              }}
               src={imageUrls[currentImageIndex]}
               alt={product.name}
-              className="w-full h-full object-contain transition-opacity duration-200"
+              className="w-full h-full object-contain transition-opacity duration-200 cursor-pointer"
               style={{
                 objectPosition: 'center',
                 background: '#f8fafc'
@@ -140,17 +165,21 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
             
             {/* Botão de maximizar simplificado */}
             <button
-              onClick={openModal}
+              onClick={(e) => {
+                e.stopPropagation();
+                openModal();
+              }}
+              disabled={isModalTransitioning}
               className={`absolute top-3 right-3 text-white bg-black/30 hover:bg-black/50 p-2 rounded-full z-20 transition-opacity duration-200 ${
                 isHovered ? 'opacity-100' : 'opacity-0'
-              }`}
+              } ${isModalTransitioning ? 'pointer-events-none' : ''}`}
             >
               <Maximize2 size={16} />
             </button>
             
             {/* Tag de preço simplificada */}
             <div className="absolute top-3 left-3 bg-purple-500 text-white px-3 py-1 rounded-full">
-              <span className="text-sm font-medium">{product.priceRange}</span>
+              <span className="text-sm font-medium">R$ {product.priceRange}</span>
             </div>
           </>
         ) : (
@@ -190,13 +219,21 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
 
       {/* Modal simplificado */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            // Fechar modal apenas se clicar no fundo (não no conteúdo)
+            if (e.target === e.currentTarget) {
+              closeModal();
+            }
+          }}
+        >
           <div className="relative bg-white rounded-xl max-w-4xl max-h-[90vh] overflow-hidden shadow-lg">
             {/* Header do modal */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">{product.name}</h2>
-                <p className="text-sm text-gray-600">{product.priceRange}</p>
+                <p className="text-sm text-gray-600">R$ {product.priceRange}</p>
               </div>
               <button
                 onClick={closeModal}
