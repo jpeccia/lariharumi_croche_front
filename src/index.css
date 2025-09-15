@@ -24,3 +24,57 @@ html {
   outline: 2px solid #8b5cf6;
   outline-offset: 2px;
 }
+
+/* Estilos personalizados para Toast */
+.custom-toast {
+  @apply rounded-lg shadow-lg border-l-4;
+  font-family: 'Mali', cursive;
+}
+
+.custom-toast-body {
+  @apply text-sm font-medium;
+}
+
+.custom-toast-progress {
+  @apply bg-gradient-to-r from-purple-400 to-pink-400;
+}
+
+/* Toast específicos por tipo */
+.Toastify__toast--success {
+  @apply border-green-500 bg-green-50 text-green-800;
+}
+
+.Toastify__toast--error {
+  @apply border-red-500 bg-red-50 text-red-800;
+}
+
+.Toastify__toast--warning {
+  @apply border-yellow-500 bg-yellow-50 text-yellow-800;
+}
+
+.Toastify__toast--info {
+  @apply border-blue-500 bg-blue-50 text-blue-800;
+}
+
+.Toastify__toast--default {
+  @apply border-purple-500 bg-purple-50 text-purple-800;
+}
+
+/* Animação personalizada para toast */
+.Toastify__toast {
+  @apply transform transition-all duration-300 ease-in-out;
+}
+
+.Toastify__toast--rtl {
+  @apply transform transition-all duration-300 ease-in-out;
+}
+
+/* Botão de fechar personalizado */
+.Toastify__close-button {
+  @apply text-gray-600 hover:text-gray-800 transition-colors;
+}
+
+/* Ícones personalizados */
+.Toastify__toast-icon {
+  @apply mr-3;
+}

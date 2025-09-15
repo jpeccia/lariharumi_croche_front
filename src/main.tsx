@@ -20,6 +20,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       draggable
       pauseOnHover
       theme="light"
+      toastClassName="custom-toast"
+      bodyClassName="custom-toast-body"
+      progressClassName="custom-toast-progress"
     />
     <BrowserRouter>
       <App />

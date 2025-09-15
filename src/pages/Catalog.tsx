@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import api, { adminApi } from '../services/api'; // Importando o axios configurado
+import api from '../services/api';
 import CategoryCard from '../components/catalog/CategoryCard';
 import ProductCard from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 import { preloadImages } from '../hooks/useImageCache';
-import { Search, Filter } from 'lucide-react';
-import { useDebounce } from 'use-debounce';
+import { Filter } from 'lucide-react';
+import { showCatalogError, showCategoryLoadError, showProductLoadError } from '../utils/toast';
 
 function Catalog() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -16,8 +16,6 @@ function Catalog() {
   const viewProductCatalogRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   const [showFilters, setShowFilters] = useState(false);
 
 
@@ -32,27 +30,26 @@ function Catalog() {
       setCategories(sortedCategories);
     } catch (error) {
       console.error('Erro ao buscar categorias:', error);
+      showCategoryLoadError();
     }
   };
 
   const [page, setPage] = useState(1);
   const limit = 12;
   
-  const fetchProducts = useCallback(async (categoryId: number | null, reset = false, searchQuery?: string) => {
+  const fetchProducts = useCallback(async (categoryId: number | null, reset = false) => {
     if (isLoading || (!hasMore && !reset)) return;
   
     try {
       setIsLoading(true);
   
       const currentPage = reset ? 1 : page;
-      let productsFetched;
+      const url = categoryId
+        ? `/products/category/${categoryId}?page=${currentPage}&limit=${limit}`
+        : `/products?page=${currentPage}&limit=${limit}`;
       
-      if (searchQuery?.trim()) {
-        productsFetched = await adminApi.searchProducts(searchQuery, currentPage, limit);
-      } else {
-        productsFetched = await adminApi.getProductsByPage(categoryId, currentPage, limit);
-      }
-      
+      const response = await api.get(url);
+      const productsFetched = response.data;
       const sorted = productsFetched.sort((a: any, b: any) => a.name.localeCompare(b.name));
   
       if (reset) {
@@ -74,6 +71,7 @@ function Catalog() {
       }
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
+      showProductLoadError();
     } finally {
       setIsLoading(false);
     }
@@ -91,17 +89,6 @@ function Catalog() {
     setHasMore(true); // Reinicia o controle sempre que a categoria muda
     fetchProducts(selectedCategory, true);
   }, [selectedCategory]);
-
-  // Efeito para busca
-  useEffect(() => {
-    if (debouncedSearchTerm) {
-      setHasMore(true);
-      setSelectedCategory(null); // Limpa categoria quando busca
-      fetchProducts(null, true, debouncedSearchTerm);
-    } else if (!debouncedSearchTerm && !selectedCategory) {
-      fetchProducts(null, true);
-    }
-  }, [debouncedSearchTerm]);
   
   
 
@@ -147,52 +134,36 @@ function Catalog() {
           - Categorias -
         </h2>
         
-        {/* Barra de busca */}
+        {/* Filtros */}
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
+          <div className="flex justify-center">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
             >
               <Filter size={20} />
-              Filtros
+              Filtros por Categoria
             </button>
           </div>
           
           {/* Filtros */}
           {showFilters && (
             <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 justify-center">
                 <button
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    setSearchTerm('');
-                  }}
+                  onClick={() => setSelectedCategory(null)}
                   className={`px-4 py-2 rounded-full transition-colors ${
-                    !selectedCategory && !searchTerm
+                    !selectedCategory
                       ? 'bg-purple-500 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  Todos
+                  Todas as Peças
                 </button>
                 {categories.map((category) => (
                   <button
                     key={category.ID}
-                    onClick={() => {
-                      setSelectedCategory(category.ID);
-                      setSearchTerm('');
-                    }}
+                    onClick={() => setSelectedCategory(category.ID)}
                     className={`px-4 py-2 rounded-full transition-colors ${
                       selectedCategory === category.ID
                         ? 'bg-purple-500 text-white'
@@ -214,10 +185,7 @@ function Catalog() {
                 <CategoryCard
                   key={category.ID}
                   category={category}
-                  onClick={() => {
-                    setSelectedCategory(category.ID);
-                    setSearchTerm('');
-                  }}
+                  onClick={() => setSelectedCategory(category.ID)}
                 />
               ))}
             </div>
@@ -228,11 +196,9 @@ function Catalog() {
       <div>
         <div className="flex justify-between items-center mb-8">
           <h2 className="font-handwritten text-6xl text-purple-800 mb-8">
-            {(() => {
-              if (searchTerm) return `Resultados para "${searchTerm}"`;
-              if (selectedCategory) return categories.find((c) => c.ID === selectedCategory)?.name;
-              return 'Todas as Peças';
-            })()}
+            {selectedCategory
+              ? categories.find((c) => c.ID === selectedCategory)?.name
+              : 'Todas as Peças'}
           </h2>
           <FloatingHearts />
           {selectedCategory && (

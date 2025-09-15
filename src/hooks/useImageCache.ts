@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { adminApi } from '../services/api';
+import { getProductImages, getCategoryImage } from '../services/api';
 
 interface ImageCache {
   [key: string]: string[];
@@ -42,7 +42,7 @@ export function useImageCache(productId: number): UseImageCacheReturn {
     setError(null);
 
     try {
-      const images = await adminApi.getProductImages(productId);
+      const images = await getProductImages(productId);
       
       // Armazena no cache global e sessionStorage
       imageCache[cacheKey] = images;
@@ -97,7 +97,7 @@ export function useCategoryImageCache(categoryId: number): {
     setError(null);
 
     try {
-      const image = await adminApi.getCategoryImage(categoryId);
+      const image = await getCategoryImage(categoryId);
       
       // Armazena no cache global e sessionStorage
       imageCache[cacheKey] = [image];
@@ -137,7 +137,7 @@ export async function preloadImages(productIds: number[]): Promise<void> {
       await Promise.all(
         batch.map(async (id) => {
           try {
-            const images = await adminApi.getProductImages(id);
+            const images = await getProductImages(id);
             const cacheKey = `product-${id}`;
             imageCache[cacheKey] = images;
             sessionStorage.setItem(cacheKey, JSON.stringify(images));
