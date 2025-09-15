@@ -121,7 +121,12 @@ function ProductCard({ product }: ProductCardProps) {
   );
 }
 
-export function ProductManagement({ product }: ProductProps) {
+interface ProductManagementProps {
+  product?: Product;
+  onDataChange?: () => void;
+}
+
+export function ProductManagement({ product, onDataChange }: ProductManagementProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -249,6 +254,7 @@ export function ProductManagement({ product }: ProductProps) {
       fetchProducts();
       setIsCreating(false);
       resetForm();
+      onDataChange?.(); // Atualizar estatísticas do dashboard
     } catch (error) {
       console.error('Falha ao criar o produto:', error);
       showError('Falha ao criar o produto.');
@@ -299,6 +305,7 @@ export function ProductManagement({ product }: ProductProps) {
       setEditingProduct(null);
       setIsCreating(false);
       resetForm();
+      onDataChange?.(); // Atualizar estatísticas do dashboard
     } catch (error) {
       console.error('Falha ao atualizar o produto:', error);
       showError('Falha ao atualizar o produto.');
@@ -309,6 +316,7 @@ export function ProductManagement({ product }: ProductProps) {
     try {
       await adminApi.deleteProduct(productId);
       fetchProducts();
+      onDataChange?.(); // Atualizar estatísticas do dashboard
     } catch (error) {
       console.error('Falha ao excluir o produto:', error);
       showError('Falha ao excluir o produto.');

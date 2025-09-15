@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Package, FolderOpen, BarChart3, Settings, Users, Image, Plus, Eye } from 'lucide-react';
 import { useAnalytics } from '../../services/analytics';
 import { LoadingSpinner, CardSkeleton } from '../../components/shared/LoadingStates';
+import { adminApi } from '../../services/api';
 
 // Lazy loading para componentes administrativos pesados
 const ProductManagement = lazy(() => import('../../components/admin/ProductManagement').then(module => ({ default: module.ProductManagement })));
@@ -20,12 +21,36 @@ function AdminDashboard() {
     totalCategories: 0,
     recentActivity: []
   });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  const loadStats = async () => {
+    try {
+      setIsLoadingStats(true);
+      
+      // Carregar categorias
+      const categories = await adminApi.getCategories();
+      
+      // Carregar produtos (primeira página para contar)
+      const products = await adminApi.getProductsByPage(null, 1, 1000); // Buscar muitos produtos para contar
+      
+      setStats({
+        totalProducts: products.length,
+        totalCategories: categories.length,
+        recentActivity: [] // Por enquanto vazio, pode ser implementado depois
+      });
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAdmin) {
       navigate('/');
     } else {
       trackPageView('admin_dashboard');
+      loadStats();
     }
   }, [isAdmin, navigate, trackPageView]);
 
@@ -69,7 +94,13 @@ function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total de Produtos</p>
-                <p className="text-2xl font-bold text-purple-800">{stats.totalProducts}</p>
+                {isLoadingStats ? (
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-purple-800">{stats.totalProducts}</p>
+                )}
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
                 <Package className="h-6 w-6 text-purple-600" />
@@ -81,7 +112,13 @@ function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total de Categorias</p>
-                <p className="text-2xl font-bold text-purple-800">{stats.totalCategories}</p>
+                {isLoadingStats ? (
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-purple-800">{stats.totalCategories}</p>
+                )}
               </div>
               <div className="p-3 bg-pink-100 rounded-lg">
                 <FolderOpen className="h-6 w-6 text-pink-600" />
@@ -92,8 +129,16 @@ function AdminDashboard() {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-100 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Atividade Recente</p>
-                <p className="text-2xl font-bold text-purple-800">{stats.recentActivity.length}</p>
+                <p className="text-sm font-medium text-gray-600">Produtos por Categoria</p>
+                {isLoadingStats ? (
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-purple-800">
+                    {stats.totalCategories > 0 ? Math.round(stats.totalProducts / stats.totalCategories) : 0}
+                  </p>
+                )}
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <BarChart3 className="h-6 w-6 text-green-600" />
@@ -177,13 +222,13 @@ function AdminDashboard() {
 
             {activeTab === 'products' && (
               <Suspense fallback={<CardSkeleton />}>
-                <ProductManagement />
+                <ProductManagement onDataChange={loadStats} />
               </Suspense>
             )}
 
             {activeTab === 'categories' && (
               <Suspense fallback={<CardSkeleton />}>
-                <CategoryManagement />
+                <CategoryManagement onDataChange={loadStats} />
               </Suspense>
             )}
           </div>

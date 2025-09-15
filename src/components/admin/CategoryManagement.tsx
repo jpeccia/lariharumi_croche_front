@@ -67,7 +67,11 @@ function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
   );
 }
 
-export function CategoryManagement() {
+interface CategoryManagementProps {
+  onDataChange?: () => void;
+}
+
+export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -109,6 +113,7 @@ export function CategoryManagement() {
         description: '',
         image: '',
       });
+      onDataChange?.(); // Atualizar estatísticas do dashboard
     } catch (error) {
       console.error('Falha ao criar a categoria:', error);
       showError('Falha ao criar a categoria. Verifique os dados.');
@@ -153,6 +158,7 @@ export function CategoryManagement() {
         description: '',
         image: '',
       });
+      onDataChange?.(); // Atualizar estatísticas do dashboard
     } catch (error) {
       console.error('Falha ao atualizar a categoria:', error);
       showError('Falha ao atualizar a categoria. Verifique os dados.');
@@ -164,6 +170,7 @@ export function CategoryManagement() {
     try {
       await adminApi.deleteCategory(categoryId);
       loadCategories();
+      onDataChange?.(); // Atualizar estatísticas do dashboard
     } catch (error) {
       console.error('Falha ao excluir a categoria:', error);
       showError('Falha ao excluir a categoria. Tente novamente.');
