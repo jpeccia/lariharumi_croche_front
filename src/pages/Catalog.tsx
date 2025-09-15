@@ -8,11 +8,13 @@ import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 import { preloadImages } from '../hooks/useImageCache';
 import { showCatalogError, showCategoryLoadError, showProductLoadError } from '../utils/toast';
 import { Category, Product } from '../types/product';
+import { PaginatedResponse, PaginationConfig } from '../types/api';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { usePerformanceOptimization } from '../hooks/usePerformanceOptimization';
 import { useAnalytics } from '../services/analytics';
 import { LoadingSpinner, CardSkeleton } from '../components/shared/LoadingStates';
-import { useCategoriesCache } from '../hooks/useApiCache';
+import { useCategoriesCache, useProductsCache } from '../hooks/useApiCache';
+import { CacheIndicator } from '../components/shared/CacheIndicator';
 
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -21,6 +23,8 @@ function Catalog() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginationInfo, setPaginationInfo] = useState<PaginatedResponse<Product>['pagination'] | null>(null);
   
   // Hooks de otimização
   const { deviceInfo, getOptimalGridColumns, getAnimationConfig } = useMobileOptimization();
@@ -29,6 +33,14 @@ function Catalog() {
   
   // Cache de categorias
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useCategoriesCache();
+  
+  // Configuração de paginação
+  const paginationConfig: PaginationConfig = {
+    page: currentPage,
+    limit: 12,
+    sortBy: 'name',
+    sortOrder: 'asc'
+  };
 
 
   // Monitorar quando categorias são carregadas
@@ -38,34 +50,43 @@ function Catalog() {
     }
   }, [categories, categoriesLoading]);
 
-  const [page, setPage] = useState(1);
-  const limit = 12;
-  
   const fetchProducts = useCallback(async (categoryId: number | null, reset = false) => {
     if (isLoading || (!hasMore && !reset)) return;
   
     try {
       setIsLoading(true);
   
-      const currentPage = reset ? 1 : page;
-      const productsFetched = await adminApi.getProductsByPage(categoryId, currentPage, limit);
-      const sorted = productsFetched.sort((a: Product, b: Product) => a.name.localeCompare(b.name));
+      const pageToFetch = reset ? 1 : currentPage;
+      const config: PaginationConfig = {
+        page: pageToFetch,
+        limit: 12,
+        sortBy: 'name',
+        sortOrder: 'asc'
+      };
+      
+      const response: PaginatedResponse<Product> = await adminApi.getProductsByPage(categoryId, config);
+      const productsFetched = response.data;
+      
+      // Filtrar produtos deletados (soft delete)
+      const activeProducts = productsFetched.filter(product => !product.isDeleted);
   
       if (reset) {
-        setProducts(sorted);
-        setPage(2);
-        setHasMore(productsFetched.length === limit);
+        setProducts(activeProducts);
+        setCurrentPage(2);
+        setHasMore(response.pagination.hasNext);
+        setPaginationInfo(response.pagination);
         
         // Pré-carrega imagens dos produtos da primeira página
-        const productIds = sorted.map((product: Product) => product.ID);
+        const productIds = activeProducts.map((product: Product) => product.ID);
         preloadImages(productIds);
       } else {
-        setProducts((prev) => [...prev, ...sorted]);
-        setPage((prev) => prev + 1);
-        setHasMore(productsFetched.length === limit);
+        setProducts((prev) => [...prev, ...activeProducts]);
+        setCurrentPage((prev) => prev + 1);
+        setHasMore(response.pagination.hasNext);
+        setPaginationInfo(response.pagination);
         
         // Pré-carrega imagens dos novos produtos
-        const productIds = sorted.map((product: Product) => product.ID);
+        const productIds = activeProducts.map((product: Product) => product.ID);
         preloadImages(productIds);
       }
     } catch (error) {
@@ -74,7 +95,7 @@ function Catalog() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, page, limit]);
+  }, [isLoading, hasMore, currentPage]);
   
   
   
@@ -198,11 +219,20 @@ function Catalog() {
 
       <div>
         <div className="flex justify-between items-center mb-8">
-          <h2 className="font-handwritten text-6xl text-purple-800 mb-8">
-            {selectedCategory
-              ? categories.find((c) => c.ID === selectedCategory)?.name
-              : 'Todas as Peças'}
-          </h2>
+          <div className="flex items-center space-x-4">
+            <h2 className="font-handwritten text-6xl text-purple-800 mb-8">
+              {selectedCategory
+                ? categories.find((c) => c.ID === selectedCategory)?.name
+                : 'Todas as Peças'}
+            </h2>
+            {paginationInfo && (
+              <CacheIndicator 
+                cached={false} // Será atualizado quando implementarmos cache no frontend
+                requestTime={0}
+                className="mb-8"
+              />
+            )}
+          </div>
           <FloatingHearts />
            {selectedCategory && (
              <button

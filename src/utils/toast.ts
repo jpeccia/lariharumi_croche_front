@@ -1,4 +1,5 @@
 import { toast } from 'react-toastify';
+import { ApiError } from '../types/api';
 
 // Tipos de notificação
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -105,6 +106,30 @@ export const showCategoryLoadError = () =>
 
 export const showProductLoadError = () => 
   showError('Erro ao carregar produtos. Tente novamente. 🎁');
+
+// Funções para tratamento de erros estruturados da API
+export const showApiError = (error: ApiError) => {
+  const message = error.message || 'Erro desconhecido';
+  const details = error.details ? `\nDetalhes: ${JSON.stringify(error.details)}` : '';
+  
+  showError(`${message}${details}`, { autoClose: 8000 });
+};
+
+export const showUploadError = (error: ApiError, filename?: string) => {
+  const message = filename 
+    ? `Erro no upload de ${filename}: ${error.message}`
+    : `Erro no upload: ${error.message}`;
+  
+  showError(message, { autoClose: 10000 });
+};
+
+export const showPaginationError = (error: ApiError) => {
+  showError(`Erro na paginação: ${error.message}`, { autoClose: 6000 });
+};
+
+export const showCacheError = (error: ApiError) => {
+  showWarning(`Problema com cache: ${error.message}`, { autoClose: 4000 });
+};
 
 export const showLoading = (message: string = 'Carregando...') => 
   showInfo(message, { autoClose: false });

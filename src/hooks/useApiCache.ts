@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminApi } from '../services/api';
+import { PaginatedResponse, PaginationConfig } from '../types/api';
+import { Product, Category } from '../types/product';
 
 interface CacheEntry<T> {
   data: T;
@@ -108,13 +110,24 @@ export function useCategoriesCache() {
   );
 }
 
-export function useProductsCache(page = 1, limit = 12, categoryId: number | null = null) {
-  const key = `products-${page}-${limit}-${categoryId || 'all'}`;
+export function useProductsCache(page = 1, limit = 12, categoryId: number | null = null, config?: PaginationConfig) {
+  const key = `products-${page}-${limit}-${categoryId || 'all'}-${config?.sortBy || 'default'}-${config?.sortOrder || 'asc'}`;
+  
+  return useApiCache<PaginatedResponse<Product>>(
+    key,
+    () => adminApi.getProductsByPage(categoryId, config || { page, limit }),
+    { ttl: 2 * 60 * 1000 } // 2 minutos para produtos
+  );
+}
+
+// Hook específico para busca de produtos
+export function useProductsSearchCache(query: string, page = 1, limit = 12, config?: PaginationConfig) {
+  const key = `products-search-${query}-${page}-${limit}-${config?.sortBy || 'default'}-${config?.sortOrder || 'asc'}`;
   
   return useApiCache(
     key,
-    () => adminApi.getProductsByPage(categoryId, page, limit),
-    { ttl: 2 * 60 * 1000 } // 2 minutos para produtos
+    () => adminApi.searchProducts(query, config || { page, limit }),
+    { ttl: 1 * 60 * 1000 } // 1 minuto para busca (mais dinâmico)
   );
 }
 

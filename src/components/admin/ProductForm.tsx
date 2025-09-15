@@ -4,6 +4,8 @@ import { Product } from '../../types/product';
 import { EnhancedImageUpload } from './EnhancedImageUpload';
 import { ImageEditor } from './ImageEditor';
 import { ProductImageManager } from './ProductImageManager';
+import { useAsyncUpload } from '../../hooks/useAsyncUpload';
+import { UploadProgressComponent } from '../shared/UploadProgress';
 
 interface Category {
   ID: number;
@@ -47,6 +49,26 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Hook para upload assíncrono
+  const {
+    uploadFiles,
+    uploadProgress,
+    isUploading,
+    uploadError,
+    retryUpload,
+    cancelUpload,
+    clearError
+  } = useAsyncUpload({
+    productId: product?.ID || 0,
+    onComplete: (response) => {
+      console.log('Upload concluído:', response);
+      // Aqui você pode atualizar a lista de imagens do produto
+    },
+    onError: (error) => {
+      console.error('Erro no upload:', error);
+    }
+  });
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -300,6 +322,36 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </div>
               )}
 
+              {/* Progresso de Upload */}
+              {uploadProgress && (
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-4 rounded-xl border border-yellow-100">
+                  <UploadProgressComponent
+                    progress={uploadProgress}
+                    onCancel={cancelUpload}
+                    onRetry={retryUpload}
+                  />
+                </div>
+              )}
+
+              {/* Erro de Upload */}
+              {uploadError && (
+                <div className="bg-gradient-to-br from-red-50 to-pink-50 p-4 rounded-xl border border-red-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <X className="h-5 w-5 text-red-600 mr-2" />
+                      <span className="text-red-800 font-medium">Erro no Upload</span>
+                    </div>
+                    <button
+                      onClick={clearError}
+                      className="text-red-600 hover:text-red-700 text-sm"
+                    >
+                      Limpar
+                    </button>
+                  </div>
+                  <p className="text-red-700 text-sm mt-2">{uploadError}</p>
+                </div>
+              )}
+
               {/* Dicas */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
                 <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
@@ -329,13 +381,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isUploading}
               className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                   <span>Salvando...</span>
+                </>
+              ) : isUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <span>Fazendo Upload...</span>
                 </>
               ) : (
                 <>

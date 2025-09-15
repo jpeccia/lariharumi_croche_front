@@ -2,6 +2,16 @@ import axios from 'axios';
 import { env } from '../env';
 import { showNetworkError, showServerError, showAuthError } from '../utils/toast';
 import { useAuthStore } from '../store/authStore';
+import { 
+  PaginatedResponse, 
+  UploadResponse, 
+  UploadProgress, 
+  SearchResponse,
+  PaginationConfig,
+  UploadConfig,
+  ApiError 
+} from '../types/api';
+import { Product, Category } from '../types/product';
 
 const api = axios.create({
   baseURL: env.VITE_API_BASE_URL,
@@ -20,6 +30,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    const apiError: ApiError = error.response?.data || {
+      code: 'UNKNOWN_ERROR',
+      message: error.message || 'Erro na requisição',
+      timestamp: new Date().toISOString(),
+      retryable: false
+    };
+
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();
       showAuthError();
@@ -30,7 +47,8 @@ api.interceptors.response.use(
     } else if (!navigator.onLine) {
       showNetworkError();
     }
-    return Promise.reject(new Error(error.message || 'Erro na requisição'));
+    
+    return Promise.reject(new Error(apiError.message || 'Erro na requisição'));
   }
 );
 
@@ -80,13 +98,44 @@ export const adminApi = {
     return response.data;
   },
 
-  // Obter todos os produtos (com paginação)
-  getProductsByPage: async (categoryId: number | null, page = 1, limit = 12) => {
+  // Obter todos os produtos (com paginação melhorada)
+  getProductsByPage: async (categoryId: number | null, config: PaginationConfig = { page: 1, limit: 12 }): Promise<PaginatedResponse<Product>> => {
+    const params = new URLSearchParams({
+      page: config.page.toString(),
+      limit: config.limit.toString(),
+    });
+
+    if (config.sortBy) {
+      params.append('sortBy', config.sortBy);
+    }
+    if (config.sortOrder) {
+      params.append('sortOrder', config.sortOrder);
+    }
+
     const url = categoryId
-      ? `/products/category/${categoryId}?page=${page}&limit=${limit}`
-      : `/products?page=${page}&limit=${limit}`;
+      ? `/products/category/${categoryId}?${params.toString()}`
+      : `/products?${params.toString()}`;
   
     const response = await api.get(url);
+    return response.data;
+  },
+
+  // Buscar produtos com paginação
+  searchProducts: async (query: string, config: PaginationConfig = { page: 1, limit: 12 }): Promise<SearchResponse<Product>> => {
+    const params = new URLSearchParams({
+      q: query,
+      page: config.page.toString(),
+      limit: config.limit.toString(),
+    });
+
+    if (config.sortBy) {
+      params.append('sortBy', config.sortBy);
+    }
+    if (config.sortOrder) {
+      params.append('sortOrder', config.sortOrder);
+    }
+
+    const response = await api.get(`/products/search?${params.toString()}`);
     return response.data;
   },
 
@@ -102,21 +151,74 @@ export const adminApi = {
     return response.data;
   },
 
-  // Upload de imagens de produto
-  uploadProductImages: async (files: File[], productId: number) => {
+  // Upload de imagens de produto (assíncrono)
+  uploadProductImages: async (files: File[], productId: number, config?: UploadConfig): Promise<UploadResponse> => {
     const formData = new FormData();
     files.forEach((file) => formData.append("images[]", file)); 
 
     try {
-      const response = await api.post(`/products/${productId}/upload-images`, formData);
+      const response = await api.post(`/products/${productId}/upload-images`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 30000, // 30 segundos
+      });
       
-      if (!response.data.paths || !Array.isArray(response.data.paths)) {
-        throw new Error('O retorno do upload não é um array válido');
-      }
-
-      return response.data.paths;
+      return response.data;
     } catch (error) {
       console.error("Erro ao enviar as imagens:", error);
+      throw new Error("Falha ao fazer upload das imagens");
+    }
+  },
+
+  // Verificar progresso do upload
+  getUploadProgress: async (productId: number, uploadId: string): Promise<UploadProgress> => {
+    try {
+      const response = await api.get(`/products/${productId}/upload-progress/${uploadId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao verificar progresso do upload:", error);
+      throw new Error("Falha ao verificar progresso do upload");
+    }
+  },
+
+  // Upload de imagens em paralelo (nova funcionalidade)
+  uploadProductImagesParallel: async (files: File[], productId: number, config: UploadConfig = {
+    maxFileSize: 5 * 1024 * 1024, // 5MB
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    maxFiles: 10,
+    parallelUploads: 3,
+    retryAttempts: 3,
+    retryDelay: 1000
+  }): Promise<UploadResponse> => {
+    // Validação de arquivos
+    if (files.length > config.maxFiles) {
+      throw new Error(`Máximo de ${config.maxFiles} arquivos permitidos`);
+    }
+
+    for (const file of files) {
+      if (file.size > config.maxFileSize) {
+        throw new Error(`Arquivo ${file.name} excede o tamanho máximo de ${config.maxFileSize / 1024 / 1024}MB`);
+      }
+      if (!config.allowedTypes.includes(file.type)) {
+        throw new Error(`Tipo de arquivo ${file.type} não é permitido`);
+      }
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => formData.append("images[]", file)); 
+
+    try {
+      const response = await api.post(`/products/${productId}/upload-images`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 60000, // 60 segundos para uploads paralelos
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao enviar as imagens em paralelo:", error);
       throw new Error("Falha ao fazer upload das imagens");
     }
   },

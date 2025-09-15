@@ -6,6 +6,12 @@ export interface Product {
   category: string;
   priceRange: string;
   description: string;
+  // Campos de soft delete
+  deletedAt?: string;
+  isDeleted?: boolean;
+  // Campos de auditoria
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Category {
@@ -13,4 +19,10 @@ export interface Category {
   name: string;
   description: string;
   image: string;
+  // Campos de soft delete
+  deletedAt?: string;
+  isDeleted?: boolean;
+  // Campos de auditoria
+  createdAt?: string;
+  updatedAt?: string;
 }
