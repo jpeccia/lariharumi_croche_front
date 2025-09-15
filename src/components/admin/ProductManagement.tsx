@@ -170,7 +170,7 @@ export function ProductManagement({ product }: ProductProps) {
       setCategories(data); 
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
-      alert('Falha ao carregar as categorias.');
+      showError('Falha ao carregar as categorias.');
     } finally {
       setLoading(false);
     }

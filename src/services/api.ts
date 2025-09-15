@@ -74,6 +74,12 @@ export const adminApi = {
     return response.data;
   },
 
+  // Obter todas as categorias
+  getCategories: async () => {
+    const response = await api.get('/categories');
+    return response.data;
+  },
+
   // Obter todos os produtos (com paginação)
   getProductsByPage: async (categoryId: number | null, page = 1, limit = 12) => {
     const url = categoryId
@@ -150,31 +156,32 @@ export const adminApi = {
     const response = await api.delete(`/categories/${categoryId}`);
     return response.data;
   },
-};
 
-// Função para buscar todas as imagens de um produto
-export const getProductImages = async (productId: number) => {
-  try {
-    const response = await api.get(`/products/${productId}/images`);
+  // Obter imagens de um produto
+  getProductImages: async (productId: number) => {
+    try {
+      const response = await api.get(`/products/${productId}/images`);
 
-    if (response.data && Array.isArray(response.data)) {
-      const baseUrl = env.VITE_API_BASE_URL;
-      const images = response.data.map((url: string) => {
-        if (url.startsWith("http")) return url;
-        const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
-        return `${baseUrl}${normalizedUrl}`;
-      });
+      if (response.data && Array.isArray(response.data)) {
+        const baseUrl = env.VITE_API_BASE_URL;
+        const images = response.data.map((url: string) => {
+          if (url.startsWith("http")) return url;
+          const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
+          return `${baseUrl}${normalizedUrl}`;
+        });
 
-      return images;
-    } else {
-      console.error("Nenhuma imagem encontrada para este produto");
+        return images;
+      } else {
+        console.error("Nenhuma imagem encontrada para este produto");
+        return [];
+      }
+    } catch (error) {
+      console.error("Erro ao buscar imagens do produto:", error);
       return [];
     }
-  } catch (error) {
-    console.error("Erro ao buscar imagens do produto:", error);
-    return [];
-  }
+  },
 };
+
 
 // Função para buscar a imagem de uma categoria
 export const getCategoryImage = async (categoryId: number) => {

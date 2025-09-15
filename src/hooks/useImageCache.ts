@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getProductImages, getCategoryImage } from '../services/api';
+import { adminApi, getCategoryImage } from '../services/api';
 
 interface ImageCache {
   [key: string]: string[];
@@ -41,15 +41,15 @@ export function useImageCache(productId: number): UseImageCacheReturn {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const images = await getProductImages(productId);
-      
-      // Armazena no cache global e sessionStorage
-      imageCache[cacheKey] = images;
-      sessionStorage.setItem(cacheKey, JSON.stringify(images));
-      
-      setImageUrls(images);
-    } catch (err) {
+        try {
+          const images = await adminApi.getProductImages(productId);
+          
+          // Armazena no cache global e sessionStorage
+          imageCache[cacheKey] = images;
+          sessionStorage.setItem(cacheKey, JSON.stringify(images));
+          
+          setImageUrls(images);
+        } catch (err) {
       const errorMessage = 'Erro ao carregar imagens';
       setError(errorMessage);
       console.error(errorMessage, err);
@@ -135,16 +135,16 @@ export async function preloadImages(productIds: number[]): Promise<void> {
     for (let i = 0; i < uncachedIds.length; i += batchSize) {
       const batch = uncachedIds.slice(i, i + batchSize);
       await Promise.all(
-        batch.map(async (id) => {
-          try {
-            const images = await getProductImages(id);
-            const cacheKey = `product-${id}`;
-            imageCache[cacheKey] = images;
-            sessionStorage.setItem(cacheKey, JSON.stringify(images));
-          } catch (error) {
-            console.error(`Erro ao pré-carregar imagens do produto ${id}:`, error);
-          }
-        })
+            batch.map(async (id) => {
+              try {
+                const images = await adminApi.getProductImages(id);
+                const cacheKey = `product-${id}`;
+                imageCache[cacheKey] = images;
+                sessionStorage.setItem(cacheKey, JSON.stringify(images));
+              } catch (error) {
+                console.error(`Erro ao pré-carregar imagens do produto ${id}:`, error);
+              }
+            })
       );
     }
   } catch (error) {
