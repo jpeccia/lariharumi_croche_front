@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { UploadCategoryImage } from './UploadCategoryImage';
-import { showError } from '../../utils/toast';
-import { categorySchema, CategoryFormData } from '../../schemas/validationSchemas';
-import { useAnalytics } from '../../services/analytics';
-import { ImageEditor } from './ImageEditor';
+import { showError, showProductSuccess } from '../../utils/toast';
 import { CategoryForm } from './CategoryForm';
 
 interface Category {
@@ -21,7 +18,7 @@ interface CategoryCardProps {
   onDelete: () => void;
 }
 
-function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
+function CategoryCard({ category, onEdit, onDelete }: Readonly<CategoryCardProps>) {
   const [categoryImageUrl, setCategoryImageUrl] = useState<string>('');
 
   useEffect(() => {
@@ -35,7 +32,7 @@ function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
     };
 
     fetchCategoryImage();
-  }, [category]);
+  }, [category.ID]);
 
   return (
     <div className="flex items-center justify-between p-4 bg-gray-100 rounded-md">
@@ -72,11 +69,10 @@ interface CategoryManagementProps {
   onDataChange?: () => void;
 }
 
-export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
+export function CategoryManagement({ onDataChange }: Readonly<CategoryManagementProps>) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newCategory, setNewCategory] = useState({
@@ -92,14 +88,11 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
 
   const loadCategories = async () => {
     try {
-      setLoading(true);
       const data = await adminApi.getCategories();
       setCategories(data);
     } catch (error) {
       console.error('Falha ao carregar categorias:', error);
       showError('Falha ao carregar as categorias.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -113,7 +106,7 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
 
       console.log('Categoria criada com sucesso:', response);
 
-      showCategorySuccess('criada');
+      showProductSuccess('criada');
       loadCategories();
       setIsFormOpen(false);
       setNewCategory({
@@ -172,7 +165,6 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
       console.error('Falha ao atualizar a categoria:', error);
       showError('Falha ao atualizar a categoria. Verifique os dados.');
     }
-    window.location.reload();
   };
 
   const handleDeleteCategory = async (categoryId: number) => {
@@ -192,7 +184,6 @@ export function CategoryManagement({ onDataChange }: CategoryManagementProps) {
       image: imageUrl,
     });
     setIsImageModalOpen(false);
-    window.location.reload();
   };
 
   return (

@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Package, Plus, Edit, Trash, X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Package, Plus, Edit, Trash, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
 import { UploadProductImage } from './UploadProductImage';
 import { showProductSuccess, showError } from '../../utils/toast';
 import { useDebounce } from 'use-debounce';
-import { productSchema, ProductFormData } from '../../schemas/validationSchemas';
-import { useAnalytics } from '../../services/analytics';
 import { ImageEditor } from './ImageEditor';
 import { useCategoriesCache } from '../../hooks/useApiCache';
 import { ProductForm } from './ProductForm';
@@ -130,7 +128,6 @@ interface ProductManagementProps {
 
 export function ProductManagement({ product, onDataChange }: ProductManagementProps) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [isCreating, setIsCreating] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -144,7 +141,6 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
   // Usar cache para categorias
   const { data: categories, refresh: refreshCategories } = useCategoriesCache();
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [productImageUrl, setProductImageUrl] = useState<string>('');
   const [isSectionVisible, setIsSectionVisible] = useState(true); // Novo estado para controlar a visibilidade da seção
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
@@ -153,7 +149,6 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
   const editFormRef = useRef<HTMLFormElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
-  const [isSearching, setIsSearching] = useState(false);
 
   
   useEffect(() => {
@@ -188,21 +183,7 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   
-  useEffect(() => {
-    if (!debouncedSearchTerm) {
-      fetchProducts();
-    }
-  }, [page]);
-  
-  useEffect(() => {
-    // Carrega a primeira página quando a busca termina
-    if (!debouncedSearchTerm) {
-      setPage(1);
-      setProducts([]);
-      fetchProducts();
-    }
-  }, [debouncedSearchTerm]);
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     if (isLoading) return;
   
     try {
@@ -218,7 +199,22 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoading, page, limit]);
+  
+  useEffect(() => {
+    if (!debouncedSearchTerm) {
+      fetchProducts();
+    }
+  }, [page, debouncedSearchTerm, fetchProducts]);
+  
+  useEffect(() => {
+    // Carrega a primeira página quando a busca termina
+    if (!debouncedSearchTerm) {
+      setPage(1);
+      setProducts([]);
+      fetchProducts();
+    }
+  }, [debouncedSearchTerm, fetchProducts]);
   
   
   
