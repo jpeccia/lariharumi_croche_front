@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Package, Plus, Edit, Trash, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Package, Plus, Edit, Trash, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
 import { UploadProductImage } from './UploadProductImage';
@@ -8,7 +8,7 @@ import { useDebounce } from 'use-debounce';
 import { ImageEditor } from './ImageEditor';
 import { useCategoriesCache } from '../../hooks/useApiCache';
 import { ProductForm } from './ProductForm';
-import { PaginatedResponse, PaginationConfig } from '../../types/api';
+import { PaginationConfig } from '../../types/api';
 
 interface Category {
   ID: number;
@@ -52,11 +52,6 @@ function ProductCard({ product }: Readonly<ProductCardProps>) {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
     );
-  };
-
-  const handleImageEdit = (file: File) => {
-    setImageToEdit(file);
-    setIsImageEditorOpen(true);
   };
 
   const handleImageEditorSave = async (editedImage: File) => {
@@ -137,12 +132,10 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
     priceRange: '',
     categoryId: 1,
   });
-  const [loading, setLoading] = useState<boolean>(true);
-  
   // Usar cache para categorias
   const { data: categories, refresh: refreshCategories } = useCategoriesCache();
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [isSectionVisible, setIsSectionVisible] = useState(true); // Novo estado para controlar a visibilidade da seção
+  const [isSectionVisible, setIsSectionVisible] = useState(true);
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -151,9 +144,8 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   
-  // Estados para paginação e busca (igual ao catálogo)
+  // Estados para paginação e busca
   const [currentPage, setCurrentPage] = useState(1);
-  const [paginationInfo, setPaginationInfo] = useState<PaginatedResponse<Product>['pagination'] | null>(null);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   
@@ -182,42 +174,14 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
       
       // Compatibilidade: verificar diferentes estruturas de resposta
       let productsFetched: Product[];
-      let paginationInfo: PaginatedResponse<Product>['pagination'] | null = null;
       
-      if (response && typeof response === 'object' && 'data' in response && 'metadata' in response) {
-        // Nova estrutura com data e metadata (lista geral paginada)
-        const apiResponse = response as { data: Product[]; metadata: any };
+      if (response && typeof response === 'object' && 'data' in response) {
+        // Nova estrutura com data
+        const apiResponse = response as { data: Product[] };
         productsFetched = apiResponse.data;
-        paginationInfo = {
-          page: apiResponse.metadata.page || page,
-          limit: apiResponse.metadata.limit || config.limit,
-          total: apiResponse.metadata.total || productsFetched.length,
-          totalPages: apiResponse.metadata.totalPages || Math.ceil(productsFetched.length / config.limit),
-          hasNext: apiResponse.metadata.hasNext || false,
-          hasPrev: apiResponse.metadata.hasPrev || page > 1
-        };
-      } else if (response && typeof response === 'object' && 'data' in response && 'pagination' in response) {
-        // Estrutura PaginatedResponse
-        const paginatedResponse = response as PaginatedResponse<Product>;
-        productsFetched = paginatedResponse.data;
-        paginationInfo = paginatedResponse.pagination;
       } else if (Array.isArray(response)) {
-        // Array simples (produtos por categoria ou busca sem paginação)
-        productsFetched = response as Product[];
-        
-        // Criar paginação para busca
-        if (searchQuery.trim()) {
-          paginationInfo = {
-            page: page,
-            limit: config.limit,
-            total: productsFetched.length,
-            totalPages: Math.ceil(productsFetched.length / config.limit),
-            hasNext: productsFetched.length === config.limit,
-            hasPrev: page > 1
-          };
-        } else {
-          paginationInfo = null;
-        }
+        // Array simples
+        productsFetched = response;
       } else {
         console.error('Resposta da API:', response);
         throw new Error('Formato de resposta inválido da API');
@@ -230,7 +194,6 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
   
       setProducts(activeProducts);
       setCurrentPage(page);
-      setPaginationInfo(paginationInfo);
       
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
@@ -349,11 +312,6 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
     }
   };
 
-  const handleImageEdit = (file: File) => {
-    setImageToEdit(file);
-    setIsImageEditorOpen(true);
-  };
-
   const handleImageEditorSave = async (editedImage: File) => {
     if (!editingProduct) return;
     
@@ -361,7 +319,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
       // Upload da imagem editada
       await adminApi.uploadProductImages([editedImage], editingProduct.ID);
       showProductSuccess('imagem editada');
-      fetchProducts();
+      fetchProducts(currentPage, debouncedSearchTerm);
     } catch (error) {
       console.error('Erro ao salvar imagem editada:', error);
       showError('Erro ao salvar imagem editada.');
@@ -378,46 +336,6 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
     });
   };
 
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const ref = loadMoreRef.current;
-    if (!ref || isLoading || !hasMore) return;
-  
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        setPage((prev) => prev + 1);
-      }
-    }, { rootMargin: '200px' });
-  
-    observer.observe(ref);
-  
-    return () => {
-      if (ref) observer.unobserve(ref);
-    };
-  }, [isLoading, hasMore, page]);
-  
-  useEffect(() => {
-    const search = async () => {
-      if (!debouncedSearchTerm) {
-        // saiu do modo de busca
-        setProducts([]); // limpa os resultados da busca
-        setPage(1); // reseta paginação
-        return;
-      }
-  
-      try {
-        const result = await adminApi.searchProducts(debouncedSearchTerm, 0);
-        const productsArray = Array.isArray(result) ? result : [];
-        setProducts(productsArray);
-        setHasMore(false); // desliga paginação enquanto busca
-      } catch (err) {
-        console.error("Erro ao buscar produtos:", err);
-      }
-    };
-  
-    search();
-  }, [debouncedSearchTerm]);
   
   
 
@@ -453,8 +371,9 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
           {editingProduct && (
             <form ref={editFormRef} onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct} className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Nome</label>
+                <label htmlFor="product-name" className="block text-sm font-medium text-gray-700">Nome</label>
                 <input
+                  id="product-name"
                   type="text"
                   placeholder="Nome do produto"
                   value={newProduct.name}
@@ -465,8 +384,9 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                <label htmlFor="product-description" className="block text-sm font-medium text-gray-700">Descrição</label>
                 <input
+                  id="product-description"
                   type="text"
                   value={newProduct.description}
                   onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
@@ -477,8 +397,9 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
 
               {editingProduct && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Imagem</label>
+                  <label htmlFor="image-selector" className="block text-sm font-medium text-gray-700">Imagem</label>
                   <button
+                    id="image-selector"
                     type="button"
                     onClick={() => setIsImageModalOpen(true)}
                     className="mt-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
@@ -489,8 +410,9 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Preço</label>
+                <label htmlFor="product-price" className="block text-sm font-medium text-gray-700">Preço</label>
                 <input
+                  id="product-price"
                   type="number"
                   value={newProduct.priceRange}
                   onChange={(e) => setNewProduct({ ...newProduct, priceRange: e.target.value })}
@@ -500,25 +422,26 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Categoria</label>
+                <label htmlFor="product-category" className="block text-sm font-medium text-gray-700">Categoria</label>
                 <select
+                  id="product-category"
                   value={newProduct.categoryId}
                   onChange={(e) => setNewProduct({ ...newProduct, categoryId: parseInt(e.target.value) })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                 >
-                  {loading ? (
-                    <option>Carregando...</option>
-                  ) : (
-                    Array.isArray(categories) && categories.length > 0 ? (
-                      categories.map((category) => (
+                  {(() => {
+                    if (!categories) {
+                      return <option>Carregando...</option>;
+                    }
+                    if (Array.isArray(categories) && categories.length > 0) {
+                      return categories.map((category) => (
                         <option key={category.ID} value={category.ID}>
                           {category.name}
                         </option>
-                      ))
-                    ) : (
-                      <option value="">Nenhuma categoria disponível</option>
-                    )
-                  )}
+                      ));
+                    }
+                    return <option value="">Nenhuma categoria disponível</option>;
+                  })()}
                 </select>
               </div>
 
@@ -532,12 +455,12 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
           )}
           <div className="space-y-6">
           <div className="mb-4">
-        <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="product-search" className="block text-sm font-medium text-gray-700 mb-1">
           Buscar produto
         </label>
         <input
           type="text"
-          id="search"
+          id="product-search"
           placeholder="Digite o nome do produto"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -574,11 +497,11 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
                 </div>
               </div>
             ))}
-        <div ref={loadMoreRef} className="col-span-full flex justify-center mt-8">
-          {isLoading && (
-            <span className="text-purple-600 font-kawaii text-xl">Carregando mais peças...</span>
-          )}
-        </div>
+        {isLoadingProducts && (
+          <div className="col-span-full flex justify-center mt-8">
+            <span className="text-purple-600 font-kawaii text-xl">Carregando produtos...</span>
+          </div>
+        )}
 
           </div>
 
