@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit, Trash } from 'lucide-react';
-import { adminApi } from '../../services/api';
+import { adminApi, getCategoryImage } from '../../services/api';
 import { UploadCategoryImage } from './UploadCategoryImage';
 import { showError, showProductSuccess } from '../../utils/toast';
 import { CategoryForm } from './CategoryForm';
@@ -24,7 +24,7 @@ function CategoryCard({ category, onEdit, onDelete }: Readonly<CategoryCardProps
   useEffect(() => {
     const fetchCategoryImage = async () => {
       try {
-        const response = await adminApi.getCategoryImage(category.ID); 
+        const response = await getCategoryImage(category.ID); 
         setCategoryImageUrl(response); 
       } catch (error) {
         console.error('Erro ao carregar imagem da categoria:', error);
@@ -71,7 +71,6 @@ interface CategoryManagementProps {
 
 export function CategoryManagement({ onDataChange }: Readonly<CategoryManagementProps>) {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isCreating, setIsCreating] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -130,7 +129,7 @@ export function CategoryManagement({ onDataChange }: Readonly<CategoryManagement
       description: category.description,
       image: category.image || '',
     });
-    setIsCreating(true);
+    setIsFormOpen(true);
   };
 
   const handleUpdateCategory = async (e: React.FormEvent) => {
@@ -154,7 +153,7 @@ export function CategoryManagement({ onDataChange }: Readonly<CategoryManagement
 
       loadCategories();
       setEditingCategory(null);
-      setIsCreating(false);
+      setIsFormOpen(false);
       setNewCategory({
         name: '',
         description: '',
@@ -205,7 +204,7 @@ export function CategoryManagement({ onDataChange }: Readonly<CategoryManagement
         </button>
       </div>
 
-      {(isCreating || editingCategory) && (
+      {editingCategory && (
         <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory} className="space-y-4 mb-6">
           <div>
             <label htmlFor="category-name" className="block text-sm font-medium text-gray-700">Nome</label>

@@ -22,7 +22,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-function ProductCard({ product }: ProductCardProps) {
+function ProductCard({ product }: Readonly<ProductCardProps>) {
   const [imageUrls, setImageUrls] = useState<string[]>([]); 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
@@ -126,7 +126,7 @@ interface ProductManagementProps {
   onDataChange?: () => void;
 }
 
-export function ProductManagement({ product, onDataChange }: ProductManagementProps) {
+export function ProductManagement({ product, onDataChange }: Readonly<ProductManagementProps>) {
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState({
@@ -417,7 +417,7 @@ export function ProductManagement({ product, onDataChange }: ProductManagementPr
 
       {isSectionVisible && (
         <>
-          {(isCreating || editingProduct) && (
+          {editingProduct && (
             <form ref={editFormRef} onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct} className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nome</label>
