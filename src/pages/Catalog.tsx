@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, Filter, Grid, List, Heart, Sparkles, ArrowLeft } from 'lucide-react';
 import api, { publicApi } from '../services/api';
 import CategoryCard from '../components/catalog/CategoryCard';
 import ProductCard from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
+import { SEOHead } from '../components/shared/SEOHead';
 import { preloadImages } from '../hooks/useImageCache';
 import { showCatalogError, showCategoryLoadError, showProductLoadError } from '../utils/toast';
 import { Category, Product } from '../types/product';
@@ -12,10 +14,13 @@ import { PaginatedResponse, PaginationConfig } from '../types/api';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { usePerformanceOptimization } from '../hooks/usePerformanceOptimization';
 import { useAnalytics } from '../services/analytics';
-import { LoadingSpinner, CardSkeleton } from '../components/shared/LoadingStates';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { SkeletonProductCard, SkeletonCategoryCard } from '../components/shared/SkeletonLoader';
 import { useCategoriesCache, useProductsCache } from '../hooks/useApiCache';
 import { CacheIndicator } from '../components/shared/CacheIndicator';
 import { Pagination, CompactPagination } from '../components/shared/Pagination';
+import { PageTransition, CascadeAnimation, FadeIn } from '../components/shared/PageTransition';
+import { Suspense } from 'react';
 
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -27,11 +32,21 @@ function Catalog() {
   const [paginationInfo, setPaginationInfo] = useState<PaginatedResponse<Product>['pagination'] | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFilters, setShowFilters] = useState(false);
   
   // Hooks de otimização
-  const { deviceInfo, getOptimalGridColumns, getAnimationConfig } = useMobileOptimization();
-  const { startRenderMeasurement, endRenderMeasurement, createThrottledCallback } = usePerformanceOptimization();
-  const { trackPageView, trackClick } = useAnalytics();
+  const mobileOptimization = useMobileOptimization();
+  const deviceInfo = mobileOptimization?.deviceInfo || { isMobile: false };
+  const getOptimalGridColumns = mobileOptimization?.getOptimalGridColumns || (() => 4);
+  const getAnimationConfig = mobileOptimization?.getAnimationConfig || (() => ({ enableAnimations: true }));
+  const performanceOptimization = usePerformanceOptimization();
+  const startRenderMeasurement = performanceOptimization?.startRenderMeasurement || (() => {});
+  const endRenderMeasurement = performanceOptimization?.endRenderMeasurement || (() => {});
+  const createThrottledCallback = performanceOptimization?.createThrottledCallback || ((callback: any) => callback);
+  const analytics = useAnalytics();
+  const trackPageView = analytics?.trackPageView || (() => {});
+  const trackClick = analytics?.trackClick || (() => {});
   
   // Cache de categorias
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useCategoriesCache();
@@ -220,206 +235,298 @@ function Catalog() {
   }, [selectedCategory]);
   
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <FloatingHearts />
-      <div className="relative">
-        <div className="absolute top-24 -right-3 sm:-top-2 sm:-right-4 sm:left-auto">
-          <Stitch />
-        </div>
-        <MadeToOrderBanner />
-      </div>
-
-      <div className="mb-12">
-        <h2 className="font-handwritten text-6xl text-purple-800 mb-8 text-center">
-          - Categorias -
-        </h2>
+    <PageTransition>
+      <SEOHead
+        title="Catálogo de Produtos - Crochê da Lari"
+        description="Explore nosso catálogo completo de peças de crochê únicas e personalizadas. Amigurumis, acessórios, decorações e muito mais, todos feitos à mão com muito carinho!"
+        keywords={['catálogo crochê', 'produtos crochê', 'amigurumis', 'acessórios crochê', 'decoração crochê', 'peças personalizadas', 'Larissa Harumi']}
+        url="/catalog"
+        type="website"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        <FloatingHearts />
         
-
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex-grow">
-            {categoriesLoading ? (
-              <div className={`grid gap-8 ${getOptimalGridColumns(4) === 1 ? 'grid-cols-1' : getOptimalGridColumns(4) === 2 ? 'grid-cols-1 md:grid-cols-2' : getOptimalGridColumns(4) === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <CardSkeleton key={index} />
-                ))}
-              </div>
-            ) : categoriesError ? (
-              <div className="text-center py-8">
-                <p className="text-red-600 mb-4">Erro ao carregar categorias</p>
-                <button 
-                  onClick={() => window.location.reload()} 
-                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-                >
-                  Tentar novamente
-                </button>
-              </div>
-            ) : (
-              <div className={`grid gap-8 ${getOptimalGridColumns(4) === 1 ? 'grid-cols-1' : getOptimalGridColumns(4) === 2 ? 'grid-cols-1 md:grid-cols-2' : getOptimalGridColumns(4) === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
-                {categories?.map((category) => (
-                  <CategoryCard
-                    key={category.ID}
-                    category={category}
-                    onClick={() => handleCategoryClick(category.ID)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div>
-        {/* Campo de Busca */}
-        <div className="mb-8">
-          <div className="relative max-w-md mx-auto">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar peças de crochê..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full px-4 py-3 pl-12 pr-12 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              {searchTerm && (
-                <button
-                  onClick={handleClearSearch}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="relative">
+            {/* Elemento decorativo */}
+            <div className="absolute top-24 -right-3 sm:-top-2 sm:-right-4 sm:left-auto z-10">
+              <Suspense fallback={<div className="w-16 h-16 bg-pink-100 rounded-full animate-pulse"></div>}>
+                <Stitch />
+              </Suspense>
             </div>
-            {isSearching && (
-              <div className="mt-2 text-center">
-                <span className="text-sm text-purple-600 font-medium">
-                  🔍 Buscando por "{searchTerm}"...
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+            
+            {/* Banner */}
+            <FadeIn delay={100}>
+              <MadeToOrderBanner />
+            </FadeIn>
 
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center space-x-4">
-            <h2 className="font-handwritten text-6xl text-purple-800 mb-8">
-              {searchTerm 
-                ? `Resultados para "${searchTerm}"`
-                : selectedCategory
-                ? categories.find((c) => c.ID === selectedCategory)?.name
-                : 'Todas as Peças'}
-            </h2>
-          </div>
-          <FloatingHearts />
-           {selectedCategory && !searchTerm && (
-             <button
-               onClick={handleShowAllProducts}
-               className="font-kawaii text-purple-600 hover:text-purple-700 text-1xl sm:text-2xl font-medium hover:scale-105 transition-transform"
-             >
-               Ver todas as categorias
-             </button>
-           )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" ref={viewProductCatalogRef}>
-          {(() => {
-            // Não mostrar produtos até categorias carregarem
-            if (!categoriesLoaded) {
-              return (
-                <div className="col-span-full text-center py-12">
-                  <div className="text-gray-500">
-                    <LoadingSpinner size="medium" text="Carregando categorias..." />
+            {/* Header Principal */}
+            <CascadeAnimation delay={200}>
+              <div className="text-center mb-16">
+                <div className="flex justify-center mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
+                    <Heart className="w-10 h-10 text-purple-600" />
                   </div>
                 </div>
-              );
-            }
-            
-            if (isLoading && products.length === 0) {
-              return (
-                <div className="col-span-full">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {Array.from({ length: 6 }).map((_, index) => (
-                      <CardSkeleton key={index} />
+                <h1 className="font-handwritten text-4xl sm:text-5xl lg:text-6xl text-purple-800 mb-4">
+                  Catálogo de Peças
+                </h1>
+                <p className="font-kawaii text-lg text-gray-600 max-w-2xl mx-auto">
+                  Explore nossa coleção única de peças de crochê feitas com muito carinho! ✨
+                </p>
+              </div>
+            </CascadeAnimation>
+
+            {/* Seção de Categorias */}
+            <CascadeAnimation delay={300}>
+              <div className="mb-16">
+                <div className="text-center mb-8">
+                  <h2 className="font-handwritten text-3xl sm:text-4xl text-purple-800 mb-2">
+                    Categorias
+                  </h2>
+                  <p className="text-gray-600">Escolha uma categoria para ver as peças</p>
+                </div>
+
+                      {categoriesLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                          {Array.from({ length: 4 }).map((_, index) => (
+                            <SkeletonCategoryCard key={index} />
+                          ))}
+                        </div>
+                ) : categoriesError ? (
+                  <div className="text-center py-12">
+                    <div className="bg-white rounded-2xl p-8 shadow-lg border border-red-100 max-w-md mx-auto">
+                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl">😔</span>
+                      </div>
+                      <p className="text-red-600 mb-4 font-medium">Erro ao carregar categorias</p>
+                      <button 
+                        onClick={() => window.location.reload()} 
+                        className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                      >
+                        Tentar novamente
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {categories?.map((category, index) => (
+                      <div key={category.ID} style={{ animationDelay: `${400 + index * 100}ms` }}>
+                        <CategoryCard
+                          category={category}
+                          onClick={() => handleCategoryClick(category.ID)}
+                        />
+                      </div>
                     ))}
                   </div>
+                )}
+              </div>
+            </CascadeAnimation>
+
+            {/* Barra de Busca e Filtros */}
+            <CascadeAnimation delay={500}>
+              <div className="bg-white rounded-3xl p-6 shadow-lg border border-purple-100 mb-8">
+                <div className="flex flex-col lg:flex-row gap-4 items-center">
+                  {/* Campo de Busca */}
+                  <div className="flex-1 relative">
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        placeholder="Buscar peças de crochê..."
+                        value={searchTerm}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        className="w-full pl-12 pr-12 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={handleClearSearch}
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    {isSearching && (
+                      <div className="mt-2 text-center">
+                        <span className="text-sm text-purple-600 font-medium animate-pulse">
+                          🔍 Buscando por "{searchTerm}"...
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Botões de Visualização */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        viewMode === 'grid' 
+                          ? 'bg-purple-100 text-purple-600' 
+                          : 'text-gray-400 hover:text-gray-600'
+                      }`}
+                    >
+                      <Grid className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        viewMode === 'list' 
+                          ? 'bg-purple-100 text-purple-600' 
+                          : 'text-gray-400 hover:text-gray-600'
+                      }`}
+                    >
+                      <List className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-              );
-            }
-            
-            if (products.length === 0) {
-              return (
-                <div className="col-span-full text-center py-12">
-                  <div className="text-gray-500">
-                    <p className="text-xl mb-2">
+              </div>
+            </CascadeAnimation>
+
+            {/* Header dos Produtos */}
+            <CascadeAnimation delay={600}>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+                <div className="flex items-center gap-4 mb-4 sm:mb-0">
+                  {selectedCategory && (
+                    <button
+                      onClick={handleShowAllProducts}
+                      className="flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span className="text-sm font-medium">Voltar</span>
+                    </button>
+                  )}
+                  <div>
+                    <h2 className="font-handwritten text-3xl sm:text-4xl text-purple-800">
                       {searchTerm 
-                        ? `Nenhum produto encontrado para "${searchTerm}"`
-                        : 'Nenhum produto encontrado'
-                      }
-                    </p>
-                    <p className="text-sm">
-                      {searchTerm 
-                        ? 'Tente buscar por outro termo ou limpar a busca'
-                        : 'Tente ajustar os filtros ou buscar por outro termo'
-                      }
-                    </p>
-                    {searchTerm && (
-                      <button
-                        onClick={handleClearSearch}
-                        className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-                      >
-                        Limpar busca
-                      </button>
+                        ? `Resultados para "${searchTerm}"`
+                        : selectedCategory
+                        ? categories.find((c) => c.ID === selectedCategory)?.name
+                        : 'Todas as Peças'}
+                    </h2>
+                    {paginationInfo && (
+                      <p className="text-gray-600 text-sm mt-1">
+                        {paginationInfo.total} peça{paginationInfo.total !== 1 ? 's' : ''} encontrada{paginationInfo.total !== 1 ? 's' : ''}
+                      </p>
                     )}
                   </div>
                 </div>
-              );
-            }
-            
-            return products.map((product) => (
-              <ProductCard
-                key={product.ID}
-                product={product}
-                instagramUsername="larifazcroche"
-              />
-            ));
-          })()}
-        </div>
+              </div>
+            </CascadeAnimation>
 
-        {/* Paginação */}
-        {paginationInfo && paginationInfo.totalPages > 1 && (
-          <div className="mt-12">
-            {/* Paginação para desktop */}
-            <div className="hidden sm:block">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={paginationInfo.totalPages}
-                onPageChange={handlePageChange}
-                showInfo={true}
-                itemsPerPage={paginationInfo.limit}
-                totalItems={paginationInfo.total}
-                className="justify-center"
-              />
-            </div>
-            
-            {/* Paginação compacta para mobile */}
-            <div className="sm:hidden">
-              <CompactPagination
-                currentPage={currentPage}
-                totalPages={paginationInfo.totalPages}
-                onPageChange={handlePageChange}
-                className="justify-center"
-              />
-            </div>
+            {/* Grid de Produtos */}
+            <CascadeAnimation delay={700}>
+              <div 
+                className={`${
+                  viewMode === 'grid' 
+                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
+                    : 'space-y-4'
+                }`} 
+                ref={viewProductCatalogRef}
+              >
+                {(() => {
+                  // Não mostrar produtos até categorias carregarem
+                  if (!categoriesLoaded) {
+                    return (
+                      <div className="col-span-full text-center py-12">
+                        <div className="bg-white rounded-2xl p-8 shadow-lg border border-purple-100 max-w-md mx-auto">
+                          <LoadingSpinner size="lg" text="Carregando categorias..." />
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                        if (isLoading && products.length === 0) {
+                          return (
+                            <div className="col-span-full">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {Array.from({ length: 8 }).map((_, index) => (
+                                  <SkeletonProductCard key={index} />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                  
+                  if (products.length === 0) {
+                    return (
+                      <div className="col-span-full text-center py-12">
+                        <div className="bg-white rounded-2xl p-8 shadow-lg border border-purple-100 max-w-md mx-auto">
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-2xl">🔍</span>
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                            {searchTerm 
+                              ? `Nenhum produto encontrado para "${searchTerm}"`
+                              : 'Nenhum produto encontrado'
+                            }
+                          </h3>
+                          <p className="text-gray-600 text-sm mb-4">
+                            {searchTerm 
+                              ? 'Tente buscar por outro termo ou limpar a busca'
+                              : 'Tente ajustar os filtros ou buscar por outro termo'
+                            }
+                          </p>
+                          {searchTerm && (
+                            <button
+                              onClick={handleClearSearch}
+                              className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                            >
+                              Limpar busca
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  return products.map((product, index) => (
+                    <div key={product.ID} style={{ animationDelay: `${800 + index * 50}ms` }}>
+                      <ProductCard
+                        product={product}
+                        instagramUsername="larifazcroche"
+                      />
+                    </div>
+                  ));
+                })()}
+              </div>
+            </CascadeAnimation>
+
+            {/* Paginação */}
+            {paginationInfo && paginationInfo.totalPages > 1 && (
+              <CascadeAnimation delay={900}>
+                <div className="mt-12">
+                  {/* Paginação para desktop */}
+                  <div className="hidden sm:block">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={paginationInfo.totalPages}
+                      onPageChange={handlePageChange}
+                      showInfo={true}
+                      itemsPerPage={paginationInfo.limit}
+                      totalItems={paginationInfo.total}
+                      className="justify-center"
+                    />
+                  </div>
+                  
+                  {/* Paginação compacta para mobile */}
+                  <div className="sm:hidden">
+                    <CompactPagination
+                      currentPage={currentPage}
+                      totalPages={paginationInfo.totalPages}
+                      onPageChange={handlePageChange}
+                      className="justify-center"
+                    />
+                  </div>
+                </div>
+              </CascadeAnimation>
+            )}
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }
 

@@ -14,7 +14,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   text,
   className = '',
 }) => {
-  const { deviceInfo, getAnimationConfig } = useMobileOptimization();
+  const mobileOptimization = useMobileOptimization();
+  const deviceInfo = mobileOptimization?.deviceInfo || { isMobile: false };
+  const getAnimationConfig = mobileOptimization?.getAnimationConfig || (() => ({ enableAnimations: true }));
   const { enableAnimations } = getAnimationConfig();
 
   const getSizeClasses = () => {
@@ -40,7 +42,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   };
 
   const getTextSize = () => {
-    if (deviceInfo.isMobile) {
+    if (deviceInfo?.isMobile) {
       return 'text-sm';
     }
     return 'text-base';
@@ -83,10 +85,11 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   lines = 3,
   className = '',
 }) => {
-  const { deviceInfo } = useMobileOptimization();
+  const mobileOptimization = useMobileOptimization();
+  const deviceInfo = mobileOptimization?.deviceInfo || { isMobile: false };
   
   const getLineWidth = (index: number) => {
-    if (deviceInfo.isMobile) {
+    if (deviceInfo?.isMobile) {
       return index === 0 ? 'w-3/4' : index === 1 ? 'w-1/2' : 'w-2/3';
     }
     return index === 0 ? 'w-4/5' : index === 1 ? 'w-3/5' : 'w-2/3';

@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://larifazcroche.vercel.app/sitemap.xml
+
+# Crawl-delay para evitar sobrecarga
+Crawl-delay: 1
+
+# Permitir indexação de todas as páginas principais
+Allow: /catalog
+Allow: /care
+Allow: /contact
+Allow: /donation
+
+# Bloquear páginas administrativas
+Disallow: /admin
+Disallow: /login
+
+# Bloquear arquivos desnecessários
+Disallow: /*.json$
+Disallow: /*.js$
+Disallow: /*.css$
+Disallow: /api/

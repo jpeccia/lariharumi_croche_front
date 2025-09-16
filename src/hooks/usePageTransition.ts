@@ -1,51 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
-interface PageTransitionState {
-  isTransitioning: boolean;
-  direction: 'forward' | 'backward' | 'none';
-  previousPath: string;
+interface UsePageTransitionOptions {
+  delay?: number;
+  duration?: number;
+  stagger?: number;
 }
 
-export const usePageTransition = () => {
-  const location = useLocation();
-  const [transitionState, setTransitionState] = useState<PageTransitionState>({
-    isTransitioning: false,
-    direction: 'none',
-    previousPath: '',
-  });
-
-  const startTransition = useCallback((direction: 'forward' | 'backward' = 'forward') => {
-    setTransitionState({
-      isTransitioning: true,
-      direction,
-      previousPath: location.pathname,
-    });
-
-    // Simula transição suave
-    setTimeout(() => {
-      setTransitionState(prev => ({
-        ...prev,
-        isTransitioning: false,
-      }));
-    }, 300);
-  }, [location.pathname]);
-
-  // Detecta mudanças de rota
-  useEffect(() => {
-    if (transitionState.previousPath && transitionState.previousPath !== location.pathname) {
-      startTransition();
-    }
-  }, [location.pathname, transitionState.previousPath, startTransition]);
-
-  return {
-    ...transitionState,
-    startTransition,
-  };
-};
-
-// Hook para animações de entrada
-export const useEntranceAnimation = (delay: number = 0) => {
+export function usePageTransition(options: UsePageTransitionOptions = {}) {
+  const { delay = 0, duration = 600, stagger = 100 } = options;
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -56,33 +18,58 @@ export const useEntranceAnimation = (delay: number = 0) => {
     return () => clearTimeout(timer);
   }, [delay]);
 
-  return isVisible;
-};
+  const getStaggerDelay = (index: number) => {
+    return `${delay + (index * stagger)}ms`;
+  };
 
-// Hook para scroll suave
-export const useSmoothScroll = () => {
-  const scrollToElement = useCallback((elementId: string, offset: number = 0) => {
-    const element = document.getElementById(elementId);
-    if (element) {
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
-    }
-  }, []);
-
-  const scrollToTop = useCallback(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  }, []);
+  const getTransitionStyle = (index: number = 0) => ({
+    opacity: isVisible ? 1 : 0,
+    transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+    transition: `opacity ${duration}ms ease-out, transform ${duration}ms ease-out`,
+    transitionDelay: getStaggerDelay(index),
+  });
 
   return {
-    scrollToElement,
-    scrollToTop,
+    isVisible,
+    getStaggerDelay,
+    getTransitionStyle,
   };
-};
+}
+
+// Hook específico para animações de entrada
+export function useEntranceAnimation(delay: number = 0) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), delay);
+    return () => clearTimeout(timer);
+  }, [delay]);
+
+  return visible;
+}
+
+// Hook para animações de scroll
+export function useScrollAnimation(threshold: number = 0.1) {
+  const [isInView, setIsInView] = useState(false);
+  const [ref, setRef] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!ref) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold }
+    );
+
+    observer.observe(ref);
+
+    return () => observer.disconnect();
+  }, [ref, threshold]);
+
+  return [setRef, isInView] as const;
+}

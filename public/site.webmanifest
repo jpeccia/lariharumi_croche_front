@@ -1,0 +1,37 @@
+{
+  "name": "Crochê da Lari - Peças Únicas e Personalizadas",
+  "short_name": "Crochê da Lari",
+  "description": "Peças de crochê únicas e personalizadas feitas à mão com muito carinho pela Larissa Harumi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8B5CF6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "lifestyle", "crafts"],
+  "lang": "pt-BR",
+  "scope": "/",
+  "prefer_related_applications": false
+}

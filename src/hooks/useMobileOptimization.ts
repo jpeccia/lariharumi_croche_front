@@ -1,160 +1,118 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 
-interface DeviceInfo {
-  isMobile: boolean;
-  isTablet: boolean;
-  isDesktop: boolean;
-  screenWidth: number;
-  screenHeight: number;
-  orientation: 'portrait' | 'landscape';
-  touchSupport: boolean;
-  connectionType: 'slow' | 'fast' | 'unknown';
+interface MobileOptimizationConfig {
+  reduceAnimations: boolean;
+  optimizeImages: boolean;
+  enableHapticFeedback: boolean;
+  enableReducedMotion: boolean;
 }
 
-interface AnimationConfig {
-  enableAnimations: boolean;
-  animationDuration: number;
-  reducedMotion: boolean;
-}
+export function useMobileOptimization() {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-interface MobileOptimizationReturn {
-  deviceInfo: DeviceInfo;
-  getAnimationConfig: () => AnimationConfig;
-  isLowEndDevice: boolean;
-  shouldReduceAnimations: boolean;
-  getOptimalImageSize: (baseSize: number) => number;
-  getOptimalGridColumns: (baseColumns: number) => number;
-}
-
-export const useMobileOptimization = (): MobileOptimizationReturn => {
-  const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>({
-    isMobile: false,
-    isTablet: false,
-    isDesktop: true,
-    screenWidth: 1024,
-    screenHeight: 768,
-    orientation: 'landscape',
-    touchSupport: false,
-    connectionType: 'unknown',
-  });
-
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  // Detectar informações do dispositivo
-  const detectDeviceInfo = useCallback(() => {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const isMobile = width < 768;
-    const isTablet = width >= 768 && width < 1024;
-    const isDesktop = width >= 1024;
-    const orientation = width > height ? 'landscape' : 'portrait';
-    const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-    // Detectar tipo de conexão
-    let connectionType: 'slow' | 'fast' | 'unknown' = 'unknown';
-    if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
-      if (connection.effectiveType) {
-        connectionType = ['slow-2g', '2g', '3g'].includes(connection.effectiveType) ? 'slow' : 'fast';
-      }
-    }
-
-    setDeviceInfo({
-      isMobile,
-      isTablet,
-      isDesktop,
-      screenWidth: width,
-      screenHeight: height,
-      orientation,
-      touchSupport,
-      connectionType,
-    });
-  }, []);
-
-  // Detectar preferência de movimento reduzido
-  const detectReducedMotion = useCallback(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setReducedMotion(prefersReducedMotion);
-  }, []);
-
-  // Detectar se é dispositivo de baixo desempenho
-  const isLowEndDevice = useCallback(() => {
-    // Critérios para dispositivos de baixo desempenho
-    const lowMemory = (navigator as any).deviceMemory && (navigator as any).deviceMemory < 4;
-    const slowConnection = deviceInfo.connectionType === 'slow';
-    const smallScreen = deviceInfo.screenWidth < 480;
-    
-    return lowMemory || slowConnection || smallScreen;
-  }, [deviceInfo]);
-
-  // Configuração de animações
-  const getAnimationConfig = useCallback((): AnimationConfig => {
-    const shouldReduce = reducedMotion || isLowEndDevice() || deviceInfo.connectionType === 'slow';
-    
-    return {
-      enableAnimations: !shouldReduce,
-      animationDuration: shouldReduce ? 0 : 300,
-      reducedMotion: shouldReduce,
-    };
-  }, [reducedMotion, isLowEndDevice, deviceInfo]);
-
-  // Tamanho otimizado de imagem
-  const getOptimalImageSize = useCallback((baseSize: number): number => {
-    if (deviceInfo.isMobile) {
-      return Math.min(baseSize, deviceInfo.screenWidth * 0.8);
-    }
-    if (deviceInfo.isTablet) {
-      return Math.min(baseSize, deviceInfo.screenWidth * 0.6);
-    }
-    return baseSize;
-  }, [deviceInfo]);
-
-  // Número otimizado de colunas no grid
-  const getOptimalGridColumns = useCallback((baseColumns: number): number => {
-    if (deviceInfo.isMobile) {
-      return Math.min(baseColumns, 2);
-    }
-    if (deviceInfo.isTablet) {
-      return Math.min(baseColumns, 3);
-    }
-    return baseColumns;
-  }, [deviceInfo]);
-
-  // Listener para mudanças de orientação e tamanho
   useEffect(() => {
-    detectDeviceInfo();
-    detectReducedMotion();
-
-    const handleResize = () => {
-      detectDeviceInfo();
+    const checkDevice = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+      setIsDesktop(width >= 1024);
     };
 
-    const handleOrientationChange = () => {
-      setTimeout(detectDeviceInfo, 100); // Delay para aguardar mudança de orientação
-    };
-
+    // Verificar preferência de movimento reduzido
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handleMotionChange = () => {
-      detectReducedMotion();
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
     };
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleOrientationChange);
-    mediaQuery.addEventListener('change', handleMotionChange);
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    mediaQuery.addEventListener('change', handleMediaChange);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleOrientationChange);
-      mediaQuery.removeEventListener('change', handleMotionChange);
+      window.removeEventListener('resize', checkDevice);
+      mediaQuery.removeEventListener('change', handleMediaChange);
     };
-  }, [detectDeviceInfo, detectReducedMotion]);
+  }, []);
+
+  const getAnimationConfig = () => ({
+    enableAnimations: !prefersReducedMotion && !isMobile,
+    reduceAnimations: prefersReducedMotion || isMobile,
+    animationDuration: prefersReducedMotion ? 0 : (isMobile ? 200 : 300),
+  });
+
+  const getOptimizationConfig = (): MobileOptimizationConfig => ({
+    reduceAnimations: prefersReducedMotion || isMobile,
+    optimizeImages: isMobile || isTablet,
+    enableHapticFeedback: isMobile,
+    enableReducedMotion: prefersReducedMotion,
+  });
+
+  const getResponsiveClasses = (mobile: string, tablet?: string, desktop?: string) => {
+    let classes = mobile;
+    if (tablet) classes += ` md:${tablet}`;
+    if (desktop) classes += ` lg:${desktop}`;
+    return classes;
+  };
+
+  const getImageSize = (baseSize: number) => {
+    if (isMobile) return Math.round(baseSize * 0.8);
+    if (isTablet) return Math.round(baseSize * 0.9);
+    return baseSize;
+  };
+
+  const getGridCols = (mobile: number, tablet?: number, desktop?: number) => {
+    const cols = {
+      mobile: `grid-cols-${mobile}`,
+      tablet: tablet ? `md:grid-cols-${tablet}` : '',
+      desktop: desktop ? `lg:grid-cols-${desktop}` : '',
+    };
+    
+    return [cols.mobile, cols.tablet, cols.desktop]
+      .filter(Boolean)
+      .join(' ');
+  };
+
+  const getSpacing = (mobile: string, tablet?: string, desktop?: string) => {
+    let spacing = mobile;
+    if (tablet) spacing += ` md:${tablet}`;
+    if (desktop) spacing += ` lg:${desktop}`;
+    return spacing;
+  };
+
+  const getFontSize = (mobile: string, tablet?: string, desktop?: string) => {
+    let fontSize = mobile;
+    if (tablet) fontSize += ` md:${tablet}`;
+    if (desktop) fontSize += ` lg:${desktop}`;
+    return fontSize;
+  };
+
+  const optimizeForDevice = (config: {
+    mobile?: any;
+    tablet?: any;
+    desktop?: any;
+  }) => {
+    if (isMobile) return config.mobile;
+    if (isTablet) return config.tablet;
+    return config.desktop;
+  };
 
   return {
-    deviceInfo,
+    isMobile,
+    isTablet,
+    isDesktop,
+    prefersReducedMotion,
     getAnimationConfig,
-    isLowEndDevice: isLowEndDevice(),
-    shouldReduceAnimations: reducedMotion || isLowEndDevice(),
-    getOptimalImageSize,
-    getOptimalGridColumns,
+    getOptimizationConfig,
+    getResponsiveClasses,
+    getImageSize,
+    getGridCols,
+    getSpacing,
+    getFontSize,
+    optimizeForDevice,
   };
-};
+}
