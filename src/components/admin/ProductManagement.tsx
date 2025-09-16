@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Package, Plus, Edit, Trash, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, Plus, Edit, Trash, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
 import { UploadProductImage } from './UploadProductImage';
@@ -8,6 +8,7 @@ import { useDebounce } from 'use-debounce';
 import { ImageEditor } from './ImageEditor';
 import { useCategoriesCache } from '../../hooks/useApiCache';
 import { ProductForm } from './ProductForm';
+import { PaginatedResponse, PaginationConfig } from '../../types/api';
 
 interface Category {
   ID: number;
@@ -149,23 +150,100 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
   const editFormRef = useRef<HTMLFormElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+  
+  // Estados para paginação e busca (igual ao catálogo)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginationInfo, setPaginationInfo] = useState<PaginatedResponse<Product>['pagination'] | null>(null);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   
-  useEffect(() => {
-    // Carregar produtos quando o componente monta
-    const loadInitialData = async () => {
-      try {
-        setLoading(true);
-        await fetchProducts();
-      } catch (error) {
-        console.error('Erro ao carregar dados iniciais:', error);
-      } finally {
-        setLoading(false);
+  // Função fetchProducts igual ao catálogo
+  const fetchProducts = useCallback(async (page: number = 1, searchQuery: string = '') => {
+    if (isLoadingProducts) return;
+  
+    try {
+      setIsLoadingProducts(true);
+  
+      const config: PaginationConfig = {
+        page: page,
+        limit: 12,
+        sortBy: 'name',
+        sortOrder: 'asc'
+      };
+      
+      let response;
+      if (searchQuery.trim()) {
+        // Usar busca se há termo de pesquisa
+        response = await adminApi.searchProducts(searchQuery, config);
+      } else {
+        // Usar listagem normal
+        response = await adminApi.getProductsByPage(null, config);
       }
-    };
-    
-    loadInitialData();
-  }, []);
+      
+      // Compatibilidade: verificar diferentes estruturas de resposta
+      let productsFetched: Product[];
+      let paginationInfo: PaginatedResponse<Product>['pagination'] | null = null;
+      
+      if (response && typeof response === 'object' && 'data' in response && 'metadata' in response) {
+        // Nova estrutura com data e metadata (lista geral paginada)
+        const apiResponse = response as { data: Product[]; metadata: any };
+        productsFetched = apiResponse.data;
+        paginationInfo = {
+          page: apiResponse.metadata.page || page,
+          limit: apiResponse.metadata.limit || config.limit,
+          total: apiResponse.metadata.total || productsFetched.length,
+          totalPages: apiResponse.metadata.totalPages || Math.ceil(productsFetched.length / config.limit),
+          hasNext: apiResponse.metadata.hasNext || false,
+          hasPrev: apiResponse.metadata.hasPrev || page > 1
+        };
+      } else if (response && typeof response === 'object' && 'data' in response && 'pagination' in response) {
+        // Estrutura PaginatedResponse
+        const paginatedResponse = response as PaginatedResponse<Product>;
+        productsFetched = paginatedResponse.data;
+        paginationInfo = paginatedResponse.pagination;
+      } else if (Array.isArray(response)) {
+        // Array simples (produtos por categoria ou busca sem paginação)
+        productsFetched = response as Product[];
+        
+        // Criar paginação para busca
+        if (searchQuery.trim()) {
+          paginationInfo = {
+            page: page,
+            limit: config.limit,
+            total: productsFetched.length,
+            totalPages: Math.ceil(productsFetched.length / config.limit),
+            hasNext: productsFetched.length === config.limit,
+            hasPrev: page > 1
+          };
+        } else {
+          paginationInfo = null;
+        }
+      } else {
+        console.error('Resposta da API:', response);
+        throw new Error('Formato de resposta inválido da API');
+      }
+      
+      // Filtrar produtos deletados (soft delete) - apenas se o campo existir
+      const activeProducts = productsFetched.filter(product => 
+        !product.isDeleted && !product.deletedAt
+      );
+  
+      setProducts(activeProducts);
+      setCurrentPage(page);
+      setPaginationInfo(paginationInfo);
+      
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      showError('Erro ao carregar produtos');
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  }, [isLoadingProducts]);
+
+  // Carregar produtos iniciais
+  useEffect(() => {
+    fetchProducts(1, '');
+  }, [fetchProducts]);
   
 
   useEffect(() => {
@@ -178,63 +256,18 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
     }
   }, [editingProduct]);
 
-  const [page, setPage] = useState(1);
-  const limit = 12;
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   
-  const fetchProducts = useCallback(async () => {
-    if (isLoading) return;
   
-    try {
-      setIsLoading(true);
   
-      const productsFetched = await adminApi.getProductsByPage(null, { page, limit });
-      const productsArray = Array.isArray(productsFetched) ? productsFetched : [];
-      const sorted = productsArray.toSorted((a, b) => a.name.localeCompare(b.name));
   
-      setProducts(prev => page === 1 ? sorted : [...prev, ...sorted]);
-      setHasMore(Array.isArray(productsFetched) && productsFetched.length === limit);
-    } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoading, page, limit]);
   
+
+
+  // Carregar produtos quando termo de busca muda
   useEffect(() => {
-    if (!debouncedSearchTerm) {
-      fetchProducts();
-    }
-  }, [page, debouncedSearchTerm, fetchProducts]);
-  
-  useEffect(() => {
-    // Carrega a primeira página quando a busca termina
-    if (!debouncedSearchTerm) {
-      setPage(1);
-      setProducts([]);
-      fetchProducts();
-    }
+    setCurrentPage(1);
+    fetchProducts(1, debouncedSearchTerm);
   }, [debouncedSearchTerm, fetchProducts]);
-  
-  
-  
-
-
-  useEffect(() => {
-    if (!product?.ID) return; 
-  
-    const fetchProductImage = async () => {
-      try {
-        const response = await adminApi.getProductImages(product.ID);
-        setProductImageUrl(response);
-      } catch (error) {
-        console.error('Erro ao carregar imagem do produto:', error);
-      }
-    };
-  
-    fetchProductImage();
-  }, [product?.ID]);
   
   
 
@@ -255,7 +288,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
       }
 
       showProductSuccess('criado');
-      fetchProducts();
+      fetchProducts(currentPage, debouncedSearchTerm);
       setIsFormOpen(false);
       setEditingProduct(null);
       resetForm();
@@ -286,7 +319,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
       });
 
       showProductSuccess('atualizado');
-      fetchProducts();
+      fetchProducts(currentPage, debouncedSearchTerm);
       setIsFormOpen(false);
       setEditingProduct(null);
       refreshCategories();
@@ -308,7 +341,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
   const handleDeleteProduct = async (productId: number) => {
     try {
       await adminApi.deleteProduct(productId);
-      fetchProducts();
+      fetchProducts(currentPage, debouncedSearchTerm);
       onDataChange?.(); // Atualizar estatísticas do dashboard
     } catch (error) {
       console.error('Falha ao excluir o produto:', error);
