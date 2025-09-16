@@ -1,10 +1,11 @@
-import { useEffect, Suspense, lazy, useState } from 'react';
+import { useEffect, Suspense, lazy, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { Package, FolderOpen, BarChart3, Settings, Users, Image, Plus, Eye } from 'lucide-react';
+import { Package, FolderOpen, BarChart3, Plus, Eye } from 'lucide-react';
 import { useAnalytics } from '../../services/analytics';
-import { LoadingSpinner, CardSkeleton } from '../../components/shared/LoadingStates';
+import { CardSkeleton } from '../../components/shared/LoadingStates';
 import { useStatsCache } from '../../hooks/useApiCache';
+import { useDebounce } from 'use-debounce';
 
 // Lazy loading para componentes administrativos pesados
 const ProductManagement = lazy(() => import('../../components/admin/ProductManagement').then(module => ({ default: module.ProductManagement })));
@@ -18,6 +19,20 @@ function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'overview'>('overview');
   // Usar cache para estatísticas
   const { data: stats, loading: isLoadingStats, refresh: refreshStats } = useStatsCache();
+  
+  // Debounced refresh para evitar múltiplas requisições
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [debouncedRefreshTrigger] = useDebounce(refreshTrigger, 1000);
+  
+  const debouncedRefreshStats = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
+  
+  useEffect(() => {
+    if (debouncedRefreshTrigger > 0) {
+      refreshStats();
+    }
+  }, [debouncedRefreshTrigger, refreshStats]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -195,13 +210,13 @@ function AdminDashboard() {
 
             {activeTab === 'products' && (
               <Suspense fallback={<CardSkeleton />}>
-                <ProductManagement onDataChange={refreshStats} />
+                <ProductManagement onDataChange={debouncedRefreshStats} />
               </Suspense>
             )}
 
             {activeTab === 'categories' && (
               <Suspense fallback={<CardSkeleton />}>
-                <CategoryManagement onDataChange={refreshStats} />
+                <CategoryManagement onDataChange={debouncedRefreshStats} />
               </Suspense>
             )}
           </div>

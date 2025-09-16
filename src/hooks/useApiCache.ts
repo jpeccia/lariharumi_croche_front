@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { publicApi, adminApi } from '../services/api';
 import { PaginatedResponse, PaginationConfig } from '../types/api';
-import { Product, Category } from '../types/product';
+import { Product } from '../types/product';
 
 interface CacheEntry<T> {
   data: T;
@@ -46,7 +46,7 @@ export function useApiCache<T>(
     // Se já está carregando, não fazer nova requisição
     if (cached?.loading) {
       setLoading(true);
-      return;
+      return cached.data;
     }
 
     try {
@@ -54,7 +54,7 @@ export function useApiCache<T>(
       setError(null);
       
       // Marcar como carregando no cache global
-      globalCache.set(key, { data: null, timestamp: Date.now(), loading: true });
+      globalCache.set(key, { data: cached?.data || null, timestamp: Date.now(), loading: true });
       
       const result = await fetcher();
       
@@ -135,17 +135,26 @@ export function useStatsCache() {
   return useApiCache(
     'stats',
     async () => {
-      const [categories, products] = await Promise.all([
-        adminApi.getCategories(),
-        adminApi.getProductsByPage(null, 1, 100)
-      ]);
-      
-      return {
-        totalProducts: products.length,
-        totalCategories: categories.length,
-        recentActivity: []
-      };
+      try {
+        const [categories, products] = await Promise.all([
+          adminApi.getCategories(),
+          adminApi.getProductsByPage(null, 1, 100)
+        ]);
+        
+        return {
+          totalProducts: Array.isArray(products) ? products.length : 0,
+          totalCategories: Array.isArray(categories) ? categories.length : 0,
+          recentActivity: []
+        };
+      } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+        return {
+          totalProducts: 0,
+          totalCategories: 0,
+          recentActivity: []
+        };
+      }
     },
-    { ttl: 5 * 60 * 1000 } // 5 minutos para estatísticas
+    { ttl: 5 * 60 * 1000, refetchOnMount: false } // 5 minutos para estatísticas, sem refetch automático
   );
 }
