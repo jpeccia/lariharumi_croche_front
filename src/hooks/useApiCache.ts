@@ -138,7 +138,7 @@ export function useStatsCache() {
       try {
         const [categories, products] = await Promise.all([
           adminApi.getCategories(),
-          adminApi.getProductsByPage(null, 1, 100)
+          adminApi.getProductsByPage(null, { page: 1, limit: 100 })
         ]);
         
         return {

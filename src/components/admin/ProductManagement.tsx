@@ -189,7 +189,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
     try {
       setIsLoading(true);
   
-      const productsFetched = await adminApi.getProductsByPage(null, page, limit);
+      const productsFetched = await adminApi.getProductsByPage(null, { page, limit });
       const sorted = productsFetched.sort((a, b) => a.name.localeCompare(b.name));
   
       setProducts(prev => page === 1 ? sorted : [...prev, ...sorted]);

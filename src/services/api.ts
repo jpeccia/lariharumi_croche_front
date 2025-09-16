@@ -11,7 +11,7 @@ import {
   UploadConfig,
   ApiError 
 } from '../types/api';
-import { Product, Category } from '../types/product';
+import { Product } from '../types/product';
 
 const api = axios.create({
   baseURL: env.VITE_API_BASE_URL,
@@ -167,16 +167,24 @@ export const adminApi = {
 
   // Obter todos os produtos (com paginação melhorada)
   getProductsByPage: async (categoryId: number | null, config: PaginationConfig = { page: 1, limit: 12 }): Promise<Product[] | PaginatedResponse<Product>> => {
+    // Garantir que config tem valores padrão válidos
+    const safeConfig = {
+      page: config?.page || 1,
+      limit: config?.limit || 12,
+      sortBy: config?.sortBy,
+      sortOrder: config?.sortOrder
+    };
+
     const params = new URLSearchParams({
-      page: config.page.toString(),
-      limit: config.limit.toString(),
+      page: safeConfig.page.toString(),
+      limit: safeConfig.limit.toString(),
     });
 
-    if (config.sortBy) {
-      params.append('sortBy', config.sortBy);
+    if (safeConfig.sortBy) {
+      params.append('sortBy', safeConfig.sortBy);
     }
-    if (config.sortOrder) {
-      params.append('sortOrder', config.sortOrder);
+    if (safeConfig.sortOrder) {
+      params.append('sortOrder', safeConfig.sortOrder);
     }
 
     const url = categoryId
@@ -189,17 +197,25 @@ export const adminApi = {
 
   // Buscar produtos com paginação
   searchProducts: async (query: string, config: PaginationConfig = { page: 1, limit: 12 }): Promise<SearchResponse<Product>> => {
+    // Garantir que config tem valores padrão válidos
+    const safeConfig = {
+      page: config?.page || 1,
+      limit: config?.limit || 12,
+      sortBy: config?.sortBy,
+      sortOrder: config?.sortOrder
+    };
+
     const params = new URLSearchParams({
       search: query,
-      page: config.page.toString(),
-      limit: config.limit.toString(),
+      page: safeConfig.page.toString(),
+      limit: safeConfig.limit.toString(),
     });
 
-    if (config.sortBy) {
-      params.append('sortBy', config.sortBy);
+    if (safeConfig.sortBy) {
+      params.append('sortBy', safeConfig.sortBy);
     }
-    if (config.sortOrder) {
-      params.append('sortOrder', config.sortOrder);
+    if (safeConfig.sortOrder) {
+      params.append('sortOrder', safeConfig.sortOrder);
     }
 
     const response = await api.get(`/products/search?${params.toString()}`);
