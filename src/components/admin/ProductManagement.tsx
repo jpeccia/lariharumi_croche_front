@@ -190,10 +190,11 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
       setIsLoading(true);
   
       const productsFetched = await adminApi.getProductsByPage(null, { page, limit });
-      const sorted = productsFetched.sort((a, b) => a.name.localeCompare(b.name));
+      const productsArray = Array.isArray(productsFetched) ? productsFetched : [];
+      const sorted = productsArray.toSorted((a, b) => a.name.localeCompare(b.name));
   
       setProducts(prev => page === 1 ? sorted : [...prev, ...sorted]);
-      setHasMore(productsFetched.length === limit);
+      setHasMore(Array.isArray(productsFetched) && productsFetched.length === limit);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     } finally {
@@ -367,16 +368,15 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
     const search = async () => {
       if (!debouncedSearchTerm) {
         // saiu do modo de busca
-        setIsSearching(false);
         setProducts([]); // limpa os resultados da busca
         setPage(1); // reseta paginação
         return;
       }
   
       try {
-        setIsSearching(true);
         const result = await adminApi.searchProducts(debouncedSearchTerm, 0);
-        setProducts(result);
+        const productsArray = Array.isArray(result) ? result : [];
+        setProducts(productsArray);
         setHasMore(false); // desliga paginação enquanto busca
       } catch (err) {
         console.error("Erro ao buscar produtos:", err);
