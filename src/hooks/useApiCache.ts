@@ -138,12 +138,27 @@ export function useStatsCache() {
       try {
         const [categories, products] = await Promise.all([
           adminApi.getCategories(),
-          adminApi.getProductsByPage(null, { page: 1, limit: 100 })
+          adminApi.getProductsByPage(null, { page: 1, limit: 1000 }) // Aumentado limite para 1000
         ]);
         
+        // Calcular totais corretamente
+        let totalProducts = 0;
+        let productsByCategory: Record<string, number> = {};
+        
+        if (Array.isArray(products)) {
+          totalProducts = products.length;
+          
+          // Contar produtos por categoria
+          products.forEach(product => {
+            const categoryName = categories.find(cat => cat.ID === product.categoryId)?.name || 'Sem categoria';
+            productsByCategory[categoryName] = (productsByCategory[categoryName] || 0) + 1;
+          });
+        }
+        
         return {
-          totalProducts: Array.isArray(products) ? products.length : 0,
+          totalProducts,
           totalCategories: Array.isArray(categories) ? categories.length : 0,
+          productsByCategory,
           recentActivity: []
         };
       } catch (error) {
@@ -151,10 +166,11 @@ export function useStatsCache() {
         return {
           totalProducts: 0,
           totalCategories: 0,
+          productsByCategory: {},
           recentActivity: []
         };
       }
     },
-    { ttl: 5 * 60 * 1000, refetchOnMount: false } // 5 minutos para estatísticas, sem refetch automático
+    { ttl: 2 * 60 * 1000, refetchOnMount: false } // Reduzido TTL para 2 minutos para atualizações mais frequentes
   );
 }

@@ -5,7 +5,6 @@ import { Package, FolderOpen, BarChart3, Plus, Eye } from 'lucide-react';
 import { useAnalytics } from '../../services/analytics';
 import { CardSkeleton } from '../../components/shared/LoadingStates';
 import { useStatsCache } from '../../hooks/useApiCache';
-import { useDebounce } from 'use-debounce';
 
 // Lazy loading para componentes administrativos pesados
 const ProductManagement = lazy(() => import('../../components/admin/ProductManagement').then(module => ({ default: module.ProductManagement })));
@@ -20,19 +19,9 @@ function AdminDashboard() {
   // Usar cache para estatísticas
   const { data: stats, loading: isLoadingStats, refresh: refreshStats } = useStatsCache();
   
-  // Debounced refresh para evitar múltiplas requisições
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [debouncedRefreshTrigger] = useDebounce(refreshTrigger, 1000);
-  
   const debouncedRefreshStats = useCallback(() => {
-    setRefreshTrigger(prev => prev + 1);
-  }, []);
-  
-  useEffect(() => {
-    if (debouncedRefreshTrigger > 0) {
-      refreshStats();
-    }
-  }, [debouncedRefreshTrigger, refreshStats]);
+    refreshStats(); // Atualizar imediatamente quando há mudanças
+  }, [refreshStats]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -123,9 +112,24 @@ function AdminDashboard() {
                     <div className="h-8 bg-gray-200 rounded w-16"></div>
                   </div>
                 ) : (
-                  <p className="text-2xl font-bold text-purple-800">
-                    {stats?.totalCategories && stats?.totalCategories > 0 ? Math.round((stats?.totalProducts || 0) / stats.totalCategories) : 0}
-                  </p>
+                  <div>
+                    <p className="text-2xl font-bold text-purple-800">
+                      {stats?.productsByCategory ? Object.keys(stats.productsByCategory).length : 0}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {(() => {
+                        if (!stats?.productsByCategory) return 'Nenhuma categoria';
+                        
+                        const entries = Object.entries(stats.productsByCategory);
+                        const displayText = entries
+                          .slice(0, 2)
+                          .map(([category, count]) => `${category}: ${count}`)
+                          .join(', ');
+                        
+                        return entries.length > 2 ? `${displayText}...` : displayText;
+                      })()}
+                    </p>
+                  </div>
                 )}
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
