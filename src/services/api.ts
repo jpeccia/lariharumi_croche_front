@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { env } from '../env';
 import { showNetworkError, showServerError, showAuthError } from '../utils/toast';
 import { useAuthStore } from '../store/authStore';
@@ -12,6 +12,11 @@ import {
   ApiError 
 } from '../types/api';
 import { Product } from '../types/product';
+
+interface ErrorResponse {
+  message?: string;
+  code?: string;
+}
 
 const api = axios.create({
   baseURL: env.VITE_API_BASE_URL,
@@ -236,6 +241,19 @@ export const adminApi = {
 
   // Upload de imagens de produto (assíncrono)
   uploadProductImages: async (files: File[], productId: number, config?: UploadConfig): Promise<UploadResponse> => {
+    // Validação dos arquivos
+    const maxFileSize = config?.maxFileSize || 5 * 1024 * 1024; // 5MB padrão
+    const allowedTypes = config?.allowedTypes || ['image/jpeg', 'image/png', 'image/webp'];
+    
+    for (const file of files) {
+      if (file.size > maxFileSize) {
+        throw new Error(`Arquivo ${file.name} é muito grande (máximo ${Math.round(maxFileSize / 1024 / 1024)}MB)`);
+      }
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error(`Arquivo ${file.name} tem formato não suportado`);
+      }
+    }
+
     const formData = new FormData();
     files.forEach((file) => formData.append("images[]", file)); 
 
@@ -248,9 +266,20 @@ export const adminApi = {
       });
       
       return response.data;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao enviar as imagens:", error);
-      throw new Error("Falha ao fazer upload das imagens");
+      
+      // Tratamento específico de erros
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status === 413) {
+        throw new Error('Arquivo muito grande');
+      } else if (axiosError.response?.status === 415) {
+        throw new Error('Formato de arquivo não suportado');
+      } else if (axiosError.response?.status === 500) {
+        throw new Error('Erro interno do servidor. Tente novamente mais tarde.');
+      } else {
+        throw new Error((axiosError.response?.data as ErrorResponse)?.message || 'Falha ao fazer upload das imagens');
+      }
     }
   },
 
@@ -333,7 +362,24 @@ export const adminApi = {
 
   // Deletar imagem de produto
   deleteProductImage: async (productId: number, imageIndex: number) => {
-    await api.delete(`/products/${productId}/images/${imageIndex}`);
+    try {
+      const response = await api.delete(`/products/${productId}/images/${imageIndex}`);
+      return response.data;
+    } catch (error: unknown) {
+      console.error('Erro ao deletar imagem:', error);
+      
+      // Tratamento específico de erros
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status === 404) {
+        throw new Error('Imagem não encontrada');
+      } else if (axiosError.response?.status === 500) {
+        throw new Error('Erro interno do servidor. Tente novamente mais tarde.');
+      } else if (axiosError.response?.status === 403) {
+        throw new Error('Sem permissão para deletar esta imagem');
+      } else {
+        throw new Error((axiosError.response?.data as ErrorResponse)?.message || 'Erro ao deletar imagem');
+      }
+    }
   },
 
   // Deletar uma categoria

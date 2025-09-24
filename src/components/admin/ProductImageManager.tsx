@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Edit3, Trash2, Plus, Image as ImageIcon, Upload, X } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Edit3, Trash2, Plus, Image as ImageIcon, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { ImageEditor } from './ImageEditor';
+import { showError, showProductSuccess } from '../../utils/toast';
 
 interface ProductImageManagerProps {
   productId: number;
@@ -17,23 +18,28 @@ export const ProductImageManager: React.FC<ProductImageManagerProps> = ({
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadImages();
-  }, [productId]);
-
-  const loadImages = async () => {
+  const loadImages = useCallback(async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const imageUrls = await adminApi.getProductImages(productId);
       setImages(imageUrls);
       onImagesChange?.(imageUrls);
     } catch (error) {
       console.error('Erro ao carregar imagens:', error);
+      setError('Erro ao carregar imagens do produto');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productId, onImagesChange]);
+
+  useEffect(() => {
+    loadImages();
+  }, [loadImages]);
 
   const handleImageEdit = (index: number) => {
     setEditingImageIndex(index);
@@ -44,25 +50,53 @@ export const ProductImageManager: React.FC<ProductImageManagerProps> = ({
     if (editingImageIndex === null) return;
 
     try {
+      setError(null);
+      setSuccess(null);
+      
       // Upload da imagem editada
       await adminApi.uploadProductImages([editedImage], productId);
       
       // Recarregar imagens
       await loadImages();
       
+      setSuccess('Imagem editada com sucesso!');
       setIsImageEditorOpen(false);
       setEditingImageIndex(null);
+      
+      // Limpar mensagem de sucesso após 3 segundos
+      setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
       console.error('Erro ao salvar imagem editada:', error);
+      setError('Erro ao salvar imagem editada');
+      showError('Erro ao salvar imagem editada');
     }
   };
 
   const handleImageDelete = async (index: number) => {
+    if (!confirm('Tem certeza que deseja remover esta imagem?')) {
+      return;
+    }
+
     try {
+      setIsDeleting(index);
+      setError(null);
+      setSuccess(null);
+      
       await adminApi.deleteProductImage(productId, index);
       await loadImages();
+      
+      setSuccess('Imagem removida com sucesso!');
+      showProductSuccess('imagem removida');
+      
+      // Limpar mensagem de sucesso após 3 segundos
+      setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
       console.error('Erro ao deletar imagem:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      setError(`Erro ao remover imagem: ${errorMessage}`);
+      showError('Erro ao remover imagem. Tente novamente.');
+    } finally {
+      setIsDeleting(null);
     }
   };
 
@@ -70,12 +104,36 @@ export const ProductImageManager: React.FC<ProductImageManagerProps> = ({
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
 
+    // Validar tamanho dos arquivos (máximo 5MB cada)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      setError(`Alguns arquivos são muito grandes (máximo 5MB). Arquivos grandes: ${oversizedFiles.map(f => f.name).join(', ')}`);
+      return;
+    }
+
     try {
       setIsUploading(true);
+      setError(null);
+      setSuccess(null);
+      
       await adminApi.uploadProductImages(files, productId);
       await loadImages();
+      
+      setSuccess(`${files.length} imagem(ns) adicionada(s) com sucesso!`);
+      showProductSuccess('imagens adicionadas');
+      
+      // Limpar mensagem de sucesso após 3 segundos
+      setTimeout(() => setSuccess(null), 3000);
+      
+      // Limpar o input
+      event.target.value = '';
     } catch (error) {
       console.error('Erro ao adicionar imagens:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      setError(`Erro ao adicionar imagens: ${errorMessage}`);
+      showError('Erro ao adicionar imagens. Tente novamente.');
     } finally {
       setIsUploading(false);
     }
@@ -102,9 +160,36 @@ export const ProductImageManager: React.FC<ProductImageManagerProps> = ({
         Imagens do Produto ({images.length})
       </h3>
 
+      {/* Mensagens de erro e sucesso */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+          <AlertCircle size={16} className="text-red-600 flex-shrink-0" />
+          <span className="text-red-800 text-sm">{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto text-red-600 hover:text-red-800"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+          <CheckCircle size={16} className="text-green-600 flex-shrink-0" />
+          <span className="text-green-800 text-sm">{success}</span>
+          <button
+            onClick={() => setSuccess(null)}
+            className="ml-auto text-green-600 hover:text-green-800"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Upload de novas imagens */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="add-images" className="block text-sm font-medium text-gray-700 mb-2">
           Adicionar Novas Imagens
         </label>
         <div className="flex items-center space-x-4">
@@ -134,7 +219,7 @@ export const ProductImageManager: React.FC<ProductImageManagerProps> = ({
       {images.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {images.map((imageUrl, index) => (
-            <div key={index} className="relative group">
+            <div key={`image-${productId}-${index}`} className="relative group">
               <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
                 <img
                   src={imageUrl}
@@ -155,10 +240,15 @@ export const ProductImageManager: React.FC<ProductImageManagerProps> = ({
                   </button>
                   <button
                     onClick={() => handleImageDelete(index)}
-                    className="p-2 bg-white rounded-full shadow-lg hover:bg-red-50 transition-colors"
+                    className="p-2 bg-white rounded-full shadow-lg hover:bg-red-50 transition-colors disabled:opacity-50"
                     title="Remover imagem"
+                    disabled={isDeleting === index}
                   >
-                    <Trash2 size={16} className="text-red-600" />
+                    {isDeleting === index ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
+                    ) : (
+                      <Trash2 size={16} className="text-red-600" />
+                    )}
                   </button>
                 </div>
               </div>

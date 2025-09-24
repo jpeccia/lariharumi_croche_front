@@ -142,7 +142,7 @@ export function DonationPage() {
           
           <p className="font-kawaii text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Ooi! Se você se encantou com meu trabalho e quer me ajudar a continuar criando peças únicas cheias de amor e magia crochetada, fique à vontade para contribuir! 
-            Cada doação é como um abraço quentinho que me incentiva a seguir transformando fios em sonhos! ✨🧶💕
+            Cada doação me incentiva a seguir transformando fios em sonhos! ✨🧶💕
           </p>
         </div>
 
