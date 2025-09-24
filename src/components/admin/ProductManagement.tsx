@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Package, Plus, Edit, Trash, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { Product } from '../../types/product';
@@ -10,20 +10,11 @@ import { useCategoriesCache } from '../../hooks/useApiCache';
 import { ProductForm } from './ProductForm';
 import { PaginationConfig } from '../../types/api';
 
-interface Category {
-  ID: number;
-  name: string;
-}
-
-interface ProductProps {
-  product: Product;
-}
-
 interface ProductCardProps {
   product: Product;
 }
 
-function ProductCard({ product }: Readonly<ProductCardProps>) {
+const ProductCard = React.memo(({ product }: Readonly<ProductCardProps>) => {
   const [imageUrls, setImageUrls] = useState<string[]>([]); 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
@@ -42,19 +33,19 @@ function ProductCard({ product }: Readonly<ProductCardProps>) {
     fetchProductImages();
   }, [product.ID]);
 
-  const handlePrevImage = () => {
+  const handlePrevImage = useCallback(() => {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === 0 ? imageUrls.length - 1 : prevIndex - 1
     );
-  };
+  }, [imageUrls.length]);
 
-  const handleNextImage = () => {
+  const handleNextImage = useCallback(() => {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
     );
-  };
+  }, [imageUrls.length]);
 
-  const handleImageEditorSave = async (editedImage: File) => {
+  const handleImageEditorSave = useCallback(async (editedImage: File) => {
     try {
       // Upload da imagem editada
       await adminApi.uploadProductImages([editedImage], product.ID);
@@ -66,40 +57,48 @@ function ProductCard({ product }: Readonly<ProductCardProps>) {
     } catch (error) {
       console.error('Erro ao salvar imagem editada:', error);
     }
-  };
+  }, [product.ID]);
+
+  const imageContent = useMemo(() => {
+    if (imageUrls.length > 0) {
+      return (
+        <>
+          <button
+            onClick={handlePrevImage}
+            className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+          >
+            <ChevronLeft size={12} />
+          </button>
+
+          <img
+            src={imageUrls[currentImageIndex]}
+            alt={product.name}
+            className="w-full h-full object-fill"  
+          />
+
+          <button
+            onClick={handleNextImage}
+            className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
+          >
+            <ChevronRight size={12} />
+          </button>
+        </>
+      );
+    } else {
+      return (
+        <img
+          src="/default-image.jpg" 
+          alt={product.name}
+          className="w-full h-full object-cover" 
+        />
+      );
+    }
+  }, [imageUrls, currentImageIndex, product.name, handlePrevImage, handleNextImage]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="relative w-full h-32 flex items-center justify-center">
-      {imageUrls.length > 0 ? (
-  <>
-    <button
-      onClick={handlePrevImage}
-      className="absolute left-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-    >
-      <ChevronLeft size={12} />
-    </button>
-
-    <img
-      src={imageUrls[currentImageIndex]}
-      alt={product.name}
-      className="w-full h-full object-fill"  
-    />
-
-    <button
-      onClick={handleNextImage}
-      className="absolute right-2 text-purple-600 hover:text-purple-800 bg-white p-1 rounded-full shadow"
-    >
-      <ChevronRight size={12} />
-    </button>
-  </>
-) : (
-  <img
-    src="/default-image.jpg" 
-    alt={product.name}
-    className="w-full h-full object-cover" 
-  />
-        )}
+        {imageContent}
 
         {/* Image Editor Modal */}
         <ImageEditor
@@ -109,20 +108,22 @@ function ProductCard({ product }: Readonly<ProductCardProps>) {
             setImageToEdit(null);
           }}
           onSave={handleImageEditorSave}
-          initialImage={imageToEdit}
+          initialImage={imageToEdit || undefined}
           title="Editor de Imagem do Produto"
         />
       </div>
     </div>
   );
-}
+});
+
+ProductCard.displayName = 'ProductCard';
 
 interface ProductManagementProps {
   product?: Product;
   onDataChange?: () => void;
 }
 
-export function ProductManagement({ product, onDataChange }: Readonly<ProductManagementProps>) {
+export function ProductManagement({ onDataChange }: Readonly<ProductManagementProps>) {
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState({
@@ -149,10 +150,8 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   
-  // Função fetchProducts igual ao catálogo
+  // Função fetchProducts otimizada
   const fetchProducts = useCallback(async (page: number = 1, searchQuery: string = '') => {
-    if (isLoadingProducts) return;
-  
     try {
       setIsLoadingProducts(true);
   
@@ -201,12 +200,12 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
     } finally {
       setIsLoadingProducts(false);
     }
-  }, [isLoadingProducts]);
+  }, []); // Removida dependência de isLoadingProducts
 
-  // Carregar produtos iniciais
+  // Carregar produtos iniciais apenas uma vez
   useEffect(() => {
     fetchProducts(1, '');
-  }, [fetchProducts]);
+  }, [fetchProducts]); // Adicionada dependência
   
 
   useEffect(() => {
@@ -228,13 +227,12 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
 
   // Carregar produtos quando termo de busca muda
   useEffect(() => {
-    setCurrentPage(1);
     fetchProducts(1, debouncedSearchTerm);
-  }, [debouncedSearchTerm, fetchProducts]);
+  }, [debouncedSearchTerm, fetchProducts]); // Adicionada dependência
   
   
 
-  const handleCreateProduct = async (formData: any) => {
+  const handleCreateProduct = async (formData: { name: string; description: string; priceRange: string; categoryId: number; images?: File[] }) => {
     try {
       setIsSubmitting(true);
       
@@ -265,7 +263,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
     }
   };
 
-  const handleUpdateProduct = async (formData: any) => {
+  const handleUpdateProduct = async (formData: { name: string; description: string; priceRange: string; categoryId: number; images?: File[] }) => {
     if (!editingProduct?.ID) {
       showError('Produto não selecionado ou ID inválido');
       return;
@@ -295,13 +293,12 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
     }
   };
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = useCallback((product: Product) => {
     setEditingProduct(product);
     setIsFormOpen(true);
-  };
+  }, []);
 
-  
-  const handleDeleteProduct = async (productId: number) => {
+  const handleDeleteProduct = useCallback(async (productId: number) => {
     try {
       await adminApi.deleteProduct(productId);
       fetchProducts(currentPage, debouncedSearchTerm);
@@ -310,7 +307,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
       console.error('Falha ao excluir o produto:', error);
       showError('Falha ao excluir o produto.');
     }
-  };
+  }, [currentPage, debouncedSearchTerm, onDataChange, fetchProducts]);
 
   const handleImageEditorSave = async (editedImage: File) => {
     if (!editingProduct) return;
@@ -335,6 +332,40 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
       categoryId: 1,
     });
   };
+
+  // Memoizar a lista de produtos para evitar re-renderizações desnecessárias
+  const productsList = useMemo(() => {
+    return products.map((product) => (
+      <div
+        key={product.ID}
+        className="flex items-center justify-between p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105"
+      >
+        <div className="flex items-center gap-6">
+          <div className="w-32 h-32 flex-shrink-0">
+            <ProductCard product={product} />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xl font-semibold text-gray-800">{product.name}</p>
+            <p className="text-sm text-gray-500">{product.description}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => handleEditProduct(product)}
+            className="text-blue-600 hover:text-blue-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
+          >
+            <Edit className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => handleDeleteProduct(product.ID)}
+            className="text-red-600 hover:text-red-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
+          >
+            <Trash className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+    ));
+  }, [products, handleEditProduct, handleDeleteProduct]);
 
   
   
@@ -369,7 +400,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
       {isSectionVisible && (
         <>
           {editingProduct && (
-            <form ref={editFormRef} onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct} className="space-y-4 mb-6">
+            <form ref={editFormRef} className="space-y-4 mb-6">
               <div>
                 <label htmlFor="product-name" className="block text-sm font-medium text-gray-700">Nome</label>
                 <input
@@ -467,36 +498,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
           className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
       </div>
-              {products.map((product) => (
-              <div
-                key={product.ID}
-                className="flex items-center justify-between p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105"
-              >
-                <div className="flex items-center gap-6">
-                  <div className="w-32 h-32 flex-shrink-0">
-                    <ProductCard key={product.ID} product={product} />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-xl font-semibold text-gray-800">{product.name}</p>
-                    <p className="text-sm text-gray-500">{product.description}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => handleEditProduct(product)}
-                    className="text-blue-600 hover:text-blue-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
-                  >
-                    <Edit className="w-6 h-6" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProduct(product.ID)}
-                    className="text-red-600 hover:text-red-700 p-2 rounded-md transition duration-200 ease-in-out transform hover:scale-110"
-                  >
-                    <Trash className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              {productsList}
         {isLoadingProducts && (
           <div className="col-span-full flex justify-center mt-8">
             <span className="text-purple-600 font-kawaii text-xl">Carregando produtos...</span>
@@ -509,7 +511,7 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
             <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
               <div className="bg-white p-6 rounded-lg shadow-sm w-96">
                 <UploadProductImage
-                  productID={editingProduct ? editingProduct.ID : newProduct.ID}
+                  productID={editingProduct ? editingProduct.ID : 0}
                   onImagesUploaded={(uploadedImages) => {
                     setNewProduct((prev) => ({
                       ...prev,
@@ -543,14 +545,14 @@ export function ProductManagement({ product, onDataChange }: Readonly<ProductMan
           setImageToEdit(null);
         }}
         onSave={handleImageEditorSave}
-        initialImage={imageToEdit}
+        initialImage={imageToEdit || undefined}
         title="Editor de Imagem do Produto"
       />
 
       {/* Product Form Modal */}
       {isFormOpen && (
         <ProductForm
-          product={editingProduct}
+          product={editingProduct || undefined}
           categories={categories || []}
           onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct}
           onCancel={() => {
