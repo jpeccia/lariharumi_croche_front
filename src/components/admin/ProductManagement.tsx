@@ -6,7 +6,7 @@ import { UploadProductImage } from './UploadProductImage';
 import { showProductSuccess, showError } from '../../utils/toast';
 import { useDebounce } from 'use-debounce';
 import { ImageEditor } from './ImageEditor';
-import { useCategoriesCache } from '../../hooks/useApiCache';
+import { useCategoriesCache, invalidateProductsCache } from '../../hooks/useApiCache';
 import { ProductForm } from './ProductForm';
 import { PaginationConfig } from '../../types/api';
 
@@ -254,6 +254,7 @@ export function ProductManagement({ onDataChange }: Readonly<ProductManagementPr
       setEditingProduct(null);
       resetForm();
       refreshCategories();
+      invalidateProductsCache(); // Invalidar cache de produtos e estatísticas
       onDataChange?.();
     } catch (error) {
       console.error('Falha ao criar o produto:', error);
@@ -284,6 +285,7 @@ export function ProductManagement({ onDataChange }: Readonly<ProductManagementPr
       setIsFormOpen(false);
       setEditingProduct(null);
       refreshCategories();
+      invalidateProductsCache(); // Invalidar cache de produtos e estatísticas
       onDataChange?.();
     } catch (error) {
       console.error('Falha ao atualizar o produto:', error);
@@ -302,6 +304,7 @@ export function ProductManagement({ onDataChange }: Readonly<ProductManagementPr
     try {
       await adminApi.deleteProduct(productId);
       fetchProducts(currentPage, debouncedSearchTerm);
+      invalidateProductsCache(); // Invalidar cache de produtos e estatísticas
       onDataChange?.(); // Atualizar estatísticas do dashboard
     } catch (error) {
       console.error('Falha ao excluir o produto:', error);

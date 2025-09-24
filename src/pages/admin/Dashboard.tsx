@@ -61,6 +61,13 @@ function AdminDashboard() {
                 <Eye size={20} />
                 <span>Ver Catálogo</span>
               </button>
+              <button
+                onClick={debouncedRefreshStats}
+                className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+              >
+                <BarChart3 size={20} />
+                <span>Atualizar Stats</span>
+              </button>
             </div>
           </div>
         </div>
@@ -148,7 +155,7 @@ function AdminDashboard() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => setActiveTab(tab.id as 'products' | 'categories' | 'overview')}
                     className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       activeTab === tab.id
                         ? 'border-purple-500 text-purple-600'

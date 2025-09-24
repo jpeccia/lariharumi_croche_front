@@ -131,26 +131,54 @@ export function useProductsSearchCache(query: string, page = 1, limit = 10, conf
   );
 }
 
+// Função para invalidar cache de estatísticas
+export function invalidateStatsCache() {
+  globalCache.delete('stats');
+}
+
+// Função para invalidar cache de produtos
+export function invalidateProductsCache() {
+  // Invalidar todas as chaves relacionadas a produtos
+  for (const key of globalCache.keys()) {
+    if (key.startsWith('products-') || key.startsWith('products-search-')) {
+      globalCache.delete(key);
+    }
+  }
+  // Também invalidar estatísticas quando produtos mudam
+  invalidateStatsCache();
+}
+
 export function useStatsCache() {
   return useApiCache(
     'stats',
     async () => {
       try {
-        const [categories, products] = await Promise.all([
+        // Buscar categorias e produtos de forma mais eficiente
+        const [categories, productsResponse] = await Promise.all([
           adminApi.getCategories(),
-          adminApi.getProductsByPage(null, { page: 1, limit: 1000 }) // Aumentado limite para 1000
+          adminApi.getProductsByPage(null, { page: 1, limit: 1000 }) // Buscar até 1000 produtos
         ]);
         
-        // Calcular totais corretamente
+        // Calcular estatísticas baseadas nos dados recebidos
         let totalProducts = 0;
         let productsByCategory: Record<string, number> = {};
+        let products: Product[] = [];
         
+        // Extrair produtos da resposta (pode ser array ou objeto com data)
+        if (Array.isArray(productsResponse)) {
+          products = productsResponse;
+        } else if (productsResponse && typeof productsResponse === 'object' && 'data' in productsResponse) {
+          products = productsResponse.data;
+        }
+        
+        // Calcular totais
         if (Array.isArray(products)) {
           totalProducts = products.length;
           
           // Contar produtos por categoria
           products.forEach(product => {
-            const categoryName = categories.find(cat => cat.ID === product.categoryId)?.name || 'Sem categoria';
+            const category = categories.find(cat => cat.ID === product.categoryId);
+            const categoryName = category?.name || 'Sem categoria';
             productsByCategory[categoryName] = (productsByCategory[categoryName] || 0) + 1;
           });
         }
@@ -171,6 +199,6 @@ export function useStatsCache() {
         };
       }
     },
-    { ttl: 2 * 60 * 1000, refetchOnMount: false } // Reduzido TTL para 2 minutos para atualizações mais frequentes
+    { ttl: 2 * 60 * 1000, refetchOnMount: false }
   );
 }
