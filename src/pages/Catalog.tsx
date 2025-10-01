@@ -4,6 +4,7 @@ import api, { publicApi } from '../services/api';
 import CategoryCard from '../components/catalog/CategoryCard';
 import ProductCard from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
+import { PromotionBanner } from '../components/shared/PromotionBanner';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 import { SEOHead } from '../components/shared/SEOHead';
@@ -276,6 +277,9 @@ function Catalog() {
                 </p>
               </div>
             </CascadeAnimation>
+
+            {/* Banner de Promoção */}
+            <PromotionBanner />
 
             {/* Seção de Categorias */}
             <CascadeAnimation delay={300}>

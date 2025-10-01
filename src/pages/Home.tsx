@@ -3,9 +3,8 @@ import { Suspense, lazy } from 'react';
 import { Gift, Heart, MessageCircle, ArrowRight, Sparkles } from 'lucide-react';
 import { DonationBox } from '../components/home/DonationBox';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
-import { useEntranceAnimation } from '../hooks/usePageTransition';
+import { PromotionBanner } from '../components/shared/PromotionBanner';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
-import { LoadingSpinner } from '../components/shared/LoadingStates';
 import { SEOHead } from '../components/shared/SEOHead';
 
 // Lazy loading para componentes Kawaii pesados
@@ -15,10 +14,7 @@ const CuteCinnamoroll = lazy(() => import('../components/shared/KawaiiElements/C
 const Cat = lazy(() => import('../components/shared/KawaiiElements/Cat').then(module => ({ default: module.Cat })));
 
 function Home() {
-  const { deviceInfo, getAnimationConfig } = useMobileOptimization();
-  const { enableAnimations } = getAnimationConfig();
-  const heroVisible = useEntranceAnimation(100);
-  const featuresVisible = useEntranceAnimation(300);
+  useMobileOptimization();
 
   return (
     <>
@@ -87,6 +83,9 @@ function Home() {
             </Suspense>
           </div>
         </div>
+
+        {/* Banner de Promoção */}
+        <PromotionBanner />
 
         {/* Features Section Melhorada */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
