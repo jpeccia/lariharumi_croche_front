@@ -82,23 +82,11 @@ export function ImageGallery({
   return (
     <dialog
       ref={modalRef}
-      className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-0 border-0 outline-none"
+      className="fixed inset-0 bg-black/50 sm:bg-black/70 z-50 flex items-center justify-center p-4 border-0 outline-none"
       onClick={handleBackdropClick}
       open={isOpen}
       aria-label={`Galeria de imagens de ${productName}`}
     >
-      {/* Close button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 text-white hover:text-gray-300 transition-colors p-2 sm:p-3"
-        aria-label="Fechar galeria"
-      >
-        <X size={20} className="sm:w-6 sm:h-6" />
-      </button>
-
       {/* Navigation buttons */}
       {images.length > 1 && (
         <>
@@ -107,76 +95,94 @@ export function ImageGallery({
               e.stopPropagation();
               handlePrev();
             }}
-            className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 text-white hover:text-gray-300 transition-colors p-2 sm:p-3 bg-black/30 hover:bg-black/50 rounded-full sm:left-4"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-colors"
             aria-label="Imagem anterior"
           >
-            <ChevronLeft size={20} className="sm:w-6 sm:h-6" />
+            <ChevronLeft size={24} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleNext();
             }}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 text-white hover:text-gray-300 transition-colors p-2 sm:p-3 bg-black/30 hover:bg-black/50 rounded-full sm:right-4"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-colors"
             aria-label="Próxima imagem"
           >
-            <ChevronRight size={20} className="sm:w-6 sm:h-6" />
+            <ChevronRight size={24} />
           </button>
         </>
       )}
 
-      {/* Image container */}
+      {/* Modal container */}
       <div
-        className="relative max-w-[95vw] max-h-[95vh] sm:max-w-[90vw] sm:max-h-[90vh] flex items-center justify-center p-2 sm:p-4"
+        className="relative bg-white rounded-xl shadow-2xl max-w-[90vw] max-h-[90vh] sm:max-w-[80vw] sm:max-h-[80vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         tabIndex={0}
         role="img"
       >
-        <img
-          src={images[currentIndex]}
-          alt={`${productName} - Imagem ${currentIndex + 1}`}
-          className="max-w-full max-h-full object-contain select-none"
-        />
-      </div>
-
-      {/* Thumbnail navigation */}
-      {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 max-w-[90vw] overflow-x-auto pb-2">
-          {images.map((image, index) => (
-            <button
-              key={`thumb-${image}-${index}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setCurrentIndex(index);
-              }}
-              className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                index === currentIndex
-                  ? 'border-white'
-                  : 'border-transparent hover:border-gray-400'
-              }`}
-              aria-label={`Ver imagem ${index + 1}`}
-            >
-              <img
-                src={image}
-                alt={`Miniatura ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </button>
-          ))}
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800 truncate">{productName}</h2>
+            {images.length > 1 && (
+              <p className="text-sm text-gray-600">{currentIndex + 1} de {images.length}</p>
+            )}
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-200 transition-colors"
+            aria-label="Fechar galeria"
+          >
+            <X size={20} />
+          </button>
         </div>
-      )}
 
-      {/* Image counter */}
-      {images.length > 1 && (
-        <div className="absolute top-4 left-4 text-white bg-black/50 rounded px-3 py-1 text-sm">
-          {currentIndex + 1} / {images.length}
+        {/* Image container */}
+        <div className="relative flex-1 flex items-center justify-center bg-gray-100 p-4">
+          <img
+            src={images[currentIndex]}
+            alt={`${productName} - Imagem ${currentIndex + 1}`}
+            className="max-w-full max-h-full object-contain select-none rounded-lg shadow-lg"
+          />
         </div>
-      )}
 
-      {/* Simple instructions */}
-      <div className="absolute top-4 right-16 text-white bg-black/50 rounded px-3 py-1 text-xs">
-        ← → ou clique nas setas
+        {/* Thumbnail navigation */}
+        {images.length > 1 && (
+          <div className="flex gap-2 p-4 bg-gray-50 border-t border-gray-200 overflow-x-auto">
+            {images.map((image, index) => (
+              <button
+                key={`thumb-${image}-${index}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentIndex(index);
+                }}
+                className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                  index === currentIndex
+                    ? 'border-purple-500'
+                    : 'border-transparent hover:border-gray-400'
+                }`}
+                aria-label={`Ver imagem ${index + 1}`}
+              >
+                <img
+                  src={image}
+                  alt={`Miniatura ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Instructions */}
+        <div className="px-4 pb-4 bg-gray-50 text-center">
+          <p className="text-xs text-gray-600">
+            Use as setas ← → para navegar ou clique nas miniaturas
+          </p>
+        </div>
       </div>
     </dialog>
   );
