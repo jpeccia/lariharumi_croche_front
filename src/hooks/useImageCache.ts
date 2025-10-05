@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { adminApi, getCategoryImage } from '../services/api';
+import { adminApi, publicApi, getCategoryImage } from '../services/api';
 
 interface ImageCache {
   [key: string]: string[];
@@ -14,7 +14,7 @@ interface UseImageCacheReturn {
 // Cache global para imagens
 const imageCache: ImageCache = {};
 
-export function useImageCache(productId: number): UseImageCacheReturn {
+export function useImageCache(productId: number, usePublicApi: boolean = true): UseImageCacheReturn {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,22 +41,25 @@ export function useImageCache(productId: number): UseImageCacheReturn {
     setIsLoading(true);
     setError(null);
 
-        try {
-          const images = await adminApi.getProductImages(productId);
-          
-          // Armazena no cache global e sessionStorage
-          imageCache[cacheKey] = images;
-          sessionStorage.setItem(cacheKey, JSON.stringify(images));
-          
-          setImageUrls(images);
-        } catch (err) {
+    try {
+      // Usa API pública ou admin dependendo do contexto
+      const images = usePublicApi 
+        ? await publicApi.getProductImages(productId)
+        : await adminApi.getProductImages(productId);
+      
+      // Armazena no cache global e sessionStorage
+      imageCache[cacheKey] = images;
+      sessionStorage.setItem(cacheKey, JSON.stringify(images));
+      
+      setImageUrls(images);
+    } catch (err) {
       const errorMessage = 'Erro ao carregar imagens';
       setError(errorMessage);
       console.error(errorMessage, err);
     } finally {
       setIsLoading(false);
     }
-  }, [productId, cacheKey]);
+  }, [productId, cacheKey, usePublicApi]);
 
   useEffect(() => {
     fetchImages();
@@ -66,7 +69,7 @@ export function useImageCache(productId: number): UseImageCacheReturn {
 }
 
 // Hook para carregar imagens de categoria
-export function useCategoryImageCache(categoryId: number): {
+export function useCategoryImageCache(categoryId: number, usePublicApi: boolean = true): {
   imageUrl: string;
   isLoading: boolean;
   error: string | null;
@@ -97,7 +100,10 @@ export function useCategoryImageCache(categoryId: number): {
     setError(null);
 
     try {
-      const image = await getCategoryImage(categoryId);
+      // Usa API pública ou admin dependendo do contexto
+      const image = usePublicApi 
+        ? await publicApi.getCategoryImage(categoryId)
+        : await getCategoryImage(categoryId);
       
       // Armazena no cache global e sessionStorage
       imageCache[cacheKey] = [image];
@@ -111,7 +117,7 @@ export function useCategoryImageCache(categoryId: number): {
     } finally {
       setIsLoading(false);
     }
-  }, [categoryId, cacheKey]);
+  }, [categoryId, cacheKey, usePublicApi]);
 
   useEffect(() => {
     fetchImage();
@@ -121,7 +127,7 @@ export function useCategoryImageCache(categoryId: number): {
 }
 
 // Função para pré-carregar imagens em lote
-export async function preloadImages(productIds: number[]): Promise<void> {
+export async function preloadImages(productIds: number[], usePublicApi: boolean = true): Promise<void> {
   const uncachedIds = productIds.filter(id => {
     const cacheKey = `product-${id}`;
     return !imageCache[cacheKey] && !sessionStorage.getItem(cacheKey);
@@ -135,16 +141,18 @@ export async function preloadImages(productIds: number[]): Promise<void> {
     for (let i = 0; i < uncachedIds.length; i += batchSize) {
       const batch = uncachedIds.slice(i, i + batchSize);
       await Promise.all(
-            batch.map(async (id) => {
-              try {
-                const images = await adminApi.getProductImages(id);
-                const cacheKey = `product-${id}`;
-                imageCache[cacheKey] = images;
-                sessionStorage.setItem(cacheKey, JSON.stringify(images));
-              } catch (error) {
-                console.error(`Erro ao pré-carregar imagens do produto ${id}:`, error);
-              }
-            })
+        batch.map(async (id) => {
+          try {
+            const images = usePublicApi 
+              ? await publicApi.getProductImages(id)
+              : await adminApi.getProductImages(id);
+            const cacheKey = `product-${id}`;
+            imageCache[cacheKey] = images;
+            sessionStorage.setItem(cacheKey, JSON.stringify(images));
+          } catch (error) {
+            console.error(`Erro ao pré-carregar imagens do produto ${id}:`, error);
+          }
+        })
       );
     }
   } catch (error) {

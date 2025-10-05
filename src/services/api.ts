@@ -141,6 +141,46 @@ export const publicApi = {
     const response = await publicApiInstance.get('/categories');
     return response.data;
   },
+
+  // Obter imagens de um produto (público)
+  getProductImages: async (productId: number) => {
+    try {
+      const response = await publicApiInstance.get(`/products/${productId}/images`);
+
+      if (response.data && Array.isArray(response.data)) {
+        const baseUrl = env.VITE_API_BASE_URL;
+        const images = response.data.map((url: string) => {
+          if (url.startsWith("http")) return url;
+          const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
+          return `${baseUrl}${normalizedUrl}`;
+        });
+
+        return images;
+      } else {
+        console.error("Nenhuma imagem encontrada para este produto");
+        return [];
+      }
+    } catch (error) {
+      console.error("Erro ao buscar imagens do produto:", error);
+      return [];
+    }
+  },
+
+  // Obter imagem de uma categoria (público)
+  getCategoryImage: async (categoryId: number) => {
+    if (!categoryId) {
+      console.error("ID da categoria não definido");
+      return "";
+    }
+
+    try {
+      const response = await publicApiInstance.get(`/categories/${categoryId}/image`);
+      return response.data.imageUrl;
+    } catch (error) {
+      console.error("Erro ao buscar imagem da categoria:", error);
+      throw new Error("Falha ao buscar imagem da categoria");
+    }
+  },
 };
 
 // Funções administrativas

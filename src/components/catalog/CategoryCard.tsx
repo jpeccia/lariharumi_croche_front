@@ -4,13 +4,13 @@ import { Category } from '../../types/product';
 import { useCategoryImageCache } from '../../hooks/useImageCache';
 
 interface CategoryCardProps {
-  category: Category;
-  onClick: (categoryId: number) => void;
+  readonly category: Category;
+  readonly onClick: (categoryId: number) => void;
 }
 
 function CategoryCard({ category, onClick }: CategoryCardProps) {
-  // Usa o hook otimizado para carregar imagem da categoria
-  const { imageUrl: categoryImageUrl, isLoading, error } = useCategoryImageCache(category.ID);
+  // Usa o hook otimizado para carregar imagem da categoria (API pública)
+  const { imageUrl: categoryImageUrl, isLoading, error } = useCategoryImageCache(category.ID, true);
   
   const handleClick = useCallback(() => {
     onClick(category.ID);

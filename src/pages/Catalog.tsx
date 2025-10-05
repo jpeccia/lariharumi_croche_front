@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Filter, Grid, List, Heart, Sparkles, ArrowLeft } from 'lucide-react';
-import api, { publicApi } from '../services/api';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { Search, Grid, List, Heart, ArrowLeft } from 'lucide-react';
+import { publicApi } from '../services/api';
 import CategoryCard from '../components/catalog/CategoryCard';
 import ProductCard from '../components/catalog/ProductCard';
 import { MadeToOrderBanner } from '../components/shared/MadeToOrderBanner';
@@ -9,19 +9,17 @@ import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHear
 import { Stitch } from '../components/shared/KawaiiElements/Stitch';
 import { SEOHead } from '../components/shared/SEOHead';
 import { preloadImages } from '../hooks/useImageCache';
-import { showCatalogError, showCategoryLoadError, showProductLoadError } from '../utils/toast';
-import { Category, Product } from '../types/product';
+import { showProductLoadError } from '../utils/toast';
+import { Product } from '../types/product';
 import { PaginatedResponse, PaginationConfig } from '../types/api';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { usePerformanceOptimization } from '../hooks/usePerformanceOptimization';
 import { useAnalytics } from '../services/analytics';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { SkeletonProductCard, SkeletonCategoryCard } from '../components/shared/SkeletonLoader';
-import { useCategoriesCache, useProductsCache } from '../hooks/useApiCache';
-import { CacheIndicator } from '../components/shared/CacheIndicator';
+import { useCategoriesCache } from '../hooks/useApiCache';
 import { Pagination, CompactPagination } from '../components/shared/Pagination';
 import { PageTransition, CascadeAnimation, FadeIn } from '../components/shared/PageTransition';
-import { Suspense } from 'react';
 
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,13 +32,9 @@ function Catalog() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showFilters, setShowFilters] = useState(false);
   
   // Hooks de otimização
   const mobileOptimization = useMobileOptimization();
-  const deviceInfo = mobileOptimization?.deviceInfo || { isMobile: false };
-  const getOptimalGridColumns = mobileOptimization?.getOptimalGridColumns || (() => 4);
-  const getAnimationConfig = mobileOptimization?.getAnimationConfig || (() => ({ enableAnimations: true }));
   const performanceOptimization = usePerformanceOptimization();
   const startRenderMeasurement = performanceOptimization?.startRenderMeasurement || (() => {});
   const endRenderMeasurement = performanceOptimization?.endRenderMeasurement || (() => {});
@@ -51,14 +45,6 @@ function Catalog() {
   
   // Cache de categorias
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useCategoriesCache();
-  
-  // Configuração de paginação
-  const paginationConfig: PaginationConfig = {
-    page: currentPage,
-    limit: 12,
-    sortBy: 'name',
-    sortOrder: 'asc'
-  };
 
 
   // Monitorar quando categorias são carregadas
@@ -142,9 +128,9 @@ function Catalog() {
       setCurrentPage(page);
       setPaginationInfo(paginationInfo);
       
-      // Pré-carrega imagens dos produtos da página atual
+      // Pré-carrega imagens dos produtos da página atual (API pública)
       const productIds = activeProducts.map((product: Product) => product.ID);
-      preloadImages(productIds);
+      preloadImages(productIds, true);
       
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
@@ -224,10 +210,6 @@ function Catalog() {
     trackClick('clear_search', 'catalog');
   }, 300);
 
-  const scrollToProducts = createThrottledCallback(() => {
-    viewProductCatalogRef.current?.scrollIntoView({ behavior: 'smooth' });
-    trackClick('scroll_to_products', 'catalog');
-  }, 300);
 
   useEffect(() => {
     if (selectedCategory !== null && viewProductCatalogRef.current) {

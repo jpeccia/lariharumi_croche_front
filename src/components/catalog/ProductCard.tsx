@@ -1,11 +1,11 @@
-import { Instagram, ChevronLeft, ChevronRight, X, Maximize2, Heart, Star } from 'lucide-react';
+import { Instagram, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
 import { Product } from '../../types/product';
 import { useState, useEffect, memo, useCallback } from 'react';
 import { useImageCache } from '../../hooks/useImageCache';
 
 interface ProductCardProps {
-  product: Product;
-  instagramUsername: string;
+  readonly product: Product;
+  readonly instagramUsername: string;
 }
 
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
@@ -15,8 +15,8 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isModalTransitioning, setIsModalTransitioning] = useState(false);
   
-  // Usa o hook otimizado para carregar imagens
-  const { imageUrls, isLoading, error } = useImageCache(product.ID);
+  // Usa o hook otimizado para carregar imagens (API pública)
+  const { imageUrls, isLoading, error } = useImageCache(product.ID, true);
 
   // Preload da próxima imagem apenas se há imagens carregadas
   useEffect(() => {
