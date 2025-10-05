@@ -89,7 +89,7 @@ export function ImageGallery({
     >
       {/* Modal container */}
       <div
-        className="relative bg-white rounded-xl shadow-2xl max-w-[95vw] max-h-[95vh] sm:max-w-[80vw] sm:max-h-[80vh] flex flex-col overflow-hidden"
+        className="relative bg-white rounded-xl shadow-2xl max-w-[95vw] max-h-[95vh] sm:max-w-[600px] sm:max-h-[700px] lg:max-w-[700px] lg:max-h-[800px] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -113,7 +113,7 @@ export function ImageGallery({
         </div>
 
         {/* Image container */}
-        <div className="relative flex-1 flex items-center justify-center bg-gray-100 p-4">
+        <div className="relative flex-1 flex items-center justify-center bg-gray-100 p-4 min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]">
           {/* Navigation buttons */}
           {images.length > 1 && (
             <>
@@ -143,7 +143,7 @@ export function ImageGallery({
           <img
             src={images[currentIndex]}
             alt={`${productName} - Imagem ${currentIndex + 1}`}
-            className="max-w-full max-h-full object-contain select-none rounded-lg shadow-lg"
+            className="max-w-full max-h-full w-auto h-auto object-contain select-none rounded-lg shadow-lg"
           />
         </div>
 
