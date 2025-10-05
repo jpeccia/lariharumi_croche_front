@@ -101,8 +101,6 @@ export function ProductImageDisplay({
         className={`relative w-full aspect-[4/5] bg-gradient-to-br from-purple-50 to-pink-50 overflow-hidden group ${className}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        tabIndex={0}
-        aria-label={`Imagens do produto ${productName}`}
       >
         {/* Main image */}
         <img
@@ -114,14 +112,7 @@ export function ProductImageDisplay({
           onClick={handleImageClick}
           onLoad={handleImageLoad}
           onError={handleImageError}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              handleImageClick();
-            }
-          }}
           loading="lazy"
-          tabIndex={0}
         />
 
         {/* Loading placeholder */}
@@ -160,7 +151,7 @@ export function ProductImageDisplay({
           <div className="absolute bottom-2 sm:bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-1">
             {images.map((_, index) => (
               <button
-                key={index}
+                key={`indicator-${index}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setCurrentIndex(index);
@@ -204,22 +195,13 @@ export function ProductImageDisplay({
           </div>
         )}
 
-        {/* Click instruction - Hidden on mobile */}
+        {/* Click instruction */}
         {images.length > 0 && (
-          <div className={`hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none transition-opacity duration-200 ${
+          <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-opacity duration-200 ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}>
             <div className="bg-black/50 text-white px-3 py-1 rounded-lg text-xs">
               Clique para ampliar
-            </div>
-          </div>
-        )}
-
-        {/* Mobile tap instruction */}
-        {images.length > 0 && (
-          <div className="sm:hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            <div className="bg-black/50 text-white px-2 py-1 rounded text-xs">
-              Toque para ampliar
             </div>
           </div>
         )}
