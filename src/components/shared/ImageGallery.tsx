@@ -82,7 +82,7 @@ export function ImageGallery({
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 bg-black/50 sm:bg-black/70 z-[9999] flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/50 sm:bg-black/70 z-[9999] flex items-center justify-center p-2 sm:p-4"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -91,15 +91,15 @@ export function ImageGallery({
     >
       {/* Modal container */}
       <div
-        className="relative bg-white rounded-xl shadow-2xl w-full max-w-[95vw] max-h-[95vh] sm:max-w-[600px] sm:max-h-[700px] lg:max-w-[700px] lg:max-h-[800px] flex flex-col overflow-hidden my-auto"
+        className="relative bg-white rounded-xl shadow-2xl w-full max-w-full max-h-[96vh] sm:max-w-[600px] sm:max-h-[85vh] lg:max-w-[700px] lg:max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 relative z-20">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 truncate">{productName}</h2>
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 bg-gray-50 relative z-20 flex-shrink-0">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800 truncate">{productName}</h2>
             {images.length > 1 && (
-              <p className="text-sm text-gray-600">{currentIndex + 1} de {images.length}</p>
+              <p className="text-xs sm:text-sm text-gray-600">{currentIndex + 1} de {images.length}</p>
             )}
           </div>
           <button
@@ -107,7 +107,7 @@ export function ImageGallery({
               e.stopPropagation();
               onClose();
             }}
-            className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-200 transition-colors relative z-20"
+            className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-200 transition-colors relative z-20 flex-shrink-0 ml-2"
             aria-label="Fechar galeria"
           >
             <X size={20} />
@@ -115,7 +115,7 @@ export function ImageGallery({
         </div>
 
         {/* Image container */}
-        <div className="relative flex-1 flex items-center justify-center bg-gray-100 p-4 min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] z-0">
+        <div className="relative flex-1 flex items-center justify-center bg-gray-100 p-2 sm:p-4 min-h-[250px] sm:min-h-[400px] lg:min-h-[500px] z-0 overflow-auto">
           {/* Navigation buttons */}
           {images.length > 1 && (
             <>
@@ -124,20 +124,20 @@ export function ImageGallery({
                   e.stopPropagation();
                   handlePrev();
                 }}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-colors"
+                className="absolute left-1 sm:left-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-colors"
                 aria-label="Imagem anterior"
               >
-                <ChevronLeft size={24} />
+                <ChevronLeft size={20} className="sm:w-6 sm:h-6" />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleNext();
                 }}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-colors"
+                className="absolute right-1 sm:right-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-colors"
                 aria-label="Próxima imagem"
               >
-                <ChevronRight size={24} />
+                <ChevronRight size={20} className="sm:w-6 sm:h-6" />
               </button>
             </>
           )}
@@ -151,7 +151,7 @@ export function ImageGallery({
 
         {/* Thumbnail navigation */}
         {images.length > 1 && (
-          <div className="flex gap-2 p-4 bg-gray-50 border-t border-gray-200 overflow-x-auto relative z-20">
+          <div className="flex gap-2 p-2 sm:p-4 bg-gray-50 border-t border-gray-200 overflow-x-auto relative z-20 flex-shrink-0">
             {images.map((image, index) => (
               <button
                 key={`thumb-${image}-${index}`}
@@ -159,7 +159,7 @@ export function ImageGallery({
                   e.stopPropagation();
                   setCurrentIndex(index);
                 }}
-                className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-md sm:rounded-lg overflow-hidden border-2 transition-colors ${
                   index === currentIndex
                     ? 'border-purple-500'
                     : 'border-transparent hover:border-gray-400'
@@ -177,8 +177,8 @@ export function ImageGallery({
         )}
 
         {/* Instructions */}
-        <div className="px-4 pb-4 bg-gray-50 text-center relative z-20">
-          <p className="text-xs text-gray-600">
+        <div className="px-2 pb-2 sm:px-4 sm:pb-3 bg-gray-50 text-center relative z-20 flex-shrink-0">
+          <p className="text-[10px] sm:text-xs text-gray-600">
             Use as setas ← → para navegar ou clique nas miniaturas
           </p>
         </div>
