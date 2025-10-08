@@ -124,12 +124,17 @@ function Catalog() {
         !product.isDeleted && !product.deletedAt
       );
   
-      setProducts(activeProducts);
+      // Ordenar produtos por nome em ordem alfabética (criar novo array)
+      const sortedProducts = [...activeProducts].sort((a, b) => 
+        a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
+      );
+  
+      setProducts(sortedProducts);
       setCurrentPage(page);
       setPaginationInfo(paginationInfo);
       
       // Pré-carrega imagens dos produtos da página atual (API pública)
-      const productIds = activeProducts.map((product: Product) => product.ID);
+      const productIds = sortedProducts.map((product: Product) => product.ID);
       preloadImages(productIds, true);
       
     } catch (error) {

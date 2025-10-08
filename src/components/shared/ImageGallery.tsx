@@ -17,7 +17,7 @@ export function ImageGallery({
   initialIndex = 0 
 }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const modalRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDialogElement>(null);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -93,7 +93,7 @@ export function ImageGallery({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 relative z-20">
           <div>
             <h2 className="text-lg font-semibold text-gray-800 truncate">{productName}</h2>
             {images.length > 1 && (
@@ -105,7 +105,7 @@ export function ImageGallery({
               e.stopPropagation();
               onClose();
             }}
-            className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-200 transition-colors"
+            className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-200 transition-colors relative z-20"
             aria-label="Fechar galeria"
           >
             <X size={20} />
@@ -113,7 +113,7 @@ export function ImageGallery({
         </div>
 
         {/* Image container */}
-        <div className="relative flex-1 flex items-center justify-center bg-gray-100 p-4 min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]">
+        <div className="relative flex-1 flex items-center justify-center bg-gray-100 p-4 min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] z-0">
           {/* Navigation buttons */}
           {images.length > 1 && (
             <>
@@ -149,7 +149,7 @@ export function ImageGallery({
 
         {/* Thumbnail navigation */}
         {images.length > 1 && (
-          <div className="flex gap-2 p-4 bg-gray-50 border-t border-gray-200 overflow-x-auto">
+          <div className="flex gap-2 p-4 bg-gray-50 border-t border-gray-200 overflow-x-auto relative z-20">
             {images.map((image, index) => (
               <button
                 key={`thumb-${image}-${index}`}
@@ -175,7 +175,7 @@ export function ImageGallery({
         )}
 
         {/* Instructions */}
-        <div className="px-4 pb-4 bg-gray-50 text-center">
+        <div className="px-4 pb-4 bg-gray-50 text-center relative z-20">
           <p className="text-xs text-gray-600">
             Use as setas ← → para navegar ou clique nas miniaturas
           </p>
