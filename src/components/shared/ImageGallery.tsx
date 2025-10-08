@@ -17,7 +17,7 @@ export function ImageGallery({
   initialIndex = 0 
 }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const modalRef = useRef<HTMLDialogElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -80,16 +80,18 @@ export function ImageGallery({
   if (!isOpen || images.length === 0) return null;
 
   return (
-    <dialog
+    <div
       ref={modalRef}
-      className="fixed inset-0 bg-black/50 sm:bg-black/70 z-50 flex items-center justify-center p-4 border-0 outline-none"
+      className="fixed inset-0 bg-black/50 sm:bg-black/70 z-[9999] flex items-center justify-center p-4 overflow-y-auto"
       onClick={handleBackdropClick}
-      open={isOpen}
+      role="dialog"
+      aria-modal="true"
       aria-label={`Galeria de imagens de ${productName}`}
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
     >
       {/* Modal container */}
       <div
-        className="relative bg-white rounded-xl shadow-2xl max-w-[95vw] max-h-[95vh] sm:max-w-[600px] sm:max-h-[700px] lg:max-w-[700px] lg:max-h-[800px] flex flex-col overflow-hidden"
+        className="relative bg-white rounded-xl shadow-2xl w-full max-w-[95vw] max-h-[95vh] sm:max-w-[600px] sm:max-h-[700px] lg:max-w-[700px] lg:max-h-[800px] flex flex-col overflow-hidden my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -181,6 +183,6 @@ export function ImageGallery({
           </p>
         </div>
       </div>
-    </dialog>
+    </div>
   );
 }
