@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface ImageGalleryProps {
@@ -80,7 +81,8 @@ export function ImageGallery({
 
   if (!isOpen || images.length === 0) return null;
 
-  return (
+  // Renderiza o modal usando portal para garantir que sempre apareça centralizado
+  return createPortal(
     <div
       ref={modalRef}
       className="fixed inset-0 bg-black/70 sm:bg-black/75 z-[9999] flex items-center justify-center overflow-hidden"
@@ -198,6 +200,7 @@ export function ImageGallery({
           </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
