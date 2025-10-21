@@ -266,7 +266,7 @@ function Catalog() {
             </CascadeAnimation>
 
             {/* Banner de Promoção */}
-            <PromotionBanner />
+            {/* <PromotionBanner /> */}
 
             {/* Seção de Categorias */}
             <CascadeAnimation delay={300}>
