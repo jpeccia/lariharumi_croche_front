@@ -14,6 +14,10 @@ export function PromotionBanner() {
 export function PromotionBannerContent({ promotion }: { promotion: Promotion }) {
   const messageHtml = buildMessageFromTemplate(promotion);
   const highlightColor = promotion.highlightColor || '#f472b6';
+  const titleColor = promotion.bannerTitleColor || highlightColor;
+  const conditionsColor = promotion.bannerConditionsColor || highlightColor;
+  const globalColor = promotion.bannerGlobalColor || highlightColor;
+  const progressiveColor = promotion.bannerProgressiveColor || highlightColor;
   const hasGlobal = !!promotion.globalPercentage && promotion.globalPercentage > 0;
   const rules = promotion.progressiveRules || [];
   const alignClass = promotion.bannerAlignment === 'left' ? 'text-left' : 'text-center';
@@ -39,8 +43,8 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
       <div className={alignClass}>
         {showTitle && titleAbove && (
           <div className={`flex items-center gap-2 mb-3 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
-            <Sparkles className="w-5 h-5" style={{ color: highlightColor }} />
-            <h2 className={`${titleFontClass} text-xl font-semibold`} style={{ color: highlightColor }}>
+            <Sparkles className="w-5 h-5" style={{ color: titleColor }} />
+            <h2 className={`${titleFontClass} text-xl font-semibold`} style={{ color: titleColor }}>
               {titleText}
             </h2>
           </div>
@@ -56,15 +60,16 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
         {showConditions && conditionsAbove && (
           <div className={`mt-3 ${promotion.bannerAlignment === 'left' ? 'text-left' : 'text-center'} max-w-xl mx-auto`}>
             <div className={`flex items-center gap-2 mb-1 ${promotion.bannerAlignment === 'left' ? '' : 'justify-center'}`}>
-              <ListOrdered className="w-4 h-4" style={{ color: highlightColor }} />
-              <span className="text-sm font-medium" style={{ color: highlightColor }}>Condições da promoção</span>
+              <ListOrdered className="w-4 h-4" style={{ color: conditionsColor }} />
+              <span className="text-sm font-medium" style={{ color: conditionsColor }}>Condições da promoção</span>
             </div>
             <ConditionsList
               hasGlobal={hasGlobal}
               rules={rules}
               align={promotion.bannerAlignment || 'center'}
               styleVariant={promotion.bannerConditionsStyle || 'bullets'}
-              highlightColor={highlightColor}
+              globalColor={globalColor}
+              progressiveColor={progressiveColor}
               globalPct={promotion.globalPercentage}
             />
             <p className="mt-2 text-xs text-gray-600">Aplicamos o maior desconto entre o global e as regras progressivas.</p>
@@ -77,8 +82,8 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
 
         {showTitle && !titleAbove && (
           <div className={`flex items-center gap-2 mb-3 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
-            <Sparkles className="w-5 h-5" style={{ color: highlightColor }} />
-            <h2 className={`${titleFontClass} text-xl font-semibold`} style={{ color: highlightColor }}>
+            <Sparkles className="w-5 h-5" style={{ color: titleColor }} />
+            <h2 className={`${titleFontClass} text-xl font-semibold`} style={{ color: titleColor }}>
               {titleText}
             </h2>
           </div>
@@ -94,18 +99,18 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
         {showConditions && !conditionsAbove && (
           <div className={`mt-3 ${promotion.bannerAlignment === 'left' ? 'text-left' : 'text-center'} max-w-xl mx-auto`}>
             <div className={`flex items-center gap-2 mb-1 ${promotion.bannerAlignment === 'left' ? '' : 'justify-center'}`}>
-              <ListOrdered className="w-4 h-4" style={{ color: highlightColor }} />
-              <span className="text-sm font-medium" style={{ color: highlightColor }}>Condições da promoção</span>
+              <ListOrdered className="w-4 h-4" style={{ color: conditionsColor }} />
+              <span className="text-sm font-medium" style={{ color: conditionsColor }}>Condições da promoção</span>
             </div>
             <ConditionsList
               hasGlobal={hasGlobal}
               rules={rules}
               align={promotion.bannerAlignment || 'center'}
               styleVariant={promotion.bannerConditionsStyle || 'bullets'}
-              highlightColor={highlightColor}
+              globalColor={globalColor}
+              progressiveColor={progressiveColor}
               globalPct={promotion.globalPercentage}
             />
-            <p className="mt-2 text-xs text-gray-600">Aplicamos o maior desconto entre o global e as regras progressivas.</p>
           </div>
         )}
       </div>
@@ -113,15 +118,15 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
   );
 }
 
-function ConditionsList({ hasGlobal, rules, align, styleVariant, highlightColor, globalPct }: { hasGlobal: boolean; rules: Promotion['progressiveRules']; align: 'center' | 'left'; styleVariant: 'bullets' | 'lines'; highlightColor: string; globalPct?: number }) {
+function ConditionsList({ hasGlobal, rules, align, styleVariant, globalColor, progressiveColor, globalPct }: { hasGlobal: boolean; rules: Promotion['progressiveRules']; align: 'center' | 'left'; styleVariant: 'bullets' | 'lines'; globalColor: string; progressiveColor: string; globalPct?: number }) {
   if (styleVariant === 'lines') {
     return (
       <div className={`text-sm text-gray-800 ${align === 'left' ? '' : 'inline-block text-left'} space-y-1`}>
         {hasGlobal && (
-          <p>Desconto global: <span className="font-semibold" style={{ color: highlightColor }}>{globalPct}%</span> OFF em todo o site.</p>
+          <p>Desconto global: <span className="font-semibold" style={{ color: globalColor }}>{globalPct}%</span> OFF em todo o site.</p>
         )}
         {(rules || []).map((r, idx) => (
-          <p key={idx}>Acima de <span className="font-semibold" style={{ color: highlightColor }}>{formatCurrencyBRL(r.threshold)}</span> → <span className="font-semibold" style={{ color: highlightColor }}>{r.percentage}%</span> OFF</p>
+          <p key={idx}>Acima de <span className="font-semibold" style={{ color: progressiveColor }}>{formatCurrencyBRL(r.threshold)}</span> → <span className="font-semibold" style={{ color: progressiveColor }}>{r.percentage}%</span> OFF</p>
         ))}
       </div>
     );
@@ -129,10 +134,10 @@ function ConditionsList({ hasGlobal, rules, align, styleVariant, highlightColor,
   return (
     <ul className={`text-sm text-gray-800 list-disc ${align === 'left' ? 'list-inside' : 'list-inside inline-block text-left'}`}>
       {hasGlobal && (
-        <li>Desconto global: <span className="font-semibold" style={{ color: highlightColor }}>{globalPct}%</span> OFF em todo o site.</li>
+        <li>Desconto global: <span className="font-semibold" style={{ color: globalColor }}>{globalPct}%</span> OFF em todo o site.</li>
       )}
       {(rules || []).map((r, idx) => (
-        <li key={idx}>Acima de {formatCurrencyBRL(r.threshold)} → {r.percentage}% OFF</li>
+        <li key={idx}>Acima de <span className="font-semibold" style={{ color: progressiveColor }}>{formatCurrencyBRL(r.threshold)}</span> → <span className="font-semibold" style={{ color: progressiveColor }}>{r.percentage}%</span> OFF</li>
       ))}
     </ul>
   );

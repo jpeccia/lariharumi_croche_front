@@ -26,6 +26,10 @@ export interface Promotion {
   bannerBorderStyle?: 'subtle' | 'solid' | 'none';
   bannerTitleFont?: 'handwritten' | 'kawaii' | 'sans' | 'serif';
   bannerMessageFont?: 'handwritten' | 'kawaii' | 'sans' | 'serif';
+  bannerTitleColor?: string; // cor do título do banner
+  bannerConditionsColor?: string; // cor do cabeçalho "Condições da promoção"
+  bannerGlobalColor?: string; // cor para o texto do desconto global
+  bannerProgressiveColor?: string; // cor para o texto das regras progressivas
 }
 
 export interface PromotionState extends Promotion {

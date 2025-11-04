@@ -37,6 +37,10 @@ export function PromotionSettings() {
     bannerBorderStyle: 'subtle',
     bannerTitleFont: 'handwritten',
     bannerMessageFont: 'kawaii',
+    bannerTitleColor: '#f472b6',
+    bannerConditionsColor: '#f472b6',
+    bannerGlobalColor: '#f472b6',
+    bannerProgressiveColor: '#f472b6',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -63,6 +67,10 @@ export function PromotionSettings() {
       bannerBorderStyle: promotion.bannerBorderStyle ?? 'subtle',
       bannerTitleFont: promotion.bannerTitleFont ?? 'handwritten',
       bannerMessageFont: promotion.bannerMessageFont ?? 'kawaii',
+      bannerTitleColor: promotion.bannerTitleColor ?? (promotion.highlightColor || '#f472b6'),
+      bannerConditionsColor: promotion.bannerConditionsColor ?? (promotion.highlightColor || '#f472b6'),
+      bannerGlobalColor: promotion.bannerGlobalColor ?? (promotion.highlightColor || '#f472b6'),
+      bannerProgressiveColor: promotion.bannerProgressiveColor ?? (promotion.highlightColor || '#f472b6'),
     });
     }
   }, [promotion]);
@@ -142,6 +150,10 @@ export function PromotionSettings() {
       bannerBorderStyle: parsed.data.bannerBorderStyle,
       bannerTitleFont: parsed.data.bannerTitleFont,
       bannerMessageFont: parsed.data.bannerMessageFont,
+      bannerTitleColor: parsed.data.bannerTitleColor,
+      bannerConditionsColor: parsed.data.bannerConditionsColor,
+      bannerGlobalColor: parsed.data.bannerGlobalColor,
+      bannerProgressiveColor: parsed.data.bannerProgressiveColor,
     };
     setPromotion(cleaned);
   }
@@ -169,6 +181,10 @@ export function PromotionSettings() {
       bannerBorderStyle: 'subtle',
       bannerTitleFont: 'handwritten',
       bannerMessageFont: 'kawaii',
+      bannerTitleColor: '#f472b6',
+      bannerConditionsColor: '#f472b6',
+      bannerGlobalColor: '#f472b6',
+      bannerProgressiveColor: '#f472b6',
     });
   }
 
@@ -368,6 +384,27 @@ export function PromotionSettings() {
                   <option value="none">Sem borda</option>
                 </select>
               </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Cores específicas do banner</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Cor do título</label>
+                    <input type="color" value={form.bannerTitleColor || '#f472b6'} onChange={(e) => updateField('bannerTitleColor', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Cor das condições</label>
+                    <input type="color" value={form.bannerConditionsColor || '#f472b6'} onChange={(e) => updateField('bannerConditionsColor', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Cor do desconto global</label>
+                    <input type="color" value={form.bannerGlobalColor || '#f472b6'} onChange={(e) => updateField('bannerGlobalColor', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Cor das regras progressivas</label>
+                    <input type="color" value={form.bannerProgressiveColor || '#f472b6'} onChange={(e) => updateField('bannerProgressiveColor', e.target.value)} />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Ações */}
@@ -415,6 +452,10 @@ export function PromotionSettings() {
               bannerBorderStyle: form.bannerBorderStyle,
               bannerTitleFont: form.bannerTitleFont,
               bannerMessageFont: form.bannerMessageFont,
+              bannerTitleColor: form.bannerTitleColor,
+              bannerConditionsColor: form.bannerConditionsColor,
+              bannerGlobalColor: form.bannerGlobalColor,
+              bannerProgressiveColor: form.bannerProgressiveColor,
             }} />
           </div>
         </div>
