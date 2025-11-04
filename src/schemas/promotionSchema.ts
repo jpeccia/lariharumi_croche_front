@@ -24,6 +24,8 @@ export const promotionSchema = z.object({
   bannerConditionsStyle: z.enum(['bullets', 'lines']).optional(),
   bannerDensity: z.enum(['compact', 'spacious']).optional(),
   bannerBorderStyle: z.enum(['subtle', 'solid', 'none']).optional(),
+  bannerTitleFont: z.enum(['handwritten', 'kawaii', 'sans', 'serif']).optional(),
+  bannerMessageFont: z.enum(['handwritten', 'kawaii', 'sans', 'serif']).optional(),
 }).refine((data) => {
   if (data.globalPercentage && data.progressiveRules && data.progressiveRules.length > 0) {
     // Permitir, mas sinalizar que global sobrescreve progressivo

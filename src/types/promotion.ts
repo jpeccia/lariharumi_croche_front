@@ -24,6 +24,8 @@ export interface Promotion {
   bannerConditionsStyle?: 'bullets' | 'lines';
   bannerDensity?: 'compact' | 'spacious';
   bannerBorderStyle?: 'subtle' | 'solid' | 'none';
+  bannerTitleFont?: 'handwritten' | 'kawaii' | 'sans' | 'serif';
+  bannerMessageFont?: 'handwritten' | 'kawaii' | 'sans' | 'serif';
 }
 
 export interface PromotionState extends Promotion {

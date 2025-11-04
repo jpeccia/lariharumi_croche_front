@@ -35,6 +35,8 @@ export function PromotionSettings() {
     bannerConditionsStyle: 'bullets',
     bannerDensity: 'spacious',
     bannerBorderStyle: 'subtle',
+    bannerTitleFont: 'handwritten',
+    bannerMessageFont: 'kawaii',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -57,9 +59,11 @@ export function PromotionSettings() {
         bannerTitle: promotion.bannerTitle ?? '✨ PROMOÇÃO ESPECIAL ✨',
         bannerTitlePosition: promotion.bannerTitlePosition ?? 'above',
         bannerConditionsStyle: promotion.bannerConditionsStyle ?? 'bullets',
-        bannerDensity: promotion.bannerDensity ?? 'spacious',
-        bannerBorderStyle: promotion.bannerBorderStyle ?? 'subtle',
-      });
+      bannerDensity: promotion.bannerDensity ?? 'spacious',
+      bannerBorderStyle: promotion.bannerBorderStyle ?? 'subtle',
+      bannerTitleFont: promotion.bannerTitleFont ?? 'handwritten',
+      bannerMessageFont: promotion.bannerMessageFont ?? 'kawaii',
+    });
     }
   }, [promotion]);
 
@@ -136,6 +140,8 @@ export function PromotionSettings() {
       bannerConditionsStyle: parsed.data.bannerConditionsStyle,
       bannerDensity: parsed.data.bannerDensity,
       bannerBorderStyle: parsed.data.bannerBorderStyle,
+      bannerTitleFont: parsed.data.bannerTitleFont,
+      bannerMessageFont: parsed.data.bannerMessageFont,
     };
     setPromotion(cleaned);
   }
@@ -161,6 +167,8 @@ export function PromotionSettings() {
       bannerConditionsStyle: 'bullets',
       bannerDensity: 'spacious',
       bannerBorderStyle: 'subtle',
+      bannerTitleFont: 'handwritten',
+      bannerMessageFont: 'kawaii',
     });
   }
 
@@ -330,6 +338,22 @@ export function PromotionSettings() {
                   <option value="above">Acima da mensagem</option>
                   <option value="below">Abaixo da mensagem</option>
                 </select>
+                <label className="block text-sm font-medium text-gray-700">Fonte do título</label>
+                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerTitleFont ?? 'handwritten'} onChange={(e) => updateField('bannerTitleFont', e.target.value as any)}>
+                  <option value="handwritten">Escrita à mão (Caveat)</option>
+                  <option value="kawaii">Kawaii (Mali)</option>
+                  <option value="sans">Sans</option>
+                  <option value="serif">Serif</option>
+                </select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Fonte da mensagem</label>
+                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerMessageFont ?? 'kawaii'} onChange={(e) => updateField('bannerMessageFont', e.target.value as any)}>
+                  <option value="handwritten">Escrita à mão (Caveat)</option>
+                  <option value="kawaii">Kawaii (Mali)</option>
+                  <option value="sans">Sans</option>
+                  <option value="serif">Serif</option>
+                </select>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">Espaçamento do banner</label>
@@ -389,6 +413,8 @@ export function PromotionSettings() {
               bannerConditionsStyle: form.bannerConditionsStyle,
               bannerDensity: form.bannerDensity,
               bannerBorderStyle: form.bannerBorderStyle,
+              bannerTitleFont: form.bannerTitleFont,
+              bannerMessageFont: form.bannerMessageFont,
             }} />
           </div>
         </div>

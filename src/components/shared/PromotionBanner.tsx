@@ -31,6 +31,8 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
   const borderClass = borderStyle === 'none' ? 'border-0' : 'border';
   const borderColor = borderStyle === 'solid' ? `${highlightColor}` : `${highlightColor}33`;
   const bgColor = `${highlightColor}22`;
+  const titleFontClass = getFontClass(promotion.bannerTitleFont || 'handwritten');
+  const messageFontClass = getFontClass(promotion.bannerMessageFont || 'kawaii');
 
   return (
     <div className={`rounded-xl ${containerPadding} mb-6 ${borderClass} shadow-sm`} style={{ borderColor, background: bgColor }}>
@@ -38,7 +40,7 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
         {showTitle && titleAbove && (
           <div className={`flex items-center gap-2 mb-3 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
             <Sparkles className="w-5 h-5" style={{ color: highlightColor }} />
-            <h2 className="font-handwritten text-xl font-semibold" style={{ color: highlightColor }}>
+            <h2 className={`${titleFontClass} text-xl font-semibold`} style={{ color: highlightColor }}>
               {titleText}
             </h2>
           </div>
@@ -69,14 +71,14 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
           </div>
         )}
 
-        <div className="prose prose-sm max-w-none mb-3">
+        <div className={`prose prose-sm max-w-none mb-3 ${messageFontClass}`}>
           <div dangerouslySetInnerHTML={{ __html: messageHtml }} />
         </div>
 
         {showTitle && !titleAbove && (
           <div className={`flex items-center gap-2 mb-3 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
             <Sparkles className="w-5 h-5" style={{ color: highlightColor }} />
-            <h2 className="font-handwritten text-xl font-semibold" style={{ color: highlightColor }}>
+            <h2 className={`${titleFontClass} text-xl font-semibold`} style={{ color: highlightColor }}>
               {titleText}
             </h2>
           </div>
@@ -134,6 +136,20 @@ function ConditionsList({ hasGlobal, rules, align, styleVariant, highlightColor,
       ))}
     </ul>
   );
+}
+
+function getFontClass(choice: 'handwritten' | 'kawaii' | 'sans' | 'serif') {
+  switch (choice) {
+    case 'handwritten':
+      return 'font-handwritten';
+    case 'kawaii':
+      return 'font-kawaii';
+    case 'serif':
+      return 'font-serif';
+    case 'sans':
+    default:
+      return 'font-sans';
+  }
 }
 
 function Countdown({ endAt }: { endAt: string }) {
