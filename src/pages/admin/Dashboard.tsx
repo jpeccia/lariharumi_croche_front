@@ -1,7 +1,7 @@
 import { useEffect, Suspense, lazy, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { Package, FolderOpen, BarChart3, Plus, Eye } from 'lucide-react';
+import { Package, FolderOpen, BarChart3, Plus, Eye, Tag } from 'lucide-react';
 import { useAnalytics } from '../../services/analytics';
 import { CardSkeleton } from '../../components/shared/LoadingStates';
 import { useStatsCache } from '../../hooks/useApiCache';
@@ -9,13 +9,14 @@ import { useStatsCache } from '../../hooks/useApiCache';
 // Lazy loading para componentes administrativos pesados
 const ProductManagement = lazy(() => import('../../components/admin/ProductManagement').then(module => ({ default: module.ProductManagement })));
 const CategoryManagement = lazy(() => import('../../components/admin/CategoryManagement').then(module => ({ default: module.CategoryManagement })));
+const PromotionSettings = lazy(() => import('../../components/admin/PromotionSettings').then(module => ({ default: module.PromotionSettings })));
 
 function AdminDashboard() {
   const navigate = useNavigate();
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const user = useAuthStore((state) => state.user);
   const { trackPageView } = useAnalytics();
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'overview'>('overview');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'overview' | 'promotions'>('overview');
   // Usar cache para estatísticas
   const { data: stats, loading: isLoadingStats, refresh: refreshStats } = useStatsCache();
   
@@ -37,6 +38,7 @@ function AdminDashboard() {
     { id: 'overview', label: 'Visão Geral', icon: BarChart3 },
     { id: 'products', label: 'Produtos', icon: Package },
     { id: 'categories', label: 'Categorias', icon: FolderOpen },
+    { id: 'promotions', label: 'Promoções', icon: Tag },
   ];
 
   return (
@@ -155,7 +157,7 @@ function AdminDashboard() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as 'products' | 'categories' | 'overview')}
+                    onClick={() => setActiveTab(tab.id as 'products' | 'categories' | 'overview' | 'promotions')}
                     className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       activeTab === tab.id
                         ? 'border-purple-500 text-purple-600'
@@ -228,6 +230,12 @@ function AdminDashboard() {
             {activeTab === 'categories' && (
               <Suspense fallback={<CardSkeleton />}>
                 <CategoryManagement onDataChange={debouncedRefreshStats} />
+              </Suspense>
+            )}
+
+            {activeTab === 'promotions' && (
+              <Suspense fallback={<CardSkeleton />}>
+                <PromotionSettings />
               </Suspense>
             )}
           </div>

@@ -20,6 +20,8 @@ import { SkeletonProductCard, SkeletonCategoryCard } from '../components/shared/
 import { useCategoriesCache } from '../hooks/useApiCache';
 import { Pagination, CompactPagination } from '../components/shared/Pagination';
 import { PageTransition, CascadeAnimation, FadeIn } from '../components/shared/PageTransition';
+import { usePromotionStore } from '../store/promotionStore';
+import { isPromotionActive, getApplicableDiscount } from '../types/promotion';
 
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,6 +34,7 @@ function Catalog() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showOnlyDiscounted, setShowOnlyDiscounted] = useState(false);
   
   // Hooks de otimização
   const mobileOptimization = useMobileOptimization();
@@ -42,6 +45,8 @@ function Catalog() {
   const analytics = useAnalytics();
   const trackPageView = analytics?.trackPageView || (() => {});
   const trackClick = analytics?.trackClick || (() => {});
+  const promotion = usePromotionStore((s) => s.promotion);
+  const promoActive = isPromotionActive(promotion || undefined);
   
   // Cache de categorias
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useCategoriesCache();
@@ -245,7 +250,7 @@ function Catalog() {
             
             {/* Banner */}
             <FadeIn delay={100}>
-              <MadeToOrderBanner />
+              {promoActive ? <PromotionBanner /> : <MadeToOrderBanner />}
             </FadeIn>
 
             {/* Header Principal */}
@@ -317,9 +322,9 @@ function Catalog() {
             {/* Barra de Busca e Filtros */}
             <CascadeAnimation delay={500}>
               <div className="bg-white rounded-3xl p-6 shadow-lg border border-purple-100 mb-8">
-                <div className="flex flex-col lg:flex-row gap-4 items-center">
-                  {/* Campo de Busca */}
-                  <div className="flex-1 relative">
+              <div className="flex flex-col lg:flex-row gap-4 items-center">
+                {/* Campo de Busca */}
+                <div className="flex-1 relative">
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
@@ -371,6 +376,10 @@ function Catalog() {
                     >
                       <List className="w-5 h-5" />
                     </button>
+                    <label className="ml-3 flex items-center gap-2 text-sm text-gray-700">
+                      <input type="checkbox" checked={showOnlyDiscounted} onChange={(e) => setShowOnlyDiscounted(e.target.checked)} />
+                      Mostrar apenas com desconto
+                    </label>
                   </div>
                 </div>
               </div>
@@ -473,7 +482,14 @@ function Catalog() {
                     );
                   }
                   
-                  return products.map((product, index) => (
+                  return products
+                    .filter((p) => {
+                      if (!showOnlyDiscounted) return true;
+                      const basePrice = parseFloat(p.priceRange);
+                      if (isNaN(basePrice)) return false;
+                      return promoActive && getApplicableDiscount(promotion || undefined, basePrice) > 0;
+                    })
+                    .map((product, index) => (
                     <div key={product.ID} style={{ animationDelay: `${800 + index * 50}ms` }}>
                       <ProductCard
                         product={product}

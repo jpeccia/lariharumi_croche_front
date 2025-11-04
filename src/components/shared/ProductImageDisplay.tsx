@@ -184,7 +184,7 @@ export function ProductImageDisplay({
         {/* Price tag */}
         {priceRange && (
           <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-purple-500 text-white px-2 py-1 sm:px-3 rounded-full shadow-lg">
-            <span className="text-xs sm:text-sm font-medium">R$ {priceRange}</span>
+            <span className="text-[10px] sm:text-xs font-medium">{priceRange}</span>
           </div>
         )}
 

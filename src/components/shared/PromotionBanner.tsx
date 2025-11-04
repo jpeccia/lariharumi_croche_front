@@ -1,43 +1,77 @@
 import { Gift, Sparkles, Clock } from 'lucide-react';
+import { usePromotionStore } from '../../store/promotionStore';
+import { buildMessageFromTemplate, formatCurrencyBRL, getApplicableDiscount, isPromotionActive } from '../../types/promotion';
 
 export function PromotionBanner() {
+  const promotion = usePromotionStore((s) => s.promotion);
+
+  if (!promotion || !isPromotionActive(promotion)) return null;
+
+  const messageHtml = buildMessageFromTemplate(promotion);
+
+  const discountPct = getApplicableDiscount(promotion, 200);
+  const highlightColor = promotion.highlightColor || '#f472b6';
+
   return (
-    <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-xl p-4 mb-6 border border-pink-200 shadow-sm">
+    <div className="rounded-xl p-4 mb-6 border shadow-sm" style={{ borderColor: highlightColor + '33', background: `${highlightColor}22` }}>
       <div className="text-center">
         <div className="flex justify-center items-center gap-2 mb-3">
-          <Sparkles className="w-5 h-5 text-purple-600" />
-          <h2 className="font-handwritten text-xl font-semibold text-purple-800">
-            ✨ PROMOÇÃO ESPECIAL NO AR! ✨
+          <Sparkles className="w-5 h-5" style={{ color: highlightColor }} />
+          <h2 className="font-handwritten text-xl font-semibold" style={{ color: highlightColor }}>
+            ✨ PROMOÇÃO ESPECIAL ✨
           </h2>
         </div>
-        
-        <p className="text-gray-700 text-sm mb-3 leading-relaxed">
-          Outubro é o mês de celebrar quem ensina com carinho e quem ilumina nossos dias com alegria! 💞
-        </p>
-        
-        <p className="text-gray-700 text-sm mb-3">
-          Para comemorar o Dia das Crianças e o Dia dos Professores, o site inteiro está com
-        </p>
-        
-        <div className="flex justify-center items-center gap-2 mb-3">
-          <Gift className="w-5 h-5 text-pink-600" />
-          <span className="font-bold text-2xl bg-pink-500 text-white px-4 py-2 rounded-lg shadow-md">
-            10% DE DESCONTO!
-          </span>
-          <Gift className="w-5 h-5 text-pink-600" />
+
+        <div className="prose prose-sm max-w-none mb-3">
+          <div dangerouslySetInnerHTML={{ __html: messageHtml }} />
         </div>
-        
-        <p className="text-gray-600 text-sm mb-3">
-          É a sua chance de garantir aquele presente perfeito ou se dar um mimo que você tanto queria!
-        </p>
-        
-        <div className="flex justify-center items-center gap-2 bg-orange-100 rounded-lg p-2 border border-orange-200">
-          <Clock className="w-4 h-4 text-orange-600" />
-          <p className="text-orange-800 text-sm font-medium">
-            <span className="font-semibold">Mas atenção:</span> a promoção é válida apenas para pedidos feitos até o dia <span className="font-bold">15/10/2025</span>.
-          </p>
-        </div>
+
+        {discountPct > 0 && (
+          <div className="flex justify-center items-center gap-2 mb-3">
+            <Gift className="w-5 h-5" style={{ color: highlightColor }} />
+            <span className="font-bold text-2xl text-white px-4 py-2 rounded-lg shadow-md" style={{ backgroundColor: highlightColor }}>
+              {discountPct}% OFF
+            </span>
+            <Gift className="w-5 h-5" style={{ color: highlightColor }} />
+          </div>
+        )}
+
+        {promotion.endAt && (
+          <div className="flex justify-center items-center gap-2 bg-orange-100 rounded-lg p-2 border border-orange-200">
+            <Clock className="w-4 h-4 text-orange-600" />
+            <Countdown endAt={promotion.endAt} />
+          </div>
+        )}
       </div>
     </div>
   );
+}
+
+function Countdown({ endAt }: { endAt: string }) {
+  const [remaining, setRemaining] = React.useState(getRemaining(endAt));
+
+  React.useEffect(() => {
+    const id = setInterval(() => setRemaining(getRemaining(endAt)), 1000);
+    return () => clearInterval(id);
+  }, [endAt]);
+
+  if (remaining.totalMs <= 0) return <p className="text-orange-800 text-sm font-medium">Promoção encerrada.</p>;
+
+  return (
+    <p className="text-orange-800 text-sm font-medium">
+      Termina em {remaining.days}d {remaining.hours}h {remaining.minutes}m {remaining.seconds}s
+    </p>
+  );
+}
+
+function getRemaining(endAt: string) {
+  const now = new Date();
+  const end = new Date(endAt);
+  const diff = end.getTime() - now.getTime();
+  const totalMs = diff;
+  const seconds = Math.max(0, Math.floor((diff / 1000) % 60));
+  const minutes = Math.max(0, Math.floor((diff / (1000 * 60)) % 60));
+  const hours = Math.max(0, Math.floor((diff / (1000 * 60 * 60)) % 24));
+  const days = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+  return { days, hours, minutes, seconds, totalMs };
 }
