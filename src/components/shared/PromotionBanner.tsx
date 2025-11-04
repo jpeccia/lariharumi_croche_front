@@ -141,7 +141,7 @@ function ConditionsList({ hasGlobal, rules, align, styleVariant, globalColor, pr
           <p>Desconto global: <span className="font-semibold" style={{ color: globalColor }}>{globalPct}% OFF</span> em todo o site.</p>
         )}
         {(rules || []).map((r, idx) => (
-          <p key={idx}>Acima de <span className="font-semibold" style={{ color: progressiveColor }}>{formatCurrencyBRL(r.threshold)}</span> → <span className="font-semibold" style={{ color: progressiveColor }}>{r.percentage}%</span> OFF</p>
+          <p key={idx}>Acima de <span className="font-semibold" style={{ color: progressiveColor }}>{formatCurrencyBRL(r.threshold)}</span> → <span className="font-semibold" style={{ color: progressiveColor }}>{r.percentage}% OFF</span>.</p>
         ))}
       </div>
     );
