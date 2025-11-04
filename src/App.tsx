@@ -1,12 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import { LoadingSpinner } from './components/shared/LoadingSpinner';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { SkipLinks } from './components/shared/SkipLinks';
-import { publicApi } from './services/api';
-import { usePromotionStore } from './store/promotionStore';
-import { isPromotionActive } from './types/promotion';
 
 // Lazy loading para todas as páginas principais
 const Home = lazy(() => import('./pages/Home'));
@@ -32,20 +29,6 @@ const PageLoader = () => (
 );
 
 function App() {
-  const existingPromotion = usePromotionStore((s) => s.promotion);
-  const setPromotion = usePromotionStore((s) => s.setPromotion);
-
-  // Hidratar promoção pública ao iniciar o app (não sobrescreve se já existe e está ativa)
-  useEffect(() => {
-    if (existingPromotion && isPromotionActive(existingPromotion)) return;
-    (async () => {
-      const promo = await publicApi.getPromotion();
-      if (promo && isPromotionActive(promo)) {
-        setPromotion(promo);
-      }
-    })();
-  }, []);
-
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">

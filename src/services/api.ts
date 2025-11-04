@@ -1,6 +1,5 @@
 import axios, { AxiosError } from 'axios';
 import { env } from '../env';
-import { Promotion } from '../types/promotion';
 import { showNetworkError, showServerError, showAuthError } from '../utils/toast';
 import { useAuthStore } from '../store/authStore';
 import { 
@@ -180,17 +179,6 @@ export const publicApi = {
     } catch (error) {
       console.error("Erro ao buscar imagem da categoria:", error);
       throw new Error("Falha ao buscar imagem da categoria");
-    }
-  },
-
-  // Obter promoção pública atual (público)
-  getPromotion: async (): Promise<Promotion | null> => {
-    try {
-      const response = await publicApiInstance.get('/promotion');
-      return response.data as Promotion;
-    } catch (error) {
-      console.warn('Não foi possível carregar a promoção pública:', error);
-      return null;
     }
   },
 };
