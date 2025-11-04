@@ -138,7 +138,7 @@ function ConditionsList({ hasGlobal, rules, align, styleVariant, globalColor, pr
     return (
       <div className={`text-sm text-gray-800 ${align === 'left' ? '' : 'inline-block text-left'} space-y-1`}>
         {hasGlobal && (
-          <p>Desconto global: <span className="font-semibold" style={{ color: globalColor }}>{globalPct}%</span> OFF em todo o site.</p>
+          <p>Desconto global: <span className="font-semibold" style={{ color: globalColor }}>{globalPct}% OFF</span> em todo o site.</p>
         )}
         {(rules || []).map((r, idx) => (
           <p key={idx}>Acima de <span className="font-semibold" style={{ color: progressiveColor }}>{formatCurrencyBRL(r.threshold)}</span> → <span className="font-semibold" style={{ color: progressiveColor }}>{r.percentage}%</span> OFF</p>
@@ -149,7 +149,7 @@ function ConditionsList({ hasGlobal, rules, align, styleVariant, globalColor, pr
   return (
     <ul className={`text-sm text-gray-800 list-disc ${align === 'left' ? 'list-inside' : 'list-inside inline-block text-left'}`}>
       {hasGlobal && (
-        <li>Desconto global: <span className="font-semibold" style={{ color: globalColor }}>{globalPct}%</span> OFF em todo o site.</li>
+        <li>Desconto global: <span className="font-semibold" style={{ color: globalColor }}>{globalPct}% OFF</span> em todo o site.</li>
       )}
       {(rules || []).map((r, idx) => (
         <li key={idx}>Acima de <span className="font-semibold" style={{ color: progressiveColor }}>{formatCurrencyBRL(r.threshold)}</span> → <span className="font-semibold" style={{ color: progressiveColor }}>{r.percentage}%</span> OFF</li>
