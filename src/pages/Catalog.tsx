@@ -485,7 +485,7 @@ function Catalog() {
                   return products
                     .filter((p) => {
                       if (!showOnlyDiscounted) return true;
-                      const basePrice = parseFloat(p.priceRange);
+                      const basePrice = parsePrice(p.priceRange);
                       if (isNaN(basePrice)) return false;
                       return promoActive && getApplicableDiscount(promotion || undefined, basePrice) > 0;
                     })
@@ -538,3 +538,14 @@ function Catalog() {
 }
 
 export default Catalog;
+
+function parsePrice(raw: string): number {
+  const cleaned = raw
+    .replace(/R\$\s?/gi, '')
+    .replace(/\./g, '')
+    .replace(/,/g, '.')
+    .trim();
+  const match = cleaned.match(/\d+(?:\.\d+)?/);
+  if (!match) return NaN;
+  return Number(match[0]);
+}

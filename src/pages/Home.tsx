@@ -2,6 +2,7 @@
 import { Suspense, lazy } from 'react';
 import { Gift, Heart, MessageCircle, ArrowRight, Sparkles } from 'lucide-react';
 import { DonationBox } from '../components/home/DonationBox';
+import { HomePromotionCard } from '../components/home/HomePromotionCard';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { PromotionBanner } from '../components/shared/PromotionBanner';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
@@ -84,8 +85,8 @@ function Home() {
           </div>
         </div>
 
-        {/* Banner de Promoção */}
-        {/* <PromotionBanner /> */}
+        {/* Card de Promoção */}
+        <HomePromotionCard />
 
         {/* Features Section Melhorada */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">

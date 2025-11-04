@@ -16,9 +16,9 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const { imageUrls, isLoading, error } = useImageCache(product.ID, true);
   const promotion = usePromotionStore((s) => s.promotion);
   const active = isPromotionActive(promotion || undefined);
-  const basePrice = parseFloat(product.priceRange);
+  const basePrice = parsePrice(product.priceRange);
   const discountPct = active ? getApplicableDiscount(promotion || undefined, basePrice) : 0;
-  const discountedPrice = discountPct > 0 && !isNaN(basePrice) ? applyDiscount(basePrice, discountPct).toFixed(2) : undefined;
+  const discountedPrice = discountPct > 0 && !isNaN(basePrice) ? applyDiscount(basePrice, discountPct) : undefined;
 
   const instagramUrl = `https://instagram.com/${instagramUsername}`;
 
@@ -28,7 +28,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
       <ProductImageDisplay
         images={imageUrls}
         productName={product.name}
-        priceRange={discountedPrice ? `${discountedPrice} (de R$ ${basePrice.toFixed(2)})` : product.priceRange}
+        priceRange={discountedPrice !== undefined ? `R$ ${discountedPrice.toFixed(2)} (de R$ ${basePrice.toFixed(2)})` : product.priceRange}
         isLoading={isLoading}
         error={error}
         className="rounded-t-xl"
@@ -48,7 +48,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
               <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm font-bold text-pink-600">{discountPct}% OFF</span>
                 <span className="text-xs sm:text-sm text-gray-500 line-through">R$ {basePrice.toFixed(2)}</span>
-                <span className="text-xs sm:text-sm text-green-700 font-semibold">R$ {discountedPrice}</span>
+                <span className="text-xs sm:text-sm text-green-700 font-semibold">R$ {discountedPrice.toFixed(2)}</span>
               </div>
               <span className="text-[10px] text-gray-400">Promoção válida por tempo limitado</span>
             </div>
@@ -72,3 +72,17 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
 
 // Memoiza o componente para evitar re-renderizações desnecessárias
 export default memo(ProductCard);
+
+function parsePrice(raw: string): number {
+  // Remove símbolo de moeda e espaços
+  const cleaned = raw
+    .replace(/R\$\s?/gi, '')
+    .replace(/\./g, '') // remove separador de milhar
+    .replace(/,/g, '.') // converte decimal
+    .trim();
+
+  // Se for faixa "150-200", pega o primeiro número
+  const match = cleaned.match(/\d+(?:\.\d+)?/);
+  if (!match) return NaN;
+  return Number(match[0]);
+}
