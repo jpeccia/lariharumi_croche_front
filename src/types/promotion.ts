@@ -30,6 +30,9 @@ export interface Promotion {
   bannerConditionsColor?: string; // cor do cabeçalho "Condições da promoção"
   bannerGlobalColor?: string; // cor para o texto do desconto global
   bannerProgressiveColor?: string; // cor para o texto das regras progressivas
+  bannerCountdownBgColor?: string; // cor de fundo do contador
+  bannerCountdownTextColor?: string; // cor do texto do contador
+  bannerCountdownSize?: 'sm' | 'md' | 'lg'; // tamanho do texto do contador
 }
 
 export interface PromotionState extends Promotion {

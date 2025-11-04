@@ -30,6 +30,9 @@ export const promotionSchema = z.object({
   bannerConditionsColor: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
   bannerGlobalColor: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
   bannerProgressiveColor: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
+  bannerCountdownBgColor: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
+  bannerCountdownTextColor: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
+  bannerCountdownSize: z.enum(['sm', 'md', 'lg']).optional(),
 }).refine((data) => {
   if (data.globalPercentage && data.progressiveRules && data.progressiveRules.length > 0) {
     // Permitir, mas sinalizar que global sobrescreve progressivo

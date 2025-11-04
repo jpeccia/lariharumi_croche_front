@@ -41,6 +41,9 @@ export function PromotionSettings() {
     bannerConditionsColor: '#f472b6',
     bannerGlobalColor: '#f472b6',
     bannerProgressiveColor: '#f472b6',
+    bannerCountdownBgColor: '#fff3cd',
+    bannerCountdownTextColor: '#b45309',
+    bannerCountdownSize: 'md',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -71,6 +74,9 @@ export function PromotionSettings() {
       bannerConditionsColor: promotion.bannerConditionsColor ?? (promotion.highlightColor || '#f472b6'),
       bannerGlobalColor: promotion.bannerGlobalColor ?? (promotion.highlightColor || '#f472b6'),
       bannerProgressiveColor: promotion.bannerProgressiveColor ?? (promotion.highlightColor || '#f472b6'),
+      bannerCountdownBgColor: promotion.bannerCountdownBgColor ?? '#fff3cd',
+      bannerCountdownTextColor: promotion.bannerCountdownTextColor ?? '#b45309',
+      bannerCountdownSize: promotion.bannerCountdownSize ?? 'md',
     });
     }
   }, [promotion]);
@@ -154,6 +160,9 @@ export function PromotionSettings() {
       bannerConditionsColor: parsed.data.bannerConditionsColor,
       bannerGlobalColor: parsed.data.bannerGlobalColor,
       bannerProgressiveColor: parsed.data.bannerProgressiveColor,
+      bannerCountdownBgColor: parsed.data.bannerCountdownBgColor,
+      bannerCountdownTextColor: parsed.data.bannerCountdownTextColor,
+      bannerCountdownSize: parsed.data.bannerCountdownSize,
     };
     setPromotion(cleaned);
   }
@@ -185,6 +194,9 @@ export function PromotionSettings() {
       bannerConditionsColor: '#f472b6',
       bannerGlobalColor: '#f472b6',
       bannerProgressiveColor: '#f472b6',
+      bannerCountdownBgColor: '#fff3cd',
+      bannerCountdownTextColor: '#b45309',
+      bannerCountdownSize: 'md',
     });
   }
 
@@ -324,16 +336,34 @@ export function PromotionSettings() {
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Exibir contador</label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={form.bannerShowCountdown ?? true} onChange={(e) => updateField('bannerShowCountdown', e.target.checked)} />
-                  Mostrar contador de término
-                </label>
-                <label className="block text-sm font-medium text-gray-700">Posição do contador</label>
-                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerCountdownPosition ?? 'below'} onChange={(e) => updateField('bannerCountdownPosition', e.target.value as any)}>
-                  <option value="above">Acima da mensagem</option>
-                  <option value="below">Abaixo da mensagem</option>
-                </select>
+              <label className="block text-sm font-medium text-gray-700">Exibir contador</label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={form.bannerShowCountdown ?? true} onChange={(e) => updateField('bannerShowCountdown', e.target.checked)} />
+                Mostrar contador de término
+              </label>
+              <label className="block text-sm font-medium text-gray-700">Posição do contador</label>
+              <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerCountdownPosition ?? 'below'} onChange={(e) => updateField('bannerCountdownPosition', e.target.value as any)}>
+                <option value="above">Acima da mensagem</option>
+                <option value="below">Abaixo da mensagem</option>
+              </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Fundo do contador</label>
+                  <input type="color" value={form.bannerCountdownBgColor || '#fff3cd'} onChange={(e) => updateField('bannerCountdownBgColor', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Cor do texto do contador</label>
+                  <input type="color" value={form.bannerCountdownTextColor || '#b45309'} onChange={(e) => updateField('bannerCountdownTextColor', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Tamanho do contador</label>
+                  <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerCountdownSize || 'md'} onChange={(e) => updateField('bannerCountdownSize', e.target.value as any)}>
+                    <option value="sm">Pequeno</option>
+                    <option value="md">Médio</option>
+                    <option value="lg">Grande</option>
+                  </select>
+                </div>
+              </div>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">Alinhamento</label>
@@ -456,6 +486,9 @@ export function PromotionSettings() {
               bannerConditionsColor: form.bannerConditionsColor,
               bannerGlobalColor: form.bannerGlobalColor,
               bannerProgressiveColor: form.bannerProgressiveColor,
+              bannerCountdownBgColor: form.bannerCountdownBgColor,
+              bannerCountdownTextColor: form.bannerCountdownTextColor,
+              bannerCountdownSize: form.bannerCountdownSize,
             }} />
           </div>
         </div>

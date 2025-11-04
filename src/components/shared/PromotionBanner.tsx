@@ -37,6 +37,11 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
   const bgColor = `${highlightColor}22`;
   const titleFontClass = getFontClass(promotion.bannerTitleFont || 'handwritten');
   const messageFontClass = getFontClass(promotion.bannerMessageFont || 'kawaii');
+  const countdownTextColor = promotion.bannerCountdownTextColor || highlightColor;
+  const countdownBgColor = promotion.bannerCountdownBgColor || `${highlightColor}22`;
+  const countdownBorderColor = `${countdownTextColor}33`;
+  const countdownSize = promotion.bannerCountdownSize || 'md';
+  const countdownSizeClass = countdownSize === 'sm' ? 'text-xs' : countdownSize === 'lg' ? 'text-base' : 'text-sm';
 
   return (
     <div className={`rounded-xl ${containerPadding} mb-6 ${borderClass} shadow-sm`} style={{ borderColor, background: bgColor }}>
@@ -51,9 +56,14 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
         )}
 
         {showCountdown && countdownAbove && (
-          <div className={`flex items-center gap-2 bg-orange-100 rounded-lg p-2 border border-orange-200 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
-            <Clock className="w-4 h-4 text-orange-600" />
-            {promotion.endAt && <Countdown endAt={promotion.endAt} />}
+          <div
+            className={`flex items-center gap-2 rounded-lg p-2 border ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}
+            style={{ background: countdownBgColor, borderColor: countdownBorderColor }}
+          >
+            <Clock className="w-4 h-4" style={{ color: countdownTextColor }} />
+            {promotion.endAt && (
+              <Countdown endAt={promotion.endAt} textColor={countdownTextColor} size={countdownSize} />
+            )}
           </div>
         )}
 
@@ -90,9 +100,14 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
         )}
 
         {showCountdown && !countdownAbove && (
-          <div className={`flex items-center gap-2 bg-orange-100 rounded-lg p-2 border border-orange-200 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
-            <Clock className="w-4 h-4 text-orange-600" />
-            {promotion.endAt && <Countdown endAt={promotion.endAt} />}
+          <div
+            className={`flex items-center gap-2 rounded-lg p-2 border ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}
+            style={{ background: countdownBgColor, borderColor: countdownBorderColor }}
+          >
+            <Clock className="w-4 h-4" style={{ color: countdownTextColor }} />
+            {promotion.endAt && (
+              <Countdown endAt={promotion.endAt} textColor={countdownTextColor} size={countdownSize} />
+            )}
           </div>
         )}
 
@@ -157,7 +172,7 @@ function getFontClass(choice: 'handwritten' | 'kawaii' | 'sans' | 'serif') {
   }
 }
 
-function Countdown({ endAt }: { endAt: string }) {
+function Countdown({ endAt, textColor, size }: { endAt: string; textColor?: string; size?: 'sm' | 'md' | 'lg' }) {
   const [remaining, setRemaining] = useState(getRemaining(endAt));
 
   useEffect(() => {
@@ -165,10 +180,16 @@ function Countdown({ endAt }: { endAt: string }) {
     return () => clearInterval(id);
   }, [endAt]);
 
-  if (remaining.totalMs <= 0) return <p className="text-orange-800 text-sm font-medium">Promoção encerrada.</p>;
+  const sizeClass = size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm';
+  if (remaining.totalMs <= 0)
+    return (
+      <p className={`${sizeClass} font-medium`} style={{ color: textColor || '#9a3412' }}>
+        Promoção encerrada.
+      </p>
+    );
 
   return (
-    <p className="text-orange-800 text-sm font-medium">
+    <p className={`${sizeClass} font-medium`} style={{ color: textColor || '#9a3412' }}>
       Termina em {remaining.days}d {remaining.hours}h {remaining.minutes}m {remaining.seconds}s
     </p>
   );
