@@ -1,16 +1,18 @@
-import { Gift, Sparkles, Clock, ListOrdered } from 'lucide-react';
+import { Sparkles, Clock, ListOrdered } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { usePromotionStore } from '../../store/promotionStore';
-import { buildMessageFromTemplate, formatCurrencyBRL, getApplicableDiscount, isPromotionActive } from '../../types/promotion';
+import { Promotion, buildMessageFromTemplate, formatCurrencyBRL, isPromotionActive } from '../../types/promotion';
 
 export function PromotionBanner() {
   const promotion = usePromotionStore((s) => s.promotion);
 
   if (!promotion || !isPromotionActive(promotion)) return null;
 
-  const messageHtml = buildMessageFromTemplate(promotion);
+  return <PromotionBannerContent promotion={promotion} />;
+}
 
-  const discountPct = getApplicableDiscount(promotion, 200);
+export function PromotionBannerContent({ promotion }: { promotion: Promotion }) {
+  const messageHtml = buildMessageFromTemplate(promotion);
   const highlightColor = promotion.highlightColor || '#f472b6';
   const hasGlobal = !!promotion.globalPercentage && promotion.globalPercentage > 0;
   const rules = promotion.progressiveRules || [];
@@ -28,16 +30,6 @@ export function PromotionBanner() {
         <div className="prose prose-sm max-w-none mb-3">
           <div dangerouslySetInnerHTML={{ __html: messageHtml }} />
         </div>
-
-        {discountPct > 0 && (
-          <div className="flex justify-center items-center gap-2 mb-3">
-            <Gift className="w-5 h-5" style={{ color: highlightColor }} />
-            <span className="font-bold text-2xl text-white px-4 py-2 rounded-lg shadow-md" style={{ backgroundColor: highlightColor }}>
-              {discountPct}% OFF
-            </span>
-            <Gift className="w-5 h-5" style={{ color: highlightColor }} />
-          </div>
-        )}
 
         {promotion.endAt && (
           <div className="flex justify-center items-center gap-2 bg-orange-100 rounded-lg p-2 border border-orange-200">
@@ -61,9 +53,6 @@ export function PromotionBanner() {
                   <li key={idx}>Acima de {formatCurrencyBRL(r.threshold)} → {r.percentage}% OFF</li>
                 ))}
               </ul>
-            )}
-            {hasGlobal && rules.length > 0 && (
-              <p className="mt-1 text-xs text-gray-500">Observação: aplicamos o maior desconto entre o global e as regras progressivas.</p>
             )}
           </div>
         )}
