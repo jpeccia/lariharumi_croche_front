@@ -11,6 +11,12 @@ export interface Promotion {
   endAt?: string; // ISO datetime
   messageTemplate?: string; // mensagem com variáveis dinâmicas
   highlightColor?: string; // cor para destaque visual
+  // Layout do banner (opcional e apenas front-end)
+  bannerShowConditions?: boolean;
+  bannerConditionsPosition?: 'above' | 'below';
+  bannerShowCountdown?: boolean;
+  bannerCountdownPosition?: 'above' | 'below';
+  bannerAlignment?: 'center' | 'left';
 }
 
 export interface PromotionState extends Promotion {

@@ -16,31 +16,32 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
   const highlightColor = promotion.highlightColor || '#f472b6';
   const hasGlobal = !!promotion.globalPercentage && promotion.globalPercentage > 0;
   const rules = promotion.progressiveRules || [];
+  const alignClass = promotion.bannerAlignment === 'left' ? 'text-left' : 'text-center';
+  const showConditions = promotion.bannerShowConditions !== false && (hasGlobal || rules.length > 0);
+  const showCountdown = promotion.bannerShowCountdown !== false && !!promotion.endAt;
+  const conditionsAbove = (promotion.bannerConditionsPosition || 'below') === 'above';
+  const countdownAbove = (promotion.bannerCountdownPosition || 'below') === 'above';
 
   return (
     <div className="rounded-xl p-4 mb-6 border shadow-sm" style={{ borderColor: highlightColor + '33', background: `${highlightColor}22` }}>
-      <div className="text-center">
-        <div className="flex justify-center items-center gap-2 mb-3">
+      <div className={alignClass}>
+        <div className={`flex items-center gap-2 mb-3 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
           <Sparkles className="w-5 h-5" style={{ color: highlightColor }} />
           <h2 className="font-handwritten text-xl font-semibold" style={{ color: highlightColor }}>
             ✨ PROMOÇÃO ESPECIAL ✨
           </h2>
         </div>
 
-        <div className="prose prose-sm max-w-none mb-3">
-          <div dangerouslySetInnerHTML={{ __html: messageHtml }} />
-        </div>
-
-        {promotion.endAt && (
-          <div className="flex justify-center items-center gap-2 bg-orange-100 rounded-lg p-2 border border-orange-200">
+        {showCountdown && countdownAbove && (
+          <div className={`flex items-center gap-2 bg-orange-100 rounded-lg p-2 border border-orange-200 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
             <Clock className="w-4 h-4 text-orange-600" />
-            <Countdown endAt={promotion.endAt} />
+            {promotion.endAt && <Countdown endAt={promotion.endAt} />}
           </div>
         )}
 
-        {(hasGlobal || rules.length > 0) && (
-          <div className="mt-3 text-left max-w-xl mx-auto">
-            <div className="flex items-center gap-2 mb-1">
+        {showConditions && conditionsAbove && (
+          <div className={`mt-3 ${promotion.bannerAlignment === 'left' ? 'text-left' : 'text-center'} max-w-xl mx-auto`}>
+            <div className={`flex items-center gap-2 mb-1 ${promotion.bannerAlignment === 'left' ? '' : 'justify-center'}`}>
               <ListOrdered className="w-4 h-4" style={{ color: highlightColor }} />
               <span className="text-sm font-medium" style={{ color: highlightColor }}>Condições da promoção</span>
             </div>
@@ -48,12 +49,44 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
               <p className="text-sm text-gray-800">• Desconto global: {promotion.globalPercentage}% OFF em todo o site.</p>
             )}
             {rules.length > 0 && (
-              <ul className="text-sm text-gray-800 list-disc list-inside">
+              <ul className={`text-sm text-gray-800 list-disc ${promotion.bannerAlignment === 'left' ? 'list-inside' : 'list-inside inline-block text-left'}`}>
                 {rules.map((r, idx) => (
                   <li key={idx}>Acima de {formatCurrencyBRL(r.threshold)} → {r.percentage}% OFF</li>
                 ))}
               </ul>
             )}
+            <p className="mt-2 text-xs text-gray-600">Aplicamos o maior desconto entre o global e as regras progressivas.</p>
+          </div>
+        )}
+
+        <div className="prose prose-sm max-w-none mb-3">
+          <div dangerouslySetInnerHTML={{ __html: messageHtml }} />
+        </div>
+
+        {showCountdown && !countdownAbove && (
+          <div className={`flex items-center gap-2 bg-orange-100 rounded-lg p-2 border border-orange-200 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
+            <Clock className="w-4 h-4 text-orange-600" />
+            {promotion.endAt && <Countdown endAt={promotion.endAt} />}
+          </div>
+        )}
+
+        {showConditions && !conditionsAbove && (
+          <div className={`mt-3 ${promotion.bannerAlignment === 'left' ? 'text-left' : 'text-center'} max-w-xl mx-auto`}>
+            <div className={`flex items-center gap-2 mb-1 ${promotion.bannerAlignment === 'left' ? '' : 'justify-center'}`}>
+              <ListOrdered className="w-4 h-4" style={{ color: highlightColor }} />
+              <span className="text-sm font-medium" style={{ color: highlightColor }}>Condições da promoção</span>
+            </div>
+            {hasGlobal && (
+              <p className="text-sm text-gray-800">• Desconto global: {promotion.globalPercentage}% OFF em todo o site.</p>
+            )}
+            {rules.length > 0 && (
+              <ul className={`text-sm text-gray-800 list-disc ${promotion.bannerAlignment === 'left' ? 'list-inside' : 'list-inside inline-block text-left'}`}>
+                {rules.map((r, idx) => (
+                  <li key={idx}>Acima de {formatCurrencyBRL(r.threshold)} → {r.percentage}% OFF</li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-2 text-xs text-gray-600">Aplicamos o maior desconto entre o global e as regras progressivas.</p>
           </div>
         )}
       </div>

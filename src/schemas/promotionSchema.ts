@@ -13,6 +13,11 @@ export const promotionSchema = z.object({
   endAt: z.string().datetime().optional(),
   messageTemplate: z.string().max(5000).optional(),
   highlightColor: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
+  bannerShowConditions: z.boolean().optional(),
+  bannerConditionsPosition: z.enum(['above', 'below']).optional(),
+  bannerShowCountdown: z.boolean().optional(),
+  bannerCountdownPosition: z.enum(['above', 'below']).optional(),
+  bannerAlignment: z.enum(['center', 'left']).optional(),
 }).refine((data) => {
   if (data.globalPercentage && data.progressiveRules && data.progressiveRules.length > 0) {
     // Permitir, mas sinalizar que global sobrescreve progressivo
