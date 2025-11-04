@@ -1,11 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import { LoadingSpinner } from './components/shared/LoadingSpinner';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { SkipLinks } from './components/shared/SkipLinks';
-import { usePromotionStore } from './store/promotionStore';
-import { promotionSchema } from './schemas/promotionSchema';
 
 // Lazy loading para todas as páginas principais
 const Home = lazy(() => import('./pages/Home'));
@@ -31,33 +29,6 @@ const PageLoader = () => (
 );
 
 function App() {
-  const setPromotion = usePromotionStore((s) => s.setPromotion);
-
-  // Importa promoção via parâmetro de URL (?promo=BASE64 ou #promo=BASE64)
-  useEffect(() => {
-    try {
-      const searchParams = new URLSearchParams(window.location.search);
-      let promoEncoded = searchParams.get('promo');
-      if (!promoEncoded && window.location.hash.startsWith('#promo=')) {
-        promoEncoded = window.location.hash.replace('#promo=', '');
-      }
-      if (promoEncoded) {
-        // Decodificar Base64 URL-safe
-        const normalized = promoEncoded.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonStr = atob(normalized);
-        const parsed = JSON.parse(jsonStr);
-        const validated = promotionSchema.safeParse(parsed);
-        if (validated.success) {
-          setPromotion(validated.data);
-        } else {
-          console.warn('Promoção inválida no parâmetro de URL:', validated.error?.message);
-        }
-      }
-    } catch (e) {
-      console.warn('Falha ao importar promoção via URL:', e);
-    }
-  }, [setPromotion]);
-
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
