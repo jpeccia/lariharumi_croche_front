@@ -88,8 +88,13 @@ export function PromotionSettings() {
       return;
     }
 
+    const hasDiscount = (
+      !!parsed.data.globalPercentage && parsed.data.globalPercentage > 0
+    ) || ((parsed.data.progressiveRules || []).length > 0);
+    const enabled = parsed.data.enabled || hasDiscount;
+
     const cleaned: Promotion = {
-      enabled: parsed.data.enabled,
+      enabled,
       globalPercentage: parsed.data.globalPercentage ? clampPercentage(parsed.data.globalPercentage) : undefined,
       // Sempre persistir regras progressivas; a precedência do desconto global é aplicada no cálculo
       progressiveRules: parsed.data.progressiveRules,
