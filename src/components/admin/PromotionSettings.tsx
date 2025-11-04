@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { usePromotionStore } from '../../store/promotionStore';
-import { Promotion, ProgressiveDiscountRule, buildMessageFromTemplate, clampPercentage, isPromotionActive } from '../../types/promotion';
+import { Promotion, ProgressiveDiscountRule, buildMessageFromTemplate, clampPercentage, isPromotionActive, formatCurrencyBRL } from '../../types/promotion';
 import { promotionSchema, PromotionFormData } from '../../schemas/promotionSchema';
 import { z } from 'zod';
-import { Clock, Percent, AlertCircle, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
+import { Clock, Percent, AlertCircle, CheckCircle2, XCircle, Sparkles, ListOrdered } from 'lucide-react';
 
 const defaultTemplate = `✨ Promoção ativa! Aproveite %OFF% de desconto em todo o site! ✨\nVálida de %START_DATE% até %END_DATE%. Faltam %DAYS_LEFT% dias!`;
 
@@ -96,8 +96,11 @@ export function PromotionSettings() {
     const cleaned: Promotion = {
       enabled,
       globalPercentage: parsed.data.globalPercentage ? clampPercentage(parsed.data.globalPercentage) : undefined,
-      // Sempre persistir regras progressivas; a precedência do desconto global é aplicada no cálculo
-      progressiveRules: parsed.data.progressiveRules,
+      // Normalizar regras progressivas: arredondar thresholds e clamp de percentuais
+      progressiveRules: (parsed.data.progressiveRules || []).map((r) => ({
+        threshold: Math.round(Math.max(0, r.threshold)),
+        percentage: clampPercentage(r.percentage),
+      })),
       startAt: parsed.data.startAt,
       endAt: parsed.data.endAt,
       messageTemplate: parsed.data.messageTemplate,
@@ -261,6 +264,29 @@ export function PromotionSettings() {
             <div className="prose prose-sm max-w-none">
               <div dangerouslySetInnerHTML={{ __html: previewMessage }} />
             </div>
+
+            {/* Pré-visualização das condições (espelha o banner) */}
+            {(!!form.globalPercentage || (form.progressiveRules || []).length > 0) && (
+              <div className="mt-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <ListOrdered className="w-4 h-4 text-purple-600" />
+                  <span className="text-sm font-medium text-purple-700">Condições da promoção</span>
+                </div>
+                {!!form.globalPercentage && (
+                  <p className="text-sm text-gray-800">• Desconto global: {clampPercentage(form.globalPercentage!)}% OFF em todo o site.</p>
+                )}
+                {(form.progressiveRules || []).length > 0 && (
+                  <ul className="text-sm text-gray-800 list-disc list-inside">
+                    {(form.progressiveRules || []).map((r, idx) => (
+                      <li key={idx}>Acima de {formatCurrencyBRL(Math.round(Math.max(0, r.threshold)))} → {clampPercentage(r.percentage)}% OFF</li>
+                    ))}
+                  </ul>
+                )}
+                {!!form.globalPercentage && (form.progressiveRules || []).length > 0 && (
+                  <p className="mt-1 text-xs text-gray-500">Observação: aplicamos o maior desconto entre o global e as regras progressivas.</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
