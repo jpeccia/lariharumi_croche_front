@@ -24,16 +24,17 @@ export function PromotionSettings() {
     endAt: undefined,
     messageTemplate: defaultTemplate,
     highlightColor: '#f472b6',
-    bannerTitle: undefined,
-    bannerTitlePosition: 'above',
-    bannerBody: undefined,
     bannerShowConditions: true,
     bannerConditionsPosition: 'below',
-    bannerConditionsStyle: 'bullets',
     bannerShowCountdown: true,
     bannerCountdownPosition: 'below',
     bannerAlignment: 'center',
-    bannerDensity: 'spaced',
+    bannerShowTitle: true,
+    bannerTitle: '✨ PROMOÇÃO ESPECIAL ✨',
+    bannerTitlePosition: 'above',
+    bannerConditionsStyle: 'bullets',
+    bannerDensity: 'spacious',
+    bannerBorderStyle: 'subtle',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -47,16 +48,17 @@ export function PromotionSettings() {
         endAt: promotion.endAt,
         messageTemplate: promotion.messageTemplate || defaultTemplate,
         highlightColor: promotion.highlightColor || '#f472b6',
-        bannerTitle: promotion.bannerTitle,
-        bannerTitlePosition: promotion.bannerTitlePosition ?? 'above',
-        bannerBody: promotion.bannerBody,
         bannerShowConditions: promotion.bannerShowConditions ?? true,
         bannerConditionsPosition: promotion.bannerConditionsPosition ?? 'below',
-        bannerConditionsStyle: promotion.bannerConditionsStyle ?? 'bullets',
         bannerShowCountdown: promotion.bannerShowCountdown ?? true,
         bannerCountdownPosition: promotion.bannerCountdownPosition ?? 'below',
         bannerAlignment: promotion.bannerAlignment ?? 'center',
-        bannerDensity: promotion.bannerDensity ?? 'spaced',
+        bannerShowTitle: promotion.bannerShowTitle ?? true,
+        bannerTitle: promotion.bannerTitle ?? '✨ PROMOÇÃO ESPECIAL ✨',
+        bannerTitlePosition: promotion.bannerTitlePosition ?? 'above',
+        bannerConditionsStyle: promotion.bannerConditionsStyle ?? 'bullets',
+        bannerDensity: promotion.bannerDensity ?? 'spacious',
+        bannerBorderStyle: promotion.bannerBorderStyle ?? 'subtle',
       });
     }
   }, [promotion]);
@@ -123,16 +125,17 @@ export function PromotionSettings() {
       endAt: parsed.data.endAt,
       messageTemplate: parsed.data.messageTemplate,
       highlightColor: parsed.data.highlightColor,
-      bannerTitle: parsed.data.bannerTitle,
-      bannerTitlePosition: parsed.data.bannerTitlePosition,
-      bannerBody: parsed.data.bannerBody,
       bannerShowConditions: parsed.data.bannerShowConditions,
       bannerConditionsPosition: parsed.data.bannerConditionsPosition,
-      bannerConditionsStyle: parsed.data.bannerConditionsStyle,
       bannerShowCountdown: parsed.data.bannerShowCountdown,
       bannerCountdownPosition: parsed.data.bannerCountdownPosition,
       bannerAlignment: parsed.data.bannerAlignment,
+      bannerShowTitle: parsed.data.bannerShowTitle,
+      bannerTitle: parsed.data.bannerTitle,
+      bannerTitlePosition: parsed.data.bannerTitlePosition,
+      bannerConditionsStyle: parsed.data.bannerConditionsStyle,
       bannerDensity: parsed.data.bannerDensity,
+      bannerBorderStyle: parsed.data.bannerBorderStyle,
     };
     setPromotion(cleaned);
   }
@@ -147,16 +150,17 @@ export function PromotionSettings() {
       endAt: undefined,
       messageTemplate: defaultTemplate,
       highlightColor: '#f472b6',
-      bannerTitle: undefined,
-      bannerTitlePosition: 'above',
-      bannerBody: undefined,
       bannerShowConditions: true,
       bannerConditionsPosition: 'below',
-      bannerConditionsStyle: 'bullets',
       bannerShowCountdown: true,
       bannerCountdownPosition: 'below',
       bannerAlignment: 'center',
-      bannerDensity: 'spaced',
+      bannerShowTitle: true,
+      bannerTitle: '✨ PROMOÇÃO ESPECIAL ✨',
+      bannerTitlePosition: 'above',
+      bannerConditionsStyle: 'bullets',
+      bannerDensity: 'spacious',
+      bannerBorderStyle: 'subtle',
     });
   }
 
@@ -254,38 +258,7 @@ export function PromotionSettings() {
               </div>
             </div>
 
-            {/* Título e Mensagem */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Título do Banner</label>
-                <input type="text" placeholder="Promoção Especial" value={form.bannerTitle || ''} onChange={(e) => updateField('bannerTitle', e.target.value)} className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500" />
-                <label className="block text-sm font-medium text-gray-700 mt-2">Posição do título</label>
-                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerTitlePosition ?? 'above'} onChange={(e) => updateField('bannerTitlePosition', e.target.value as any)}>
-                  <option value="above">Acima da mensagem</option>
-                  <option value="below">Abaixo da mensagem</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mensagem Promocional</label>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs text-gray-600">Variáveis:</span>
-                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">%OFF%</code>
-                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">%START_DATE%</code>
-                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">%END_DATE%</code>
-                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">%DAYS_LEFT%</code>
-                </div>
-                <ReactQuill theme="snow" value={form.messageTemplate || ''} onChange={(val) => updateField('messageTemplate', val)} />
-                {errors.messageTemplate && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center"><AlertCircle className="w-4 h-4 mr-1" />{errors.messageTemplate}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Corpo da descrição */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Corpo da descrição (opcional)</label>
-              <textarea placeholder="Detalhes adicionais da promoção..." value={form.bannerBody || ''} onChange={(e) => updateField('bannerBody', e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
-            </div>
+            {/* Mensagem */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Mensagem Promocional</label>
               <div className="flex items-center gap-2 mb-2">
@@ -337,17 +310,38 @@ export function PromotionSettings() {
                   <option value="above">Acima da mensagem</option>
                   <option value="below">Abaixo da mensagem</option>
                 </select>
-                <label className="block text-sm font-medium text-gray-700">Espaçamento e bordas</label>
-                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerDensity ?? 'spaced'} onChange={(e) => updateField('bannerDensity', e.target.value as any)}>
-                  <option value="compact">Compacto</option>
-                  <option value="spaced">Espaçado</option>
-                </select>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">Alinhamento</label>
                 <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerAlignment ?? 'center'} onChange={(e) => updateField('bannerAlignment', e.target.value as any)}>
                   <option value="center">Centralizado</option>
                   <option value="left">Esquerda</option>
+                </select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Título do banner</label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={form.bannerShowTitle ?? true} onChange={(e) => updateField('bannerShowTitle', e.target.checked)} />
+                  Mostrar título
+                </label>
+                <input type="text" className="w-full px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerTitle ?? ''} onChange={(e) => updateField('bannerTitle', e.target.value)} placeholder="Ex.: ✨ PROMOÇÃO ESPECIAL ✨" />
+                <label className="block text-sm font-medium text-gray-700">Posição do título</label>
+                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerTitlePosition ?? 'above'} onChange={(e) => updateField('bannerTitlePosition', e.target.value as any)}>
+                  <option value="above">Acima da mensagem</option>
+                  <option value="below">Abaixo da mensagem</option>
+                </select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Espaçamento do banner</label>
+                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerDensity ?? 'spacious'} onChange={(e) => updateField('bannerDensity', e.target.value as any)}>
+                  <option value="compact">Compacto</option>
+                  <option value="spacious">Espaçado</option>
+                </select>
+                <label className="block text-sm font-medium text-gray-700">Borda do banner</label>
+                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerBorderStyle ?? 'subtle'} onChange={(e) => updateField('bannerBorderStyle', e.target.value as any)}>
+                  <option value="subtle">Suave</option>
+                  <option value="solid">Sólida</option>
+                  <option value="none">Sem borda</option>
                 </select>
               </div>
             </div>
@@ -384,16 +378,17 @@ export function PromotionSettings() {
               endAt: form.endAt,
               messageTemplate: form.messageTemplate,
               highlightColor: form.highlightColor,
-              bannerTitle: form.bannerTitle,
-              bannerTitlePosition: form.bannerTitlePosition,
-              bannerBody: form.bannerBody,
               bannerShowConditions: form.bannerShowConditions,
               bannerConditionsPosition: form.bannerConditionsPosition,
-              bannerConditionsStyle: form.bannerConditionsStyle,
               bannerShowCountdown: form.bannerShowCountdown,
               bannerCountdownPosition: form.bannerCountdownPosition,
               bannerAlignment: form.bannerAlignment,
+              bannerShowTitle: form.bannerShowTitle,
+              bannerTitle: form.bannerTitle,
+              bannerTitlePosition: form.bannerTitlePosition,
+              bannerConditionsStyle: form.bannerConditionsStyle,
               bannerDensity: form.bannerDensity,
+              bannerBorderStyle: form.bannerBorderStyle,
             }} />
           </div>
         </div>
