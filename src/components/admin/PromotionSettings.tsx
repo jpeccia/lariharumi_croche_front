@@ -46,6 +46,7 @@ export function PromotionSettings() {
     bannerCountdownSize: 'md',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [shareLink, setShareLink] = useState<string>('');
 
   useEffect(() => {
     if (promotion) {
@@ -165,6 +166,23 @@ export function PromotionSettings() {
       bannerCountdownSize: parsed.data.bannerCountdownSize,
     };
     setPromotion(cleaned);
+  }
+
+  function generateShareLink() {
+    const parsed = promotionSchema.safeParse(form);
+    if (!parsed.success) {
+      setErrors((prev) => ({ ...prev, form: 'Corrija os campos da promoção antes de compartilhar.' }));
+      return;
+    }
+    try {
+      const json = JSON.stringify(parsed.data);
+      const b64 = btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      const url = `${window.location.origin}/?promo=${b64}`;
+      setShareLink(url);
+      navigator.clipboard?.writeText(url).catch(() => {});
+    } catch (e) {
+      console.warn('Falha ao gerar link de compartilhamento da promoção:', e);
+    }
   }
 
   function disablePromotion() {
@@ -490,6 +508,31 @@ export function PromotionSettings() {
               bannerCountdownTextColor: form.bannerCountdownTextColor,
               bannerCountdownSize: form.bannerCountdownSize,
             }} />
+
+            <div className="mt-4 border-t pt-4">
+              <h4 className="text-sm font-semibold text-purple-800 mb-2">Compartilhar promoção (via link)</h4>
+              <p className="text-xs text-gray-600 mb-2">Gere um link para ativar esta promoção em outro dispositivo.</p>
+              <div className="flex items-center gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={generateShareLink}
+                  className="bg-purple-500 hover:bg-purple-600 text-white text-xs px-3 py-2 rounded-md"
+                >
+                  Gerar e copiar link
+                </button>
+              </div>
+              {shareLink && (
+                <div>
+                  <input
+                    type="text"
+                    value={shareLink}
+                    readOnly
+                    className="w-full text-xs p-2 border rounded-md"
+                  />
+                  <p className="text-[11px] text-gray-500 mt-1">Abra este link no celular para aplicar a promoção imediatamente.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
