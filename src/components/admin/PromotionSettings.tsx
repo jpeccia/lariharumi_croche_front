@@ -24,11 +24,16 @@ export function PromotionSettings() {
     endAt: undefined,
     messageTemplate: defaultTemplate,
     highlightColor: '#f472b6',
+    bannerTitle: undefined,
+    bannerTitlePosition: 'above',
+    bannerBody: undefined,
     bannerShowConditions: true,
     bannerConditionsPosition: 'below',
+    bannerConditionsStyle: 'bullets',
     bannerShowCountdown: true,
     bannerCountdownPosition: 'below',
     bannerAlignment: 'center',
+    bannerDensity: 'spaced',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -42,11 +47,16 @@ export function PromotionSettings() {
         endAt: promotion.endAt,
         messageTemplate: promotion.messageTemplate || defaultTemplate,
         highlightColor: promotion.highlightColor || '#f472b6',
+        bannerTitle: promotion.bannerTitle,
+        bannerTitlePosition: promotion.bannerTitlePosition ?? 'above',
+        bannerBody: promotion.bannerBody,
         bannerShowConditions: promotion.bannerShowConditions ?? true,
         bannerConditionsPosition: promotion.bannerConditionsPosition ?? 'below',
+        bannerConditionsStyle: promotion.bannerConditionsStyle ?? 'bullets',
         bannerShowCountdown: promotion.bannerShowCountdown ?? true,
         bannerCountdownPosition: promotion.bannerCountdownPosition ?? 'below',
         bannerAlignment: promotion.bannerAlignment ?? 'center',
+        bannerDensity: promotion.bannerDensity ?? 'spaced',
       });
     }
   }, [promotion]);
@@ -113,11 +123,16 @@ export function PromotionSettings() {
       endAt: parsed.data.endAt,
       messageTemplate: parsed.data.messageTemplate,
       highlightColor: parsed.data.highlightColor,
+      bannerTitle: parsed.data.bannerTitle,
+      bannerTitlePosition: parsed.data.bannerTitlePosition,
+      bannerBody: parsed.data.bannerBody,
       bannerShowConditions: parsed.data.bannerShowConditions,
       bannerConditionsPosition: parsed.data.bannerConditionsPosition,
+      bannerConditionsStyle: parsed.data.bannerConditionsStyle,
       bannerShowCountdown: parsed.data.bannerShowCountdown,
       bannerCountdownPosition: parsed.data.bannerCountdownPosition,
       bannerAlignment: parsed.data.bannerAlignment,
+      bannerDensity: parsed.data.bannerDensity,
     };
     setPromotion(cleaned);
   }
@@ -132,11 +147,16 @@ export function PromotionSettings() {
       endAt: undefined,
       messageTemplate: defaultTemplate,
       highlightColor: '#f472b6',
+      bannerTitle: undefined,
+      bannerTitlePosition: 'above',
+      bannerBody: undefined,
       bannerShowConditions: true,
       bannerConditionsPosition: 'below',
+      bannerConditionsStyle: 'bullets',
       bannerShowCountdown: true,
       bannerCountdownPosition: 'below',
       bannerAlignment: 'center',
+      bannerDensity: 'spaced',
     });
   }
 
@@ -234,7 +254,38 @@ export function PromotionSettings() {
               </div>
             </div>
 
-            {/* Mensagem */}
+            {/* Título e Mensagem */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Título do Banner</label>
+                <input type="text" placeholder="Promoção Especial" value={form.bannerTitle || ''} onChange={(e) => updateField('bannerTitle', e.target.value)} className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                <label className="block text-sm font-medium text-gray-700 mt-2">Posição do título</label>
+                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerTitlePosition ?? 'above'} onChange={(e) => updateField('bannerTitlePosition', e.target.value as any)}>
+                  <option value="above">Acima da mensagem</option>
+                  <option value="below">Abaixo da mensagem</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mensagem Promocional</label>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs text-gray-600">Variáveis:</span>
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">%OFF%</code>
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">%START_DATE%</code>
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">%END_DATE%</code>
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">%DAYS_LEFT%</code>
+                </div>
+                <ReactQuill theme="snow" value={form.messageTemplate || ''} onChange={(val) => updateField('messageTemplate', val)} />
+                {errors.messageTemplate && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center"><AlertCircle className="w-4 h-4 mr-1" />{errors.messageTemplate}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Corpo da descrição */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Corpo da descrição (opcional)</label>
+              <textarea placeholder="Detalhes adicionais da promoção..." value={form.bannerBody || ''} onChange={(e) => updateField('bannerBody', e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Mensagem Promocional</label>
               <div className="flex items-center gap-2 mb-2">
@@ -269,6 +320,11 @@ export function PromotionSettings() {
                   <option value="above">Acima da mensagem</option>
                   <option value="below">Abaixo da mensagem</option>
                 </select>
+                <label className="block text-sm font-medium text-gray-700">Estilo das condições</label>
+                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerConditionsStyle ?? 'bullets'} onChange={(e) => updateField('bannerConditionsStyle', e.target.value as any)}>
+                  <option value="bullets">Marcadores</option>
+                  <option value="lines">Linhas</option>
+                </select>
               </div>
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">Exibir contador</label>
@@ -280,6 +336,11 @@ export function PromotionSettings() {
                 <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerCountdownPosition ?? 'below'} onChange={(e) => updateField('bannerCountdownPosition', e.target.value as any)}>
                   <option value="above">Acima da mensagem</option>
                   <option value="below">Abaixo da mensagem</option>
+                </select>
+                <label className="block text-sm font-medium text-gray-700">Espaçamento e bordas</label>
+                <select className="px-3 py-2 rounded-lg border-2 border-gray-200" value={form.bannerDensity ?? 'spaced'} onChange={(e) => updateField('bannerDensity', e.target.value as any)}>
+                  <option value="compact">Compacto</option>
+                  <option value="spaced">Espaçado</option>
                 </select>
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -323,11 +384,16 @@ export function PromotionSettings() {
               endAt: form.endAt,
               messageTemplate: form.messageTemplate,
               highlightColor: form.highlightColor,
+              bannerTitle: form.bannerTitle,
+              bannerTitlePosition: form.bannerTitlePosition,
+              bannerBody: form.bannerBody,
               bannerShowConditions: form.bannerShowConditions,
               bannerConditionsPosition: form.bannerConditionsPosition,
+              bannerConditionsStyle: form.bannerConditionsStyle,
               bannerShowCountdown: form.bannerShowCountdown,
               bannerCountdownPosition: form.bannerCountdownPosition,
               bannerAlignment: form.bannerAlignment,
+              bannerDensity: form.bannerDensity,
             }} />
           </div>
         </div>

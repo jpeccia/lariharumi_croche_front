@@ -12,11 +12,16 @@ export interface Promotion {
   messageTemplate?: string; // mensagem com variáveis dinâmicas
   highlightColor?: string; // cor para destaque visual
   // Layout do banner (opcional e apenas front-end)
+  bannerTitle?: string; // título personalizado do banner
+  bannerTitlePosition?: 'above' | 'below'; // posição do título em relação à mensagem
+  bannerBody?: string; // corpo descritivo opcional do banner
   bannerShowConditions?: boolean;
   bannerConditionsPosition?: 'above' | 'below';
+  bannerConditionsStyle?: 'bullets' | 'lines'; // estilo da lista de condições
   bannerShowCountdown?: boolean;
   bannerCountdownPosition?: 'above' | 'below';
   bannerAlignment?: 'center' | 'left';
+  bannerDensity?: 'compact' | 'spaced'; // controle de espaçamento/bordas
 }
 
 export interface PromotionState extends Promotion {
