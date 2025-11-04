@@ -88,11 +88,11 @@ export function PromotionSettings() {
       return;
     }
 
-    // Limpar regras se global está definido
     const cleaned: Promotion = {
       enabled: parsed.data.enabled,
       globalPercentage: parsed.data.globalPercentage ? clampPercentage(parsed.data.globalPercentage) : undefined,
-      progressiveRules: parsed.data.globalPercentage ? [] : parsed.data.progressiveRules,
+      // Sempre persistir regras progressivas; a precedência do desconto global é aplicada no cálculo
+      progressiveRules: parsed.data.progressiveRules,
       startAt: parsed.data.startAt,
       endAt: parsed.data.endAt,
       messageTemplate: parsed.data.messageTemplate,
