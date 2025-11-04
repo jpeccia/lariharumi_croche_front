@@ -22,6 +22,7 @@ import { Pagination, CompactPagination } from '../components/shared/Pagination';
 import { PageTransition, CascadeAnimation, FadeIn } from '../components/shared/PageTransition';
 import { usePromotionStore } from '../store/promotionStore';
 import { isPromotionActive, getApplicableDiscount } from '../types/promotion';
+import { extractNumericPrice } from '../utils/price';
 
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -485,7 +486,7 @@ function Catalog() {
                   return products
                     .filter((p) => {
                       if (!showOnlyDiscounted) return true;
-                      const basePrice = parseFloat(p.priceRange);
+                      const basePrice = extractNumericPrice(p.priceRange);
                       if (isNaN(basePrice)) return false;
                       return promoActive && getApplicableDiscount(promotion || undefined, basePrice) > 0;
                     })
