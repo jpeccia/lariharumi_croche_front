@@ -416,7 +416,7 @@ export function PromotionSettings() {
         </div>
 
         {/* Pré-visualização */}
-        <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6 lg:sticky lg:top-4 lg:max-h-[80vh] lg:overflow-auto">
           <div className="space-y-3">
             <div className={`rounded-lg p-3 border ${active ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
               <div className="flex items-center gap-2 text-sm">
