@@ -1,4 +1,5 @@
 import { Gift, Sparkles, Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { usePromotionStore } from '../../store/promotionStore';
 import { buildMessageFromTemplate, formatCurrencyBRL, getApplicableDiscount, isPromotionActive } from '../../types/promotion';
 
@@ -48,9 +49,9 @@ export function PromotionBanner() {
 }
 
 function Countdown({ endAt }: { endAt: string }) {
-  const [remaining, setRemaining] = React.useState(getRemaining(endAt));
+  const [remaining, setRemaining] = useState(getRemaining(endAt));
 
-  React.useEffect(() => {
+  useEffect(() => {
     const id = setInterval(() => setRemaining(getRemaining(endAt)), 1000);
     return () => clearInterval(id);
   }, [endAt]);
