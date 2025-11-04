@@ -63,7 +63,7 @@ export function PromotionBanner() {
               </ul>
             )}
             {hasGlobal && rules.length > 0 && (
-              <p className="mt-1 text-xs text-gray-500">Observação: o desconto global sobrescreve as regras progressivas no preço aplicado.</p>
+              <p className="mt-1 text-xs text-gray-500">Observação: aplicamos o maior desconto entre o global e as regras progressivas.</p>
             )}
           </div>
         )}

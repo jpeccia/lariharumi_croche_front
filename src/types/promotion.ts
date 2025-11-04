@@ -35,22 +35,23 @@ export function getApplicableDiscount(
   orderTotal: number
 ): number {
   if (!promo || !isPromotionActive(promo)) return 0;
-
-  // Global override
-  if (promo.globalPercentage && promo.globalPercentage > 0) {
-    return clampPercentage(promo.globalPercentage);
-  }
+  const global = promo.globalPercentage && promo.globalPercentage > 0
+    ? clampPercentage(promo.globalPercentage)
+    : 0;
 
   // Progressive rules
   const rules = promo.progressiveRules || [];
-  if (rules.length === 0) return 0;
+  let progressive = 0;
+  if (rules.length > 0) {
+    // Escolhe a maior regra aplicável pelo threshold
+    const applicable = rules
+      .filter((r) => orderTotal >= r.threshold)
+      .sort((a, b) => b.threshold - a.threshold)[0];
+    progressive = applicable ? clampPercentage(applicable.percentage) : 0;
+  }
 
-  // Escolhe a maior regra aplicável pelo threshold
-  const applicable = rules
-    .filter((r) => orderTotal >= r.threshold)
-    .sort((a, b) => b.threshold - a.threshold)[0];
-
-  return applicable ? clampPercentage(applicable.percentage) : 0;
+  // Aplicar o MAIOR desconto entre global e progressivo
+  return Math.max(global, progressive);
 }
 
 export function applyDiscount(price: number, percentage: number): number {
@@ -74,7 +75,7 @@ export function formatCurrencyBRL(value: number): string {
 }
 
 export function buildMessageFromTemplate(promo: Promotion, orderTotalForPreview?: number): string {
-  const percentage = promo.globalPercentage ?? getApplicableDiscount(promo, orderTotalForPreview ?? 0);
+  const percentage = getApplicableDiscount(promo, orderTotalForPreview ?? 0);
 
   const daysLeft = (() => {
     if (!promo.endAt) return '';
