@@ -12,6 +12,7 @@ import {
   ApiError 
 } from '../types/api';
 import { Product } from '../types/product';
+import { Promotion } from '../types/promotion';
 
 interface ErrorResponse {
   message?: string;
@@ -179,6 +180,18 @@ export const publicApi = {
     } catch (error) {
       console.error("Erro ao buscar imagem da categoria:", error);
       throw new Error("Falha ao buscar imagem da categoria");
+    }
+  },
+
+  // Obter promoção pública (sem autenticação)
+  getPromotion: async (): Promise<Promotion | null> => {
+    try {
+      const response = await publicApiInstance.get('/promotion');
+      // Espera um objeto Promotion; se vier vazio/404, retornar null
+      return response.data || null;
+    } catch (error) {
+      // Falhas não são críticas para navegação; apenas retorna null
+      return null;
     }
   },
 };
@@ -450,6 +463,12 @@ export const adminApi = {
       console.error("Erro ao buscar imagens do produto:", error);
       return [];
     }
+  },
+
+  // Atualizar promoção (admin)
+  updatePromotion: async (promotion: Promotion): Promise<Promotion> => {
+    const response = await api.put('/promotion', promotion);
+    return response.data;
   },
 };
 

@@ -7,6 +7,7 @@ import { SkipLinks } from './components/shared/SkipLinks';
 import { usePromotionStore } from './store/promotionStore';
 import { decodePromotion } from './utils/promotionShare';
 import { promotionSchema } from './schemas/promotionSchema';
+import { publicApi } from './services/api';
 
 // Lazy loading para todas as páginas principais
 const Home = lazy(() => import('./pages/Home'));
@@ -46,10 +47,27 @@ function App() {
             setPromotion(parsed.data);
           }
         }
+        // Se veio via URL, não busca do backend nesta navegação
+        return;
       }
     } catch (e) {
       // ignore hydration errors
     }
+
+    // Sem parâmetro ?promo, buscar promoção pública do backend
+    (async () => {
+      try {
+        const remote = await publicApi.getPromotion();
+        if (remote) {
+          const parsed = promotionSchema.safeParse(remote);
+          if (parsed.success) {
+            setPromotion(parsed.data);
+          }
+        }
+      } catch {
+        // falhas silenciosas: navegação continua
+      }
+    })();
   }, [setPromotion]);
 
   return (
