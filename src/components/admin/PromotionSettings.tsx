@@ -5,6 +5,7 @@ import { usePromotionStore } from '../../store/promotionStore';
 import { Promotion, ProgressiveDiscountRule, buildMessageFromTemplate, clampPercentage, isPromotionActive } from '../../types/promotion';
 import { PromotionBannerContent } from '../shared/PromotionBanner';
 import { promotionSchema, PromotionFormData } from '../../schemas/promotionSchema';
+import { encodePromotion } from '../../utils/promotionShare';
 import { z } from 'zod';
 import { Clock, Percent, AlertCircle, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
 
@@ -201,6 +202,43 @@ export function PromotionSettings() {
   }
 
   const active = isActive();
+  const shareLink = (() => {
+    try {
+      const promotionLike: Promotion = {
+        enabled: form.enabled,
+        globalPercentage: form.globalPercentage,
+        progressiveRules: form.progressiveRules,
+        startAt: form.startAt,
+        endAt: form.endAt,
+        messageTemplate: form.messageTemplate,
+        highlightColor: form.highlightColor,
+        bannerShowConditions: form.bannerShowConditions,
+        bannerConditionsPosition: form.bannerConditionsPosition,
+        bannerShowCountdown: form.bannerShowCountdown,
+        bannerCountdownPosition: form.bannerCountdownPosition,
+        bannerAlignment: form.bannerAlignment,
+        bannerShowTitle: form.bannerShowTitle,
+        bannerTitle: form.bannerTitle,
+        bannerTitlePosition: form.bannerTitlePosition,
+        bannerConditionsStyle: form.bannerConditionsStyle,
+        bannerDensity: form.bannerDensity,
+        bannerBorderStyle: form.bannerBorderStyle,
+        bannerTitleFont: form.bannerTitleFont,
+        bannerMessageFont: form.bannerMessageFont,
+        bannerTitleColor: form.bannerTitleColor,
+        bannerConditionsColor: form.bannerConditionsColor,
+        bannerGlobalColor: form.bannerGlobalColor,
+        bannerProgressiveColor: form.bannerProgressiveColor,
+        bannerCountdownBgColor: form.bannerCountdownBgColor,
+        bannerCountdownTextColor: form.bannerCountdownTextColor,
+        bannerCountdownSize: form.bannerCountdownSize,
+      };
+      const encoded = encodePromotion(promotionLike);
+      return `${window.location.origin}/?promo=${encoded}`;
+    } catch {
+      return '';
+    }
+  })();
 
   return (
     <div className="p-6">
@@ -441,7 +479,23 @@ export function PromotionSettings() {
             <div className="flex items-center gap-3">
               <button onClick={validateAndSave} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Salvar promoção</button>
               <button onClick={disablePromotion} className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200">Desativar</button>
+              <button
+                onClick={() => {
+                  if (shareLink) {
+                    navigator.clipboard?.writeText(shareLink).catch(() => {});
+                  }
+                }}
+                className="px-4 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200"
+                title="Copiar link para ativar esta promoção"
+              >
+                Copiar link da promoção
+              </button>
             </div>
+            {shareLink && (
+              <div className="mt-2 text-xs text-gray-600 break-all">
+                Link: {shareLink}
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,9 +1,12 @@
 import { Routes, Route } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import { LoadingSpinner } from './components/shared/LoadingSpinner';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { SkipLinks } from './components/shared/SkipLinks';
+import { usePromotionStore } from './store/promotionStore';
+import { decodePromotion } from './utils/promotionShare';
+import { promotionSchema } from './schemas/promotionSchema';
 
 // Lazy loading para todas as páginas principais
 const Home = lazy(() => import('./pages/Home'));
@@ -29,6 +32,26 @@ const PageLoader = () => (
 );
 
 function App() {
+  const setPromotion = usePromotionStore((s) => s.setPromotion);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const encoded = params.get('promo');
+      if (encoded) {
+        const decoded = decodePromotion(encoded);
+        if (decoded) {
+          const parsed = promotionSchema.safeParse(decoded);
+          if (parsed.success) {
+            setPromotion(parsed.data);
+          }
+        }
+      }
+    } catch (e) {
+      // ignore hydration errors
+    }
+  }, [setPromotion]);
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">

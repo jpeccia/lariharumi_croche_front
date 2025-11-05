@@ -5,23 +5,6 @@ import { Promotion, buildMessageFromTemplate, formatCurrencyBRL, isPromotionActi
 
 export function PromotionBanner() {
   const promotion = usePromotionStore((s) => s.promotion);
-  const setPromotion = usePromotionStore((s) => s.setPromotion);
-
-  // Fallback: tenta carregar promoção pública estática quando não houver no storage local
-  useEffect(() => {
-    if (!promotion) {
-      fetch('/promotion.json')
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data && data.enabled) {
-            setPromotion(data);
-          }
-        })
-        .catch(() => {
-          // Silenciar erros de fetch para não afetar a experiência
-        });
-    }
-  }, [promotion, setPromotion]);
 
   if (!promotion || !isPromotionActive(promotion)) return null;
 
