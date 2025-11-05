@@ -49,7 +49,7 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
         {showTitle && titleAbove && (
           <div className={`flex items-center gap-2 mb-3 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
             <Sparkles className="w-5 h-5" style={{ color: titleColor }} />
-            <h2 className={`${titleFontClass} text-xl font-semibold`} style={{ color: titleColor }}>
+            <h2 className={`${titleFontClass} text-lg sm:text-xl font-semibold`} style={{ color: titleColor }}>
               {titleText}
             </h2>
           </div>
@@ -71,7 +71,7 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
           <div className={`mt-3 ${promotion.bannerAlignment === 'left' ? 'text-left' : 'text-center'} max-w-xl mx-auto`}>
             <div className={`flex items-center gap-2 mb-1 ${promotion.bannerAlignment === 'left' ? '' : 'justify-center'}`}>
               <ListOrdered className="w-4 h-4" style={{ color: conditionsColor }} />
-              <span className="text-sm font-medium" style={{ color: conditionsColor }}>Condições da promoção</span>
+              <span className="text-xs sm:text-sm font-medium" style={{ color: conditionsColor }}>Condições da promoção</span>
             </div>
             <ConditionsList
               hasGlobal={hasGlobal}
@@ -86,14 +86,14 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
           </div>
         )}
 
-        <div className={`prose prose-sm max-w-none mb-3 ${messageFontClass}`}>
+        <div className={`prose prose-sm max-w-none mb-3 ${messageFontClass} break-words`}>
           <div dangerouslySetInnerHTML={{ __html: messageHtml }} />
         </div>
 
         {showTitle && !titleAbove && (
           <div className={`flex items-center gap-2 mb-3 ${promotion.bannerAlignment === 'left' ? 'justify-start' : 'justify-center'}`}>
             <Sparkles className="w-5 h-5" style={{ color: titleColor }} />
-            <h2 className={`${titleFontClass} text-xl font-semibold`} style={{ color: titleColor }}>
+            <h2 className={`${titleFontClass} text-lg sm:text-xl font-semibold`} style={{ color: titleColor }}>
               {titleText}
             </h2>
           </div>
@@ -136,7 +136,7 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
 function ConditionsList({ hasGlobal, rules, align, styleVariant, globalColor, progressiveColor, globalPct }: { hasGlobal: boolean; rules: Promotion['progressiveRules']; align: 'center' | 'left'; styleVariant: 'bullets' | 'lines'; globalColor: string; progressiveColor: string; globalPct?: number }) {
   if (styleVariant === 'lines') {
     return (
-      <div className={`text-sm text-gray-800 ${align === 'left' ? '' : 'inline-block text-left'} space-y-1`}>
+      <div className={`text-xs sm:text-sm text-gray-800 ${align === 'left' ? '' : 'inline-block text-left'} space-y-1`}>
         {hasGlobal && (
           <p>Desconto global: <span className="font-semibold" style={{ color: globalColor }}>{globalPct}% OFF</span> em todo o site.</p>
         )}
@@ -147,7 +147,7 @@ function ConditionsList({ hasGlobal, rules, align, styleVariant, globalColor, pr
     );
   }
   return (
-    <ul className={`text-sm text-gray-800 list-disc ${align === 'left' ? 'list-inside' : 'list-inside inline-block text-left'}`}>
+    <ul className={`text-xs sm:text-sm text-gray-800 list-disc ${align === 'left' ? 'list-inside' : 'list-inside inline-block text-left'}`}>
       {hasGlobal && (
         <li>Desconto global: <span className="font-semibold" style={{ color: globalColor }}>{globalPct}% OFF</span> em todo o site.</li>
       )}

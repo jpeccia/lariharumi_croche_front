@@ -47,10 +47,8 @@ export type DynamicMessageVariable =
 
 export function isPromotionActive(promo?: Promotion | null, now: Date = new Date()): boolean {
   if (!promo || !promo.enabled) return false;
-  const start = promo.startAt ? parseIsoDateSafe(promo.startAt) : null;
-  const end = promo.endAt ? parseIsoDateSafe(promo.endAt) : null;
-  if (start && start > now) return false;
-  if (end && end < now) return false;
+  if (promo.startAt && new Date(promo.startAt) > now) return false;
+  if (promo.endAt && new Date(promo.endAt) < now) return false;
   return true;
 }
 
@@ -104,7 +102,7 @@ export function buildMessageFromTemplate(promo: Promotion, orderTotalForPreview?
   const daysLeft = (() => {
     if (!promo.endAt) return '';
     const now = new Date();
-    const end = parseIsoDateSafe(promo.endAt);
+    const end = new Date(promo.endAt);
     const diffMs = end.getTime() - now.getTime();
     if (diffMs <= 0) return '0';
     return String(Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
@@ -112,27 +110,8 @@ export function buildMessageFromTemplate(promo: Promotion, orderTotalForPreview?
 
   let msg = promo.messageTemplate || '';
   msg = msg.replace(/%OFF%/g, `${clampPercentage(percentage)}%`);
-  if (promo.startAt) msg = msg.replace(/%START_DATE%/g, parseIsoDateSafe(promo.startAt).toLocaleDateString('pt-BR'));
-  if (promo.endAt) msg = msg.replace(/%END_DATE%/g, parseIsoDateSafe(promo.endAt).toLocaleDateString('pt-BR'));
+  if (promo.startAt) msg = msg.replace(/%START_DATE%/g, new Date(promo.startAt).toLocaleDateString('pt-BR'));
+  if (promo.endAt) msg = msg.replace(/%END_DATE%/g, new Date(promo.endAt).toLocaleDateString('pt-BR'));
   msg = msg.replace(/%DAYS_LEFT%/g, daysLeft);
   return msg;
-}
-
-// Parsing robusto para strings ISO sem segundos ou timezone (compatível com iOS Safari)
-function parseIsoDateSafe(input: string): Date {
-  // Aceita formatos: YYYY-MM-DDTHH:mm, YYYY-MM-DDTHH:mm:ss, com ou sem timezone
-  const hasSeconds = /T\d{2}:\d{2}:\d{2}/.test(input);
-  const hasTimezone = /[zZ]|[+-]\d{2}:?\d{2}$/.test(input);
-  let normalized = input;
-  if (!hasSeconds) {
-    // Acrescenta :00 de segundos
-    normalized = input.replace(/T(\d{2}:\d{2})$/, 'T$1:00');
-  }
-  if (!hasTimezone) {
-    // Trata como horário local, evita interpretação UTC.
-    // new Date(normalized) já interpreta como local em a maioria dos browsers.
-    // Mantemos sem 'Z' para preservar timezone local.
-  }
-  const d = new Date(normalized);
-  return isNaN(d.getTime()) ? new Date(input) : d;
 }

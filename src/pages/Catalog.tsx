@@ -23,8 +23,13 @@ import { PageTransition, CascadeAnimation, FadeIn } from '../components/shared/P
 import { usePromotionStore } from '../store/promotionStore';
 import { isPromotionActive, getApplicableDiscount } from '../types/promotion';
 import { extractNumericPrice } from '../utils/price';
+import { usePromotionStore } from '../store/promotionStore';
 
 function Catalog() {
+  const initializePromotion = usePromotionStore((s) => s.initializeFromPublic);
+  useEffect(() => {
+    initializePromotion();
+  }, [initializePromotion]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const viewProductCatalogRef = useRef<HTMLDivElement>(null);

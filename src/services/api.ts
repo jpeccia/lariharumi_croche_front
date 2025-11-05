@@ -106,17 +106,6 @@ export const authApi = {
 
 // Funções públicas (sem autenticação)
 export const publicApi = {
-  // Obter promoção ativa (público)
-  getActivePromotion: async () => {
-    try {
-      const response = await publicApiInstance.get('/promotions/active');
-      return response.data;
-    } catch (error) {
-      // Silencia erros para fallback local (sem bloquear renderização)
-      console.warn('Não foi possível obter promoção ativa do servidor:', error);
-      return null;
-    }
-  },
   // Buscar produtos com paginação (público)
   searchProducts: async (query: string, config: PaginationConfig = { page: 1, limit: 10 }): Promise<Product[] | SearchResponse<Product>> => {
     const params = new URLSearchParams({

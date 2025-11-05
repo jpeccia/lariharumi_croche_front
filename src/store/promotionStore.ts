@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { PromotionState, Promotion, getApplicableDiscount, applyDiscount, isPromotionActive } from '../types/promotion';
-import { publicApi } from '../services/api';
+import { promotionSchema } from '../schemas/promotionSchema';
 
 interface PromotionStore {
   promotion: PromotionState | null;
@@ -10,7 +10,7 @@ interface PromotionStore {
   isActive: () => boolean;
   getDiscountPercentage: (orderTotal: number) => number;
   getDiscountedPrice: (price: number, orderTotal?: number) => number;
-  hydrateFromServer: () => Promise<void>;
+  initializeFromPublic: () => Promise<void>;
 }
 
 export const usePromotionStore = create<PromotionStore>()(
@@ -37,21 +37,21 @@ export const usePromotionStore = create<PromotionStore>()(
         const pct = get().getDiscountPercentage(orderTotal);
         return applyDiscount(price, pct);
       },
-      hydrateFromServer: async () => {
+      initializeFromPublic: async () => {
         try {
-          const remote = await publicApi.getActivePromotion();
-          if (!remote) return;
-          // Se o remoto está ativo e é mais recente que o local, atualiza
-          const local = get().promotion;
-          const remoteUpdated = (remote.updatedAt && new Date(remote.updatedAt).getTime()) || 0;
-          const localUpdated = (local?.updatedAt && new Date(local.updatedAt).getTime()) || 0;
-          const remoteActive = isPromotionActive(remote);
-          if (remoteActive && remoteUpdated >= localUpdated) {
-            set({ promotion: { ...remote, updatedAt: new Date().toISOString() } });
-          }
-        } catch (err) {
-          // Falha silenciosa para não quebrar o cliente
-          console.warn('Falha ao hidratar promoção do servidor:', err);
+          // Se já existe promoção persistida, não precisa inicializar
+          if (get().promotion) return;
+
+          const res = await fetch('/promotion.json', { cache: 'no-cache' });
+          if (!res.ok) return;
+          const data = await res.json();
+          // Validar estrutura básica com Zod (permitindo campos opcionais)
+          const parsed = promotionSchema.safeParse(data);
+          if (!parsed.success) return;
+          const cleaned: Promotion = parsed.data as Promotion;
+          set({ promotion: { ...cleaned, updatedAt: new Date().toISOString() } });
+        } catch (e) {
+          // Silenciar erros (arquivo pode não existir em alguns ambientes)
         }
       },
     }),
@@ -59,18 +59,18 @@ export const usePromotionStore = create<PromotionStore>()(
       name: 'promotion-storage',
       partialize: (state) => ({ promotion: state.promotion }),
       version: 1,
-      // Após reidratar do storage local, tenta hidratar do servidor
-      onRehydrateStorage: () => {
-        return (state) => {
-          try {
-            // Chama fora do ciclo de renderização
-            setTimeout(() => {
-              usePromotionStore.getState().hydrateFromServer();
-            }, 0);
-          } catch (e) {
-            console.warn('onRehydrateStorage promoção: falha ao agendar hidratação', e);
-          }
-        };
+      onRehydrateStorage: () => (state) => {
+        // Após rehidratar, se não houver promoção, tenta carregar do arquivo público
+        if (!state?.promotion) {
+          // Chama de forma assíncrona para não bloquear
+          setTimeout(() => {
+            // Evitar exceções se a store ainda não estiver montada
+            try {
+              // @ts-ignore - chamar método da store
+              usePromotionStore.getState().initializeFromPublic();
+            } catch {}
+          }, 0);
+        }
       },
     }
   )
