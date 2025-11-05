@@ -185,14 +185,14 @@ export const publicApi = {
 
   // Obter promoção pública (sem autenticação)
   getPromotion: async (): Promise<Promotion | null> => {
-    try {
-      const response = await publicApiInstance.get('/promotion');
-      // Espera um objeto Promotion; se vier vazio/404, retornar null
-      return response.data || null;
-    } catch (error) {
-      // Falhas não são críticas para navegação; apenas retorna null
+    // Tratar 204/404/500 como sucesso silencioso para não exibir toast ao usuário
+    const response = await publicApiInstance.get('/promotion', {
+      validateStatus: (status) => (status >= 200 && status < 300) || status === 404 || status === 204 || status === 500,
+    });
+    if (response.status === 204 || response.status === 404 || response.status === 500) {
       return null;
     }
+    return response.data || null;
   },
 };
 
