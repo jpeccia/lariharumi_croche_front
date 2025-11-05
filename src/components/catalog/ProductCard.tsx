@@ -1,6 +1,7 @@
 import { Instagram } from 'lucide-react';
 import { Product } from '../../types/product';
 import { memo } from 'react';
+import { showInfo } from '../../utils/toast';
 import { useImageCache } from '../../hooks/useImageCache';
 import { ProductImageDisplay } from '../shared/ProductImageDisplay';
 import { usePromotionStore } from '../../store/promotionStore';
@@ -21,7 +22,27 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const discountPct = active ? getApplicableDiscount(promotion || undefined, basePrice) : 0;
   const discountedPrice = discountPct > 0 && !isNaN(basePrice) ? applyDiscount(basePrice, discountPct) : undefined;
 
-  const instagramUrl = `https://instagram.com/${instagramUsername}`;
+  // Link de DM do Instagram com mensagem pré-preenchida incluindo o nome do produto
+  const dmMessage = `Oi Lari! Adorei suas peças 😍 Gostaria de encomendar o "${product.name}". Podemos conversar sobre tamanho, cores e prazo?`;
+  const encoded = encodeURIComponent(dmMessage).replace(/%20/g, '+');
+  const instagramUrl = `https://ig.me/m/${instagramUsername}?text=${encoded}`;
+
+  const handleInstagramClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    try {
+      if (navigator?.clipboard?.writeText) {
+        navigator.clipboard.writeText(dmMessage)
+          .then(() => {
+            showInfo('Mensagem copiada! Cole no chat do Direct.');
+          })
+          .catch(() => {
+            // Silencia erro de clipboard e prossegue
+          });
+      }
+    } finally {
+      window.open(instagramUrl, '_blank', 'noopener');
+    }
+  };
 
   return (
     <div className={`group bg-white rounded-xl shadow-md hover:shadow-lg overflow-hidden relative transition-shadow duration-200 border ${active && discountPct > 0 ? 'border-pink-300' : 'border-gray-100'}`}>
@@ -59,6 +80,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
         {/* Botão de ação responsivo */}
         <a
           href={instagramUrl}
+          onClick={handleInstagramClick}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium transition-colors duration-200 text-xs sm:text-sm"

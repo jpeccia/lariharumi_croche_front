@@ -1,6 +1,7 @@
 
 import { Suspense, lazy } from 'react';
 import { Gift, Heart, MessageCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { showInfo } from '../utils/toast';
 import { DonationBox } from '../components/home/DonationBox';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { PromotionBanner } from '../components/shared/PromotionBanner';
@@ -65,7 +66,21 @@ function Home() {
             </a>
 
             <a 
-              href="https://www.instagram.com/larifazcroche/" 
+              href={`https://ig.me/m/larifazcroche?text=${encodeURIComponent('Oi Lari! Adorei suas peças 😍 Gostaria de encomendar uma peça. Podemos conversar sobre tamanho, cores e prazo?').replace(/%20/g, '+')}`}
+              onClick={(e) => {
+                e.preventDefault();
+                const message = 'Oi Lari! Adorei suas peças 😍 Gostaria de encomendar uma peça. Podemos conversar sobre tamanho, cores e prazo?';
+                const url = `https://ig.me/m/larifazcroche?text=${encodeURIComponent(message).replace(/%20/g, '+')}`;
+                try {
+                  if (navigator?.clipboard?.writeText) {
+                    navigator.clipboard.writeText(message)
+                      .then(() => showInfo('Mensagem copiada! Cole no chat do Direct.'))
+                      .catch(() => {});
+                  }
+                } finally {
+                  window.open(url, '_blank', 'noopener');
+                }
+              }}
               target="_blank" 
               rel="noopener noreferrer"
               className="group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105 transform"
