@@ -4,8 +4,6 @@ import { Gift, Heart, MessageCircle, ArrowRight, Sparkles } from 'lucide-react';
 import { DonationBox } from '../components/home/DonationBox';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { PromotionBanner } from '../components/shared/PromotionBanner';
-import { usePromotionStore } from '../store/promotionStore';
-import { useEffect } from 'react';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { SEOHead } from '../components/shared/SEOHead';
 
@@ -17,10 +15,6 @@ const Cat = lazy(() => import('../components/shared/KawaiiElements/Cat').then(mo
 
 function Home() {
   useMobileOptimization();
-  const initializePromotion = usePromotionStore((s) => s.initializeFromPublic);
-  useEffect(() => {
-    initializePromotion();
-  }, [initializePromotion]);
 
   return (
     <>
