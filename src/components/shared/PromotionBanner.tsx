@@ -82,7 +82,6 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
               progressiveColor={progressiveColor}
               globalPct={promotion.globalPercentage}
             />
-            <p className="mt-2 text-xs text-gray-600">Aplicamos o maior desconto entre o global e as regras progressivas.</p>
           </div>
         )}
 
