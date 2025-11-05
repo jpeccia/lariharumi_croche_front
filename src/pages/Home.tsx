@@ -1,12 +1,12 @@
 
 import { Suspense, lazy } from 'react';
 import { Gift, Heart, MessageCircle, ArrowRight, Sparkles } from 'lucide-react';
-import { showInfo } from '../utils/toast';
 import { DonationBox } from '../components/home/DonationBox';
 import { FloatingHearts } from '../components/shared/KawaiiElements/FloatingHearts';
 import { PromotionBanner } from '../components/shared/PromotionBanner';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { SEOHead } from '../components/shared/SEOHead';
+import { openIgDm } from '../utils/instagram';
 
 // Lazy loading para componentes Kawaii pesados
 const CuteBunny = lazy(() => import('../components/shared/KawaiiElements/CuteBunny').then(module => ({ default: module.CuteBunny })));
@@ -66,20 +66,10 @@ function Home() {
             </a>
 
             <a 
-              href={`https://ig.me/m/larifazcroche?text=${encodeURIComponent('Oi Lari! Adorei suas peças 😍 Gostaria de encomendar uma peça. Podemos conversar sobre tamanho, cores e prazo?').replace(/%20/g, '+')}`}
+              href={`https://ig.me/m/larifazcroche?text=${encodeURIComponent('Oi Lari! Adorei suas peças 😍 Gostaria de encomendar uma peça. Podemos conversar sobre tamanho, cores e prazo?')}`}
               onClick={(e) => {
                 e.preventDefault();
-                const message = 'Oi Lari! Adorei suas peças 😍 Gostaria de encomendar uma peça. Podemos conversar sobre tamanho, cores e prazo?';
-                const url = `https://ig.me/m/larifazcroche?text=${encodeURIComponent(message).replace(/%20/g, '+')}`;
-                try {
-                  if (navigator?.clipboard?.writeText) {
-                    navigator.clipboard.writeText(message)
-                      .then(() => showInfo('Mensagem copiada! Cole no chat do Direct.'))
-                      .catch(() => {});
-                  }
-                } finally {
-                  window.open(url, '_blank', 'noopener');
-                }
+                openIgDm('larifazcroche', 'Oi Lari! Adorei suas peças 😍 Gostaria de encomendar uma peça. Podemos conversar sobre tamanho, cores e prazo?');
               }}
               target="_blank" 
               rel="noopener noreferrer"
