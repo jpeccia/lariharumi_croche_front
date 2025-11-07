@@ -8,19 +8,28 @@ export function buildIgDmUrl(username: string, message?: string): string {
 
 export async function openIgDm(username: string, message?: string): Promise<void> {
   const url = buildIgDmUrl(username, message);
-  try {
-    if (message && typeof navigator !== 'undefined' && navigator.clipboard) {
-      await navigator.clipboard.writeText(message);
-      // Notifica o usuário para colar caso o texto não apareça automaticamente
-      try {
-        const { showInfo } = await import('./toast');
-        showInfo('Mensagem copiada! Se não aparecer, cole no Instagram.');
-      } catch {
-        // Ignora se não conseguir mostrar toast
-      }
-    }
-  } catch {
-    // Se copiar falhar, apenas segue abrindo o link
+
+  // Abre imediatamente para preservar o gesto do usuário (evita bloqueio em mobile)
+  const opened = window.open(url, '_blank', 'noopener');
+
+  // Fallback: se o pop-up for bloqueado, navega diretamente
+  if (!opened) {
+    window.location.href = url;
   }
-  window.open(url, '_blank', 'noopener');
+
+  // Tentativa de copiar a mensagem em segundo plano (não bloquear a abertura)
+  if (message && typeof navigator !== 'undefined' && navigator.clipboard) {
+    navigator.clipboard.writeText(message)
+      .then(async () => {
+        try {
+          const { showInfo } = await import('./toast');
+          showInfo('Mensagem copiada! Se não aparecer, cole no Instagram.');
+        } catch {
+          // Ignora se não conseguir mostrar toast
+        }
+      })
+      .catch(() => {
+        // Ignora falhas de cópia
+      });
+  }
 }
