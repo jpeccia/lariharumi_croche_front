@@ -34,6 +34,11 @@ const messages = [
     author: "Pedro",
     emoji: "🎉"
   },
+    {
+    message: "Eu adoreeei, ficou uma gracinha de coração muito obrigada pelo trabalho 🥹 Ficou muito fofo os detalhes que fez",
+    author: "Luana",
+    emoji: "💖"
+  },
   {
     message: "Recebi seu trabalhinho e ficou perfeito! Você é uma excelente artista com talento excepcional! Minha namorada também amou! Você vai muito longe com esse talento! 💖",
     author: "Rogério M.",
