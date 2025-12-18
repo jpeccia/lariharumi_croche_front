@@ -61,12 +61,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     clearError
   } = useAsyncUpload({
     productId: product?.ID || 0,
-    onComplete: (response) => {
-      console.log('Upload concluído:', response);
-      // Aqui você pode atualizar a lista de imagens do produto
+    onComplete: () => {
+      // Upload finalizado
     },
-    onError: (error) => {
-      console.error('Erro no upload:', error);
+    onError: () => {
+      // Erro tratado pelo hook
     }
   });
 
@@ -106,8 +105,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     try {
       await onSubmit(formData);
-    } catch (error) {
-      console.error('Erro ao salvar produto:', error);
+    } catch {
+      // Erro tratado pelo componente pai
     }
   };
 
@@ -303,9 +302,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               {isEditing && product ? (
                 <ProductImageManager
                   productId={product.ID}
-                  onImagesChange={(images) => {
-                    // Atualizar quando imagens mudarem
-                    console.log('Imagens atualizadas:', images);
+                  onImagesChange={() => {
+                    // Imagens atualizadas
                   }}
                 />
               ) : (

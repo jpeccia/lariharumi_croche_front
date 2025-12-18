@@ -30,42 +30,27 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      console.log('Tentando fazer login com:', data.email);
       const response = await authApi.login(data.email, data.password);
-      console.log('Resposta do backend:', response);
   
-      // O backend retorna o token
       const token = response.token;
 
       if (!token || typeof token !== 'string') {
-        console.error('Token inválido:', token);
         throw new Error('Token inválido');
       }
 
-      console.log('Token recebido:', token);
-      
-      // Decodifique o token JWT
       const decodedToken = jwtDecode<JwtPayload>(token);
-      console.log('Token decodificado:', decodedToken);
   
-      // Verifique o papel do usuário
       const isAdmin = decodedToken.role === 'ADMIN';
-      console.log('É admin?', isAdmin);
       
-      // Crie o objeto user a partir dos dados do token e email fornecido
       const user = {
-        ID: parseInt(decodedToken.sub), // Subject contém o ID do usuário
-        email: data.email, // Usamos o email fornecido no login
-        name: data.email.split('@')[0], // Nome temporário baseado no email
+        ID: parseInt(decodedToken.sub),
+        email: data.email,
+        name: data.email.split('@')[0],
         isAdmin: isAdmin
       };
-      
-      console.log('Objeto user criado:', user);
   
-      // Armazene os dados no Zustand
       setAuth(user, token);
   
-      // Rastrear conversão de login bem-sucedido
       trackConversion('login_success', undefined, { isAdmin });
       
       if (isAdmin) {
@@ -73,12 +58,9 @@ export function LoginForm() {
       } else {
         navigate('/');
       }
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch {
       showError('Erro de login, verifique suas credenciais.');
-      
-      // Rastrear erro de login
-      trackError(error as Error);
+      trackError(new Error('Login failed'));
     }
   };
   

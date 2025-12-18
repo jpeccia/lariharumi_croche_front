@@ -99,11 +99,9 @@ export function CategoryManagement({ onDataChange }: Readonly<CategoryManagement
     try {
       setIsSubmitting(true);
       
-      const response = await adminApi.createCategory({
+      await adminApi.createCategory({
         name: formData.name,
       });
-
-      console.log('Categoria criada com sucesso:', response);
 
       showProductSuccess('criada');
       loadCategories();
@@ -148,8 +146,7 @@ export function CategoryManagement({ onDataChange }: Readonly<CategoryManagement
     };
 
     try {
-      const response = await adminApi.updateCategory(editingCategory.ID, categoryData);
-      console.log('Categoria atualizada com sucesso:', response);
+      await adminApi.updateCategory(editingCategory.ID, categoryData);
 
       loadCategories();
       setEditingCategory(null);

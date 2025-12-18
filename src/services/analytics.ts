@@ -104,7 +104,6 @@ class AnalyticsService {
     };
 
     this.events.push(analyticsEvent);
-    console.log('📊 Analytics Event:', analyticsEvent);
   }
 
   // Rastrear visualizações de página
@@ -121,7 +120,6 @@ class AnalyticsService {
     };
 
     this.pageViews.push(pageViewEvent);
-    console.log('📄 Page View:', pageViewEvent);
   }
 
   // Rastrear conversões (compras, cadastros, etc.)
@@ -137,7 +135,6 @@ class AnalyticsService {
     };
 
     this.conversions.push(conversionEvent);
-    console.log('🎯 Conversion:', conversionEvent);
   }
 
   // Rastrear cliques
