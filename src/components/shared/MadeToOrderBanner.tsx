@@ -1,6 +1,11 @@
 import { Clock, Heart } from 'lucide-react';
+import { memo } from 'react';
 
-export function MadeToOrderBanner() {
+/**
+ * Static banner for made-to-order information.
+ * Memoized as it has no props and never needs to re-render.
+ */
+function MadeToOrderBannerComponent() {
   return (
     <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-lg p-4 mb-8">
       <div className="flex items-center gap-4">
@@ -20,3 +25,5 @@ export function MadeToOrderBanner() {
     </div>
   );
 }
+
+export const MadeToOrderBanner = memo(MadeToOrderBannerComponent);

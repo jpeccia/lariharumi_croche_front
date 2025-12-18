@@ -26,9 +26,8 @@ export default defineConfig({
           // Utilities
           'utils': ['jwt-decode', 'use-debounce'],
           // QR Code
-          'qr': ['qrcode.react'],
-          // Swiper
-          'swiper': ['swiper']
+          'qr': ['qrcode.react']
+          // Note: Swiper removed from manual chunks - auto-bundled when used
         }
       }
     },

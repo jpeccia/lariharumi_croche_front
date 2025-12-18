@@ -1,9 +1,13 @@
 import { Sparkles, Clock, ListOrdered } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { usePromotionStore } from '../../store/promotionStore';
 import { Promotion, buildMessageFromTemplate, formatCurrencyBRL, isPromotionActive } from '../../types/promotion';
 
-export function PromotionBanner() {
+/**
+ * Wrapper component that shows promotion banner only when active.
+ * Memoized to prevent re-renders.
+ */
+function PromotionBannerComponent() {
   const promotion = usePromotionStore((s) => s.promotion);
 
   if (!promotion || !isPromotionActive(promotion)) return null;
@@ -11,7 +15,13 @@ export function PromotionBanner() {
   return <PromotionBannerContent promotion={promotion} />;
 }
 
-export function PromotionBannerContent({ promotion }: { promotion: Promotion }) {
+export const PromotionBanner = memo(PromotionBannerComponent);
+
+/**
+ * Actual promotion banner content display.
+ * Memoized as it can be complex to render.
+ */
+function PromotionBannerContentComponent({ promotion }: { promotion: Promotion }) {
   const messageHtml = buildMessageFromTemplate(promotion);
   const highlightColor = promotion.highlightColor || '#f472b6';
   const titleColor = promotion.bannerTitleColor || highlightColor;
@@ -131,6 +141,8 @@ export function PromotionBannerContent({ promotion }: { promotion: Promotion }) 
     </div>
   );
 }
+
+export const PromotionBannerContent = memo(PromotionBannerContentComponent);
 
 function ConditionsList({ hasGlobal, rules, align, styleVariant, globalColor, progressiveColor, globalPct }: { hasGlobal: boolean; rules: Promotion['progressiveRules']; align: 'center' | 'left'; styleVariant: 'bullets' | 'lines'; globalColor: string; progressiveColor: string; globalPct?: number }) {
   if (styleVariant === 'lines') {

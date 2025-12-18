@@ -1,15 +1,27 @@
-import React from 'react';
+import { memo, useMemo } from 'react';
 
-export function FloatingHearts() {
+/**
+ * Generates stable random positions for floating heart animations.
+ * Uses useMemo to prevent recalculating positions on every render.
+ */
+function FloatingHeartsComponent() {
+  const hearts = useMemo(() => 
+    [...Array(6)].map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 5}s`,
+    })), 
+  []);
+
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[...Array(6)].map((_, i) => (
+      {hearts.map((heart) => (
         <div
-          key={i}
+          key={heart.id}
           className="absolute animate-float-heart"
           style={{
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
+            left: heart.left,
+            animationDelay: heart.delay,
             opacity: 0.3
           }}
         >
@@ -19,3 +31,5 @@ export function FloatingHearts() {
     </div>
   );
 }
+
+export const FloatingHearts = memo(FloatingHeartsComponent);

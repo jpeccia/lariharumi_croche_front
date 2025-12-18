@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo } from 'react';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -7,7 +7,11 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export function LoadingSpinner({ 
+/**
+ * Generic loading spinner component.
+ * Memoized to prevent re-renders with same props.
+ */
+function LoadingSpinnerComponent({ 
   size = 'md', 
   color = 'purple', 
   text,
@@ -58,8 +62,13 @@ export function LoadingSpinner({
   );
 }
 
-// Spinner com coração para páginas kawaii
-export function KawaiiLoadingSpinner({ text = 'Carregando...' }: { text?: string }) {
+export const LoadingSpinner = memo(LoadingSpinnerComponent);
+
+/**
+ * Kawaii-themed loading spinner with heart animation.
+ * Memoized to prevent re-renders with same props.
+ */
+function KawaiiLoadingSpinnerComponent({ text = 'Carregando...' }: { text?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-8">
       <div className="relative">
@@ -79,8 +88,13 @@ export function KawaiiLoadingSpinner({ text = 'Carregando...' }: { text?: string
   );
 }
 
-// Skeleton loader para cards
-export function CardSkeleton() {
+export const KawaiiLoadingSpinner = memo(KawaiiLoadingSpinnerComponent);
+
+/**
+ * Skeleton loader for card components.
+ * Memoized - no props means it never needs to re-render.
+ */
+function CardSkeletonComponent() {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-lg border border-purple-100 animate-pulse">
       <div className="flex items-center gap-4 mb-4">
@@ -99,8 +113,13 @@ export function CardSkeleton() {
   );
 }
 
-// Loading dots animados
-export function LoadingDots({ className = '' }: { className?: string }) {
+export const CardSkeleton = memo(CardSkeletonComponent);
+
+/**
+ * Animated loading dots.
+ * Memoized to prevent re-renders with same props.
+ */
+function LoadingDotsComponent({ className = '' }: { className?: string }) {
   return (
     <div className={`flex space-x-1 ${className}`}>
       <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
@@ -109,4 +128,6 @@ export function LoadingDots({ className = '' }: { className?: string }) {
     </div>
   );
 }
+
+export const LoadingDots = memo(LoadingDotsComponent);
 

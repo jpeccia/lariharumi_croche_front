@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Heart, Menu, X, Sparkles, Home, Grid3X3, Shield, Gift, MessageCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 
 interface NavItem {
   path: string;
@@ -16,7 +16,11 @@ const navItems: NavItem[] = [
   { path: '/contact', label: 'Contato', icon: MessageCircle },
 ];
 
-export default function Navbar() {
+/**
+ * Main navigation bar component.
+ * Memoized to prevent re-renders when parent components update.
+ */
+function NavbarComponent() {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -191,3 +195,5 @@ export default function Navbar() {
     </>
   );
 }
+
+export default memo(NavbarComponent);

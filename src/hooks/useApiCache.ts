@@ -116,7 +116,7 @@ export function useProductsCache(page = 1, limit = 10, categoryId: number | null
   return useApiCache<Product[] | PaginatedResponse<Product>>(
     key,
     () => publicApi.getProductsByPage(categoryId, config || { page, limit }),
-    { ttl: 2 * 60 * 1000 } // 2 minutos para produtos
+    { ttl: 5 * 60 * 1000 } // 5 minutos para produtos (aumentado de 2 para reduzir chamadas)
   );
 }
 
