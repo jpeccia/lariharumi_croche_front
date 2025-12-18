@@ -197,7 +197,7 @@ export function ProductImageDisplay({
               </div>
             </div>
             {discountPercentage && discountPercentage > 0 && (
-              <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg shadow-lg self-start">
+              <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg shadow-lg self-start animate-discount-pulse">
                 <span className="text-[10px] sm:text-xs font-bold">-{discountPercentage}% OFF</span>
               </div>
             )}
