@@ -39,8 +39,8 @@ function Home() {
             </Suspense>
           </div>
 
-          {/* Título Principal com gradiente animado */}
-          <h1 className="font-handwritten text-5xl sm:text-6xl lg:text-7xl mb-6 relative animate-text-gradient">
+          {/* Título Principal */}
+          <h1 className="font-handwritten text-5xl sm:text-6xl lg:text-7xl text-purple-800 mb-6 relative">
             Crochê da Lari
             <div className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6">
               <Suspense fallback={<div className="w-12 h-12 bg-pink-100 rounded-full animate-pulse"></div>}>
@@ -54,11 +54,11 @@ function Home() {
             Peças únicas e personalizadas, feitas à mão com muito carinho 💝
           </p>
 
-          {/* Botões Modernos com animações */}
+          {/* Botões Modernos */}
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
             <a 
               href="/catalog" 
-              className="group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 hover:shadow-lg btn-press shine-effect"
+              className="group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105 transform"
             >
               <Gift className="w-5 h-5" />
               <span>Ver Catálogo</span>

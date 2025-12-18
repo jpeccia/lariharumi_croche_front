@@ -27,7 +27,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
   const instagramUrl = `https://ig.me/m/${instagramUsername}?text=${encodeURIComponent(dmMessage)}`;
 
   return (
-    <div className={`group bg-white rounded-xl shadow-md overflow-hidden relative border card-hover-lift animate-card-enter ${active && discountPct > 0 ? 'border-pink-300' : 'border-gray-100'}`}>
+    <div className={`group bg-white rounded-xl shadow-md hover:shadow-lg overflow-hidden relative transition-shadow duration-200 border ${active && discountPct > 0 ? 'border-pink-300' : 'border-gray-100'}`}>
       {/* Container da imagem responsivo */}
       <ProductImageDisplay
         images={imageUrls}
@@ -43,20 +43,20 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
       {/* Conteúdo do card responsivo */}
       <div className="p-3 sm:p-4 relative z-10">
         <div className="mb-3">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-purple-700 transition-colors duration-300">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
             {product.name}
           </h3>
           <p className="text-gray-600 text-xs sm:text-sm leading-relaxed line-clamp-3">
             {product.description}
           </p>
           {active && discountPct > 0 && !isNaN(basePrice) && (
-            <p className="mt-2 text-[10px] sm:text-xs text-pink-500 font-medium animate-price-blink">
+            <p className="mt-2 text-[10px] sm:text-xs text-pink-500 font-medium">
               ✨ Promoção válida por tempo limitado
             </p>
           )}
         </div>
         
-        {/* Botão de ação responsivo com animação */}
+        {/* Botão de ação responsivo */}
         <a
           href={instagramUrl}
           onClick={(e) => {
@@ -65,7 +65,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
           }}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium text-xs sm:text-sm btn-press shine-effect"
+          className="inline-flex items-center justify-center gap-2 w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium transition-colors duration-200 text-xs sm:text-sm"
         >
           <Instagram size={14} className="sm:w-4 sm:h-4" />
           <span>Encomendar no Instagram</span>
