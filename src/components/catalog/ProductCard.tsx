@@ -32,7 +32,9 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
       <ProductImageDisplay
         images={imageUrls}
         productName={product.name}
-        priceRange={discountedPrice ? `${formatBRL(discountedPrice)} (de ${formatBRL(basePrice)})` : product.priceRange}
+        priceRange={discountedPrice ? formatBRL(discountedPrice) : formatBRL(basePrice)}
+        discountPercentage={discountPct > 0 ? discountPct : undefined}
+        originalPrice={discountPct > 0 && !isNaN(basePrice) ? formatBRL(basePrice) : undefined}
         isLoading={isLoading}
         error={error}
         className="rounded-t-xl"
@@ -48,14 +50,9 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
             {product.description}
           </p>
           {active && discountPct > 0 && !isNaN(basePrice) && (
-            <div className="mt-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm font-bold text-pink-600">{discountPct}% OFF</span>
-                <span className="text-xs sm:text-sm text-gray-500 line-through">{formatBRL(basePrice)}</span>
-                <span className="text-xs sm:text-sm text-green-700 font-semibold">{formatBRL(discountedPrice!)}</span>
-              </div>
-              <span className="text-[10px] text-gray-400">Promoção válida por tempo limitado</span>
-            </div>
+            <p className="mt-2 text-[10px] sm:text-xs text-pink-500 font-medium">
+              ✨ Promoção válida por tempo limitado
+            </p>
           )}
         </div>
         

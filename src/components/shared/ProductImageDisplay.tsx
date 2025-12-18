@@ -6,6 +6,8 @@ interface ProductImageDisplayProps {
   images: string[];
   productName: string;
   priceRange?: string;
+  discountPercentage?: number;
+  originalPrice?: string;
   isLoading?: boolean;
   error?: string | null;
   className?: string;
@@ -15,6 +17,8 @@ export function ProductImageDisplay({
   images,
   productName,
   priceRange,
+  discountPercentage,
+  originalPrice,
   isLoading = false,
   error = null,
   className = '',
@@ -181,10 +185,22 @@ export function ProductImageDisplay({
           <Maximize2 size={14} className="sm:w-4 sm:h-4" />
         </button>
 
-        {/* Price tag */}
+        {/* Price tag - Redesigned for better visibility */}
         {priceRange && (
-          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-purple-500 text-white px-2 py-1 sm:px-3 rounded-full shadow-lg">
-            <span className="text-[10px] sm:text-xs font-medium">{priceRange}</span>
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-1">
+            <div className="bg-white/95 backdrop-blur-sm text-purple-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl shadow-lg border border-purple-200/50">
+              <div className="flex items-center gap-2">
+                {discountPercentage && discountPercentage > 0 && originalPrice && (
+                  <span className="text-[10px] sm:text-xs text-gray-400 line-through">{originalPrice}</span>
+                )}
+                <span className="text-sm sm:text-base font-bold">{priceRange}</span>
+              </div>
+            </div>
+            {discountPercentage && discountPercentage > 0 && (
+              <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg shadow-lg self-start">
+                <span className="text-[10px] sm:text-xs font-bold">-{discountPercentage}% OFF</span>
+              </div>
+            )}
           </div>
         )}
 
