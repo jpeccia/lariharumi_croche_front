@@ -6,19 +6,25 @@ import { useCategoryImageCache } from '../../hooks/useImageCache';
 interface CategoryCardProps {
   readonly category: Category;
   readonly onClick: (categoryId: number) => void;
+  readonly onMouseEnter?: (categoryId: number) => void;
 }
 
-function CategoryCard({ category, onClick }: CategoryCardProps) {
-  // Usa o hook otimizado para carregar imagem da categoria (API pública)
+function CategoryCard({ category, onClick, onMouseEnter }: CategoryCardProps) {
   const { imageUrl: categoryImageUrl, isLoading, error } = useCategoryImageCache(category.ID, true);
-  
+
   const handleClick = useCallback(() => {
     onClick(category.ID);
   }, [onClick, category.ID]);
 
+  /** @description Fires prefetch callback when user hovers the card. */
+  const handleMouseEnter = useCallback(() => {
+    onMouseEnter?.(category.ID);
+  }, [onMouseEnter, category.ID]);
+
   return (
-    <div 
+    <div
       onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
       className="group cursor-pointer animate-slide-up"
     >
       <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-purple-100 overflow-hidden transition-all duration-300 hover:-translate-y-2">
@@ -46,7 +52,7 @@ function CategoryCard({ category, onClick }: CategoryCardProps) {
               />
               {/* Overlay gradiente */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
+
               {/* Ícone de decoração */}
               <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center">
@@ -56,7 +62,7 @@ function CategoryCard({ category, onClick }: CategoryCardProps) {
             </>
           )}
         </div>
-        
+
         <div className="p-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-xl font-bold text-purple-800 group-hover:text-purple-600 transition-colors duration-300">
@@ -64,13 +70,13 @@ function CategoryCard({ category, onClick }: CategoryCardProps) {
             </h3>
             <ArrowRight className="w-5 h-5 text-purple-400 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1" />
           </div>
-          
+
           {category.description && (
             <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
               {category.description}
             </p>
           )}
-          
+
           {/* Indicador de clique */}
           <div className="mt-4 flex items-center text-purple-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <span>Explorar peças</span>

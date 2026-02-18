@@ -39,19 +39,21 @@ function Catalog() {
   const [showOnlyDiscounted, setShowOnlyDiscounted] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+  const productsCacheRef = useRef<Map<string, { products: Product[]; pagination: PaginatedResponse<Product>['pagination'] | null; timestamp: number }>>(new Map());
+  const prefetchingRef = useRef<Set<string>>(new Set());
+
   // Hooks de otimização
   const mobileOptimization = useMobileOptimization();
   const performanceOptimization = usePerformanceOptimization();
-  const startRenderMeasurement = performanceOptimization?.startRenderMeasurement || (() => {});
-  const endRenderMeasurement = performanceOptimization?.endRenderMeasurement || (() => {});
+  const startRenderMeasurement = performanceOptimization?.startRenderMeasurement || (() => { });
+  const endRenderMeasurement = performanceOptimization?.endRenderMeasurement || (() => { });
   const createThrottledCallback = performanceOptimization?.createThrottledCallback || ((callback: any) => callback);
   const analytics = useAnalytics();
-  const trackPageView = analytics?.trackPageView || (() => {});
-  const trackClick = analytics?.trackClick || (() => {});
+  const trackPageView = analytics?.trackPageView || (() => { });
+  const trackClick = analytics?.trackClick || (() => { });
   const promotion = usePromotionStore((s) => s.promotion);
   const promoActive = isPromotionActive(promotion || undefined);
-  
+
   // Cache de categorias
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useCategoriesCache();
 
@@ -68,6 +70,19 @@ function Catalog() {
    * Supports fetching by category, by search query, or all products with pagination.
    */
   const fetchProducts = useCallback(async (categoryId: number | null, page: number = 1, searchQuery: string = '') => {
+    const CACHE_TTL_MS = 5 * 60 * 1000;
+    const cacheKey = searchQuery ? `search:${searchQuery}:${page}` : `cat:${categoryId ?? 'all'}:${page}`;
+
+    const cached = productsCacheRef.current.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      setProducts(cached.products);
+      setCurrentPage(page);
+      setPaginationInfo(cached.pagination);
+      setIsLoading(false);
+      setIsSearching(false);
+      return;
+    }
+
     abortControllerRef.current?.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -75,12 +90,12 @@ function Catalog() {
     try {
       setIsLoading(true);
       setIsSearching(!!searchQuery);
-  
+
       const config: PaginationConfig = {
         page: page,
         limit: 10,
       };
-      
+
       let response;
       if (searchQuery.trim()) {
         response = await publicApi.searchProducts(searchQuery, config);
@@ -89,10 +104,10 @@ function Catalog() {
       }
 
       if (controller.signal.aborted) return;
-      
+
       let productsFetched: Product[];
       let paginationInfo: PaginatedResponse<Product>['pagination'] | null = null;
-      
+
       if (response && typeof response === 'object' && 'data' in response && 'metadata' in response) {
         const apiResponse = response as { data: Product[]; metadata: any };
         productsFetched = apiResponse.data;
@@ -110,7 +125,7 @@ function Catalog() {
         paginationInfo = paginatedResponse.pagination;
       } else if (Array.isArray(response)) {
         productsFetched = response as Product[];
-        
+
         if (categoryId) {
           paginationInfo = null;
         } else {
@@ -127,22 +142,28 @@ function Catalog() {
         console.error('Resposta da API:', response);
         throw new Error('Formato de resposta inválido da API');
       }
-      
-      const activeProducts = productsFetched.filter(product => 
+
+      const activeProducts = productsFetched.filter(product =>
         !product.isDeleted && !product.deletedAt
       );
-  
-      const sortedProducts = [...activeProducts].sort((a, b) => 
+
+      const sortedProducts = [...activeProducts].sort((a, b) =>
         a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
       );
-  
+
+      productsCacheRef.current.set(cacheKey, {
+        products: sortedProducts,
+        pagination: paginationInfo,
+        timestamp: Date.now(),
+      });
+
       setProducts(sortedProducts);
       setCurrentPage(page);
       setPaginationInfo(paginationInfo);
-      
+
       const productIds = sortedProducts.map((product: Product) => product.ID);
       preloadImages(productIds, true);
-      
+
     } catch (error: unknown) {
       if (controller.signal.aborted) return;
       console.error('Erro ao buscar produtos:', error);
@@ -154,9 +175,9 @@ function Catalog() {
       }
     }
   }, []);
-  
-  
-  
+
+
+
 
   useEffect(() => {
     startRenderMeasurement();
@@ -189,6 +210,61 @@ function Catalog() {
     setSelectedCategory(categoryId);
     trackClick('category', 'catalog');
   }, [trackClick]);
+
+  /**
+   * Prefetches products for a category in the background when the user hovers a CategoryCard.
+   * Silently populates the cache so the click fetch returns instantly from cache.
+   */
+  const prefetchCategory = useCallback(async (categoryId: number) => {
+    const CACHE_TTL_MS = 5 * 60 * 1000;
+    const cacheKey = `cat:${categoryId}:1`;
+
+    if (productsCacheRef.current.has(cacheKey) && Date.now() - (productsCacheRef.current.get(cacheKey)?.timestamp ?? 0) < CACHE_TTL_MS) return;
+    if (prefetchingRef.current.has(cacheKey)) return;
+
+    prefetchingRef.current.add(cacheKey);
+    try {
+      const response = await publicApi.getProductsByPage(categoryId, { page: 1, limit: 10 });
+      let productsFetched: Product[] = [];
+      let paginationResult: PaginatedResponse<Product>['pagination'] | null = null;
+
+      if (response && typeof response === 'object' && 'data' in response && 'metadata' in response) {
+        const apiResponse = response as { data: Product[]; metadata: any };
+        productsFetched = apiResponse.data;
+        paginationResult = {
+          page: apiResponse.metadata.page || 1,
+          limit: apiResponse.metadata.limit || 10,
+          total: apiResponse.metadata.total || productsFetched.length,
+          totalPages: apiResponse.metadata.totalPages || Math.ceil(productsFetched.length / 10),
+          hasNext: apiResponse.metadata.hasNext || false,
+          hasPrev: false
+        };
+      } else if (response && typeof response === 'object' && 'data' in response && 'pagination' in response) {
+        const paginatedResponse = response as PaginatedResponse<Product>;
+        productsFetched = paginatedResponse.data;
+        paginationResult = paginatedResponse.pagination;
+      } else if (Array.isArray(response)) {
+        productsFetched = response as Product[];
+        paginationResult = null;
+      }
+
+      const activeProducts = productsFetched.filter(p => !p.isDeleted && !p.deletedAt);
+      const sortedProducts = [...activeProducts].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+
+      productsCacheRef.current.set(cacheKey, {
+        products: sortedProducts,
+        pagination: paginationResult,
+        timestamp: Date.now(),
+      });
+
+      const productIds = sortedProducts.map((p: Product) => p.ID);
+      preloadImages(productIds, true);
+    } catch {
+      /* Prefetch silently fails */
+    } finally {
+      prefetchingRef.current.delete(cacheKey);
+    }
+  }, []);
 
   /** @description Clears the selected category to show all products. */
   const handleShowAllProducts = useCallback(() => {
@@ -236,7 +312,7 @@ function Catalog() {
       viewProductCatalogRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [selectedCategory]);
-  
+
   return (
     <PageTransition>
       <SEOHead
@@ -248,7 +324,7 @@ function Catalog() {
       />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
         <FloatingHearts />
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="relative">
             {/* Elemento decorativo */}
@@ -257,7 +333,7 @@ function Catalog() {
                 <Stitch />
               </Suspense>
             </div>
-            
+
             {/* Banner */}
             <FadeIn delay={100}>
               {promoActive ? <PromotionBanner /> : <MadeToOrderBanner />}
@@ -293,12 +369,12 @@ function Catalog() {
                   <p className="text-gray-600">Escolha uma categoria para ver as peças</p>
                 </div>
 
-                      {categoriesLoading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                          {Array.from({ length: 4 }).map((_, index) => (
-                            <SkeletonCategoryCard key={index} />
-                          ))}
-                        </div>
+                {categoriesLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <SkeletonCategoryCard key={index} />
+                    ))}
+                  </div>
                 ) : categoriesError ? (
                   <div className="text-center py-12">
                     <div className="bg-white rounded-2xl p-8 shadow-lg border border-red-100 max-w-md mx-auto">
@@ -306,8 +382,8 @@ function Catalog() {
                         <span className="text-2xl">😔</span>
                       </div>
                       <p className="text-red-600 mb-4 font-medium">Erro ao carregar categorias</p>
-                      <button 
-                        onClick={() => window.location.reload()} 
+                      <button
+                        onClick={() => window.location.reload()}
                         className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                       >
                         Tentar novamente
@@ -321,6 +397,7 @@ function Catalog() {
                         <CategoryCard
                           category={category}
                           onClick={() => handleCategoryClick(category.ID)}
+                          onMouseEnter={() => prefetchCategory(category.ID)}
                         />
                       </div>
                     ))}
@@ -332,9 +409,9 @@ function Catalog() {
             {/* Barra de Busca e Filtros */}
             <CascadeAnimation delay={500}>
               <div className="bg-white rounded-3xl p-6 shadow-lg border border-purple-100 mb-8">
-              <div className="flex flex-col lg:flex-row gap-4 items-center">
-                {/* Campo de Busca */}
-                <div className="flex-1 relative">
+                <div className="flex flex-col lg:flex-row gap-4 items-center">
+                  {/* Campo de Busca */}
+                  <div className="flex-1 relative">
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
@@ -375,21 +452,19 @@ function Catalog() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setViewMode('grid')}
-                      className={`p-2 rounded-lg transition-colors ${
-                        viewMode === 'grid' 
-                          ? 'bg-purple-100 text-purple-600' 
+                      className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
+                          ? 'bg-purple-100 text-purple-600'
                           : 'text-gray-400 hover:text-gray-600'
-                      }`}
+                        }`}
                     >
                       <Grid className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`p-2 rounded-lg transition-colors ${
-                        viewMode === 'list' 
-                          ? 'bg-purple-100 text-purple-600' 
+                      className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
+                          ? 'bg-purple-100 text-purple-600'
                           : 'text-gray-400 hover:text-gray-600'
-                      }`}
+                        }`}
                     >
                       <List className="w-5 h-5" />
                     </button>
@@ -417,11 +492,11 @@ function Catalog() {
                   )}
                   <div>
                     <h2 className="font-handwritten text-3xl sm:text-4xl text-purple-800">
-                      {searchTerm 
+                      {searchTerm
                         ? `Resultados para "${searchTerm}"`
                         : selectedCategory
-                        ? categories.find((c) => c.ID === selectedCategory)?.name
-                        : 'Todas as Peças'}
+                          ? categories.find((c) => c.ID === selectedCategory)?.name
+                          : 'Todas as Peças'}
                     </h2>
                     {paginationInfo && (
                       <p className="text-gray-600 text-sm mt-1">
@@ -435,12 +510,11 @@ function Catalog() {
 
             {/* Grid de Produtos */}
             <CascadeAnimation delay={700}>
-              <div 
-                className={`${
-                  viewMode === 'grid' 
-                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
+              <div
+                className={`${viewMode === 'grid'
+                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
                     : 'space-y-4'
-                }`} 
+                  }`}
                 ref={viewProductCatalogRef}
               >
                 {(() => {
@@ -454,19 +528,19 @@ function Catalog() {
                       </div>
                     );
                   }
-                  
-                        if (isLoading && products.length === 0) {
-                          return (
-                            <div className="col-span-full">
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {Array.from({ length: 8 }).map((_, index) => (
-                                  <SkeletonProductCard key={index} />
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        }
-                  
+
+                  if (isLoading && products.length === 0) {
+                    return (
+                      <div className="col-span-full">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                          {Array.from({ length: 8 }).map((_, index) => (
+                            <SkeletonProductCard key={index} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+
                   if (products.length === 0) {
                     return (
                       <div className="col-span-full text-center py-12">
@@ -475,13 +549,13 @@ function Catalog() {
                             <span className="text-2xl">🔍</span>
                           </div>
                           <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                            {searchTerm 
+                            {searchTerm
                               ? `Nenhum produto encontrado para "${searchTerm}"`
                               : 'Nenhum produto encontrado'
                             }
                           </h3>
                           <p className="text-gray-600 text-sm mb-4">
-                            {searchTerm 
+                            {searchTerm
                               ? 'Tente buscar por outro termo ou limpar a busca'
                               : 'Tente ajustar os filtros ou buscar por outro termo'
                             }
@@ -498,7 +572,7 @@ function Catalog() {
                       </div>
                     );
                   }
-                  
+
                   return products
                     .filter((p) => {
                       if (!showOnlyDiscounted) return true;
@@ -507,13 +581,13 @@ function Catalog() {
                       return promoActive && getApplicableDiscount(promotion || undefined, basePrice) > 0;
                     })
                     .map((product, index) => (
-                    <div key={product.ID} style={{ animationDelay: `${800 + index * 50}ms` }}>
-                      <ProductCard
-                        product={product}
-                        instagramUsername="larifazcroche"
-                      />
-                    </div>
-                  ));
+                      <div key={product.ID} style={{ animationDelay: `${800 + index * 50}ms` }}>
+                        <ProductCard
+                          product={product}
+                          instagramUsername="larifazcroche"
+                        />
+                      </div>
+                    ));
                 })()}
               </div>
             </CascadeAnimation>
@@ -534,7 +608,7 @@ function Catalog() {
                       className="justify-center"
                     />
                   </div>
-                  
+
                   {/* Paginação compacta para mobile */}
                   <div className="sm:hidden">
                     <CompactPagination
