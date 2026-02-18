@@ -60,7 +60,7 @@ const messages = [
     emoji: "💝"
   },
   {
-    message: "AMIGA FICOU MUITO LINDO TA PERFEITO AMEI MUITO. Vou divulgar horrores pq ficou mt lindo",
+    message: "AMIGA FICOU MUITO LINDO TA PERFEITO AMEI MUITO. Amo seu trabalho e confio em vc 100%, Vou divulgar horrores pq ficou mt lindo",
     author: "Giovana Cavalheiro",
     emoji: "🌈"
   },
@@ -216,8 +216,8 @@ export function DonationPage() {
                   <button
                     onClick={copyPixKey}
                     className={`p-2 rounded-lg transition-colors duration-200 ${copiedPix
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                      ? 'bg-green-100 text-green-600'
+                      : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
                       }`}
                   >
                     {copiedPix ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
@@ -293,8 +293,8 @@ export function DonationPage() {
                   key={index}
                   onClick={() => setCurrentPage(index)}
                   className={`w-4 h-4 rounded-full transition-all duration-300 ${index === currentPage
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 scale-125 shadow-md'
-                      : 'bg-gray-300 hover:bg-gray-400 hover:scale-110'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 scale-125 shadow-md'
+                    : 'bg-gray-300 hover:bg-gray-400 hover:scale-110'
                     }`}
                 />
               ))}
