@@ -33,9 +33,12 @@ function Catalog() {
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationInfo, setPaginationInfo] = useState<PaginatedResponse<Product>['pagination'] | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [inputValue, setInputValue] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showOnlyDiscounted, setShowOnlyDiscounted] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Hooks de otimização
   const mobileOptimization = useMobileOptimization();
@@ -60,9 +63,15 @@ function Catalog() {
     }
   }, [categories, categoriesLoading]);
 
+  /**
+   * Fetches products from the API, cancelling any in-flight request via AbortController.
+   * Supports fetching by category, by search query, or all products with pagination.
+   */
   const fetchProducts = useCallback(async (categoryId: number | null, page: number = 1, searchQuery: string = '') => {
-    if (isLoading) return;
-  
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       setIsLoading(true);
       setIsSearching(!!searchQuery);
@@ -74,19 +83,17 @@ function Catalog() {
       
       let response;
       if (searchQuery.trim()) {
-        // Usar busca se há termo de pesquisa
         response = await publicApi.searchProducts(searchQuery, config);
       } else {
-        // Usar listagem normal
         response = await publicApi.getProductsByPage(categoryId, config);
       }
+
+      if (controller.signal.aborted) return;
       
-      // Compatibilidade: verificar diferentes estruturas de resposta
       let productsFetched: Product[];
       let paginationInfo: PaginatedResponse<Product>['pagination'] | null = null;
       
       if (response && typeof response === 'object' && 'data' in response && 'metadata' in response) {
-        // Nova estrutura com data e metadata (lista geral paginada)
         const apiResponse = response as { data: Product[]; metadata: any };
         productsFetched = apiResponse.data;
         paginationInfo = {
@@ -98,19 +105,15 @@ function Catalog() {
           hasPrev: apiResponse.metadata.hasPrev || page > 1
         };
       } else if (response && typeof response === 'object' && 'data' in response && 'pagination' in response) {
-        // Estrutura PaginatedResponse
         const paginatedResponse = response as PaginatedResponse<Product>;
         productsFetched = paginatedResponse.data;
         paginationInfo = paginatedResponse.pagination;
       } else if (Array.isArray(response)) {
-        // Array simples (produtos por categoria ou busca sem paginação)
         productsFetched = response as Product[];
         
         if (categoryId) {
-          // Produtos por categoria: sem paginação
           paginationInfo = null;
         } else {
-          // Busca ou lista geral: criar paginação
           paginationInfo = {
             page: page,
             limit: config.limit,
@@ -125,12 +128,10 @@ function Catalog() {
         throw new Error('Formato de resposta inválido da API');
       }
       
-      // Filtrar produtos deletados (soft delete) - apenas se o campo existir
       const activeProducts = productsFetched.filter(product => 
         !product.isDeleted && !product.deletedAt
       );
   
-      // Ordenar produtos por nome em ordem alfabética (criar novo array)
       const sortedProducts = [...activeProducts].sort((a, b) => 
         a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
       );
@@ -139,87 +140,95 @@ function Catalog() {
       setCurrentPage(page);
       setPaginationInfo(paginationInfo);
       
-      // Pré-carrega imagens dos produtos da página atual (API pública)
       const productIds = sortedProducts.map((product: Product) => product.ID);
       preloadImages(productIds, true);
       
-    } catch (error) {
+    } catch (error: unknown) {
+      if (controller.signal.aborted) return;
       console.error('Erro ao buscar produtos:', error);
       showProductLoadError();
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+        setIsSearching(false);
+      }
     }
-  }, [isLoading]);
+  }, []);
   
   
   
 
-  // Carregar produtos apenas após categorias estarem carregadas
   useEffect(() => {
     startRenderMeasurement();
     trackPageView('catalog');
     endRenderMeasurement('Catalog');
   }, [startRenderMeasurement, endRenderMeasurement, trackPageView]);
 
-  // Carregar produtos iniciais após categorias estarem prontas
+  /**
+   * Single consolidated effect that reacts to category, search, or initial load changes.
+   * Replaces three separate useEffects to prevent race conditions and stale closures.
+   */
   useEffect(() => {
-    if (categoriesLoaded && !isLoading) {
-      setCurrentPage(1);
-      fetchProducts(selectedCategory, 1, searchTerm);
-    }
-  }, [categoriesLoaded]);
+    if (!categoriesLoaded) return;
+    setCurrentPage(1);
+    fetchProducts(selectedCategory, 1, searchTerm);
+  }, [categoriesLoaded, selectedCategory, searchTerm, fetchProducts]);
 
-  // Carregar produtos quando categoria muda (apenas se categorias já carregaram)
+  /**
+   * Cleanup: abort in-flight requests and clear debounce timer on unmount.
+   */
   useEffect(() => {
-    if (categoriesLoaded) {
-      setCurrentPage(1);
-      fetchProducts(selectedCategory, 1, searchTerm);
-    }
-  }, [selectedCategory]);
+    return () => {
+      abortControllerRef.current?.abort();
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, []);
 
-  // Carregar produtos quando termo de busca muda
-  useEffect(() => {
-    if (categoriesLoaded) {
-      setCurrentPage(1);
-      fetchProducts(selectedCategory, 1, searchTerm);
-    }
-  }, [searchTerm]);
-  
-  
-
-  // Callbacks otimizados
-  const handleCategoryClick = createThrottledCallback((categoryId: number) => {
+  /** @description Selects a category and lets the consolidated effect trigger the fetch. */
+  const handleCategoryClick = useCallback((categoryId: number) => {
     setSelectedCategory(categoryId);
     trackClick('category', 'catalog');
-  }, 300);
+  }, [trackClick]);
 
-  const handleShowAllProducts = createThrottledCallback(() => {
+  /** @description Clears the selected category to show all products. */
+  const handleShowAllProducts = useCallback(() => {
     setSelectedCategory(null);
     trackClick('show_all_products', 'catalog');
-  }, 300);
+  }, [trackClick]);
 
-  const handlePageChange = createThrottledCallback((page: number) => {
+  /** @description Handles pagination: fetches products for the given page. */
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     fetchProducts(selectedCategory, page, searchTerm);
     trackClick('page_change', 'catalog');
-    
-    // Scroll para o topo dos produtos
     viewProductCatalogRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, 300);
+  }, [fetchProducts, selectedCategory, searchTerm, trackClick]);
 
-  const handleSearch = createThrottledCallback((query: string) => {
-    setSearchTerm(query);
-    setCurrentPage(1);
-    fetchProducts(selectedCategory, 1, query);
-    trackClick('search', 'catalog');
-  }, 500);
+  /**
+   * Debounced search handler. Updates the input display value immediately
+   * and only triggers the actual search (sets searchTerm) after 500ms and
+   * when the query has at least 3 characters (or is cleared).
+   */
+  const handleSearchInput = useCallback((query: string) => {
+    setInputValue(query);
 
-  const handleClearSearch = createThrottledCallback(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+    debounceTimerRef.current = setTimeout(() => {
+      if (query.length >= 3 || query.length === 0) {
+        setSearchTerm(query);
+        trackClick('search', 'catalog');
+      }
+    }, 500);
+  }, [trackClick]);
+
+  /** @description Clears both the input display and the search term. */
+  const handleClearSearch = useCallback(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    setInputValue('');
     setSearchTerm('');
-    setCurrentPage(1);
-    fetchProducts(selectedCategory, 1, '');
     trackClick('clear_search', 'catalog');
-  }, 300);
+  }, [trackClick]);
 
 
   useEffect(() => {
@@ -330,12 +339,12 @@ function Catalog() {
                       <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
                         type="text"
-                        placeholder="Buscar peças de crochê..."
-                        value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
+                        placeholder="Buscar peças de crochê (mín. 3 letras)..."
+                        value={inputValue}
+                        onChange={(e) => handleSearchInput(e.target.value)}
                         className="w-full pl-12 pr-12 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                       />
-                      {searchTerm && (
+                      {inputValue && (
                         <button
                           onClick={handleClearSearch}
                           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -350,6 +359,13 @@ function Catalog() {
                       <div className="mt-2 text-center">
                         <span className="text-sm text-purple-600 font-medium animate-pulse">
                           🔍 Buscando por "{searchTerm}"...
+                        </span>
+                      </div>
+                    )}
+                    {inputValue.length > 0 && inputValue.length < 3 && (
+                      <div className="mt-2 text-center">
+                        <span className="text-sm text-gray-400">
+                          Digite mais {3 - inputValue.length} letra{3 - inputValue.length > 1 ? 's' : ''} para buscar
                         </span>
                       </div>
                     )}
