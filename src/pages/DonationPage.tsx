@@ -34,7 +34,7 @@ const messages = [
     author: "Pedro",
     emoji: "🎉"
   },
-    {
+  {
     message: "Eu adoreeei, ficou uma gracinha de coração muito obrigada pelo trabalho 🥹 Ficou muito fofo os detalhes que fez",
     author: "Luana",
     emoji: "💖"
@@ -60,8 +60,8 @@ const messages = [
     emoji: "💝"
   },
   {
-    message: "Cada peça sua é como um abraço de fios! Você transforma simples linhas em sonhos coloridos! Obrigada por espalhar tanta alegria! 🧶✨",
-    author: "Cliente Feliz",
+    message: "AMIGA FICOU MUITO LINDO TA PERFEITO AMEI MUITO. Vou divulgar horrores pq ficou mt lindo",
+    author: "Giovana Cavalheiro",
     emoji: "🌈"
   },
   {
@@ -114,12 +114,12 @@ export function DonationPage() {
     }
   };
 
-  
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <FloatingHearts />
-      
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header Section */}
         <div className="relative text-center mb-16">
@@ -139,14 +139,14 @@ export function DonationPage() {
           <div className="mb-8">
             <KawaiiMascot />
           </div>
-          
+
           <h2 className="font-handwritten text-4xl sm:text-5xl lg:text-6xl text-purple-800 mb-4 flex items-center justify-center gap-3">
             Caixinha Solidária da Lari!
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
           </h2>
-          
+
           <p className="font-kawaii text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Ooi! Se você se encantou com meu trabalho e quer me ajudar a continuar criando peças únicas cheias de amor e magia crochetada, fique à vontade para contribuir! 
+            Ooi! Se você se encantou com meu trabalho e quer me ajudar a continuar criando peças únicas cheias de amor e magia crochetada, fique à vontade para contribuir!
             Cada doação me incentiva a seguir transformando fios em sonhos! ✨🧶💕
           </p>
         </div>
@@ -188,11 +188,11 @@ export function DonationPage() {
                   <Heart className="w-8 h-8 text-purple-600" />
                 </div>
               </div>
-              
+
               <h3 className="text-2xl font-bold text-purple-800 mb-4">
                 Doação de R$ {selectedAmount},00 💖
               </h3>
-              
+
               <p className="text-gray-600 mb-6">
                 Escaneie o QR Code ou copie a chave PIX para fazer sua doação
               </p>
@@ -215,11 +215,10 @@ export function DonationPage() {
                   </code>
                   <button
                     onClick={copyPixKey}
-                    className={`p-2 rounded-lg transition-colors duration-200 ${
-                      copiedPix 
-                        ? 'bg-green-100 text-green-600' 
+                    className={`p-2 rounded-lg transition-colors duration-200 ${copiedPix
+                        ? 'bg-green-100 text-green-600'
                         : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
-                    }`}
+                      }`}
                   >
                     {copiedPix ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                   </button>
@@ -293,11 +292,10 @@ export function DonationPage() {
                 <button
                   key={index}
                   onClick={() => setCurrentPage(index)}
-                  className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                    index === currentPage 
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 scale-125 shadow-md' 
+                  className={`w-4 h-4 rounded-full transition-all duration-300 ${index === currentPage
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 scale-125 shadow-md'
                       : 'bg-gray-300 hover:bg-gray-400 hover:scale-110'
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -316,7 +314,7 @@ export function DonationPage() {
               Muito Obrigada pelo Seu Apoio! 💖
             </h4>
             <p className="font-kawaii text-lg text-gray-600 leading-relaxed mb-4">
-              Cada contribuição é como um abraço quentinho que me incentiva a continuar criando peças únicas cheias de amor e magia crochetada! 
+              Cada contribuição é como um abraço quentinho que me incentiva a continuar criando peças únicas cheias de amor e magia crochetada!
               Com seu apoio, posso investir em materiais de qualidade e participar de feirinhas para levar meu trabalho para mais pessoas! ✨🧶
             </p>
             <p className="text-purple-600 font-medium">
