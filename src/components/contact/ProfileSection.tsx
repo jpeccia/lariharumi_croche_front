@@ -17,22 +17,22 @@ export function ProfileSection() {
             <Sparkles className="w-4 h-4 text-white" />
           </div>
         </div>
-        
+
         <div className="flex-1 text-center md:text-left">
           <h3 className="font-handwritten text-3xl text-purple-800 mb-4">
             Olá! Sou a Larissa 💖
           </h3>
-          
+
           <div className="font-kawaii prose text-gray-600 space-y-4">
             <p className="text-lg leading-relaxed">
-              Bem vindo! Sou a Larissa, tenho 21 aninhos, 
-              moro em Cravinhos e sou estudante de Engenharia Elétrica no IFSP.  
-              Há mais ou menos 1 ano comecei minha jornada com o crochê e 
+              Bem vindo! Sou a Larissa, tenho 22 aninhos,
+              moro em Cravinhos e sou estudante de Engenharia Elétrica no IFSP.
+              Há mais ou menos 2 anos comecei minha jornada com o crochê e
               desde então venho me apaixonando e me aventurando cada vez mais por essa arte! 🌻💫
             </p>
             <p className="text-lg leading-relaxed">
-              Cada peça que crio é única, feita com todo o cuidado e atenção aos detalhes, 
-              especialmente para você! ♡ 
+              Cada peça que crio é única, feita com todo o cuidado e atenção aos detalhes,
+              especialmente para você! ♡
               Acredito que o artesanato tem o poder de transformar momentos em algo ainda mais especial.
             </p>
           </div>
