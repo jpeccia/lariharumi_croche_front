@@ -42,14 +42,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     categoryId: product?.categoryId || categories[0]?.ID || 1,
     images: []
   });
-  
+
   const [isEditing, setIsEditing] = useState(!!product);
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Hook para upload assíncrono
   const {
     uploadFiles,
@@ -98,7 +98,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -112,7 +112,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleInputChange = (field: keyof ProductFormData, value: string | number | File[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Limpar erro do campo quando usuário começar a digitar
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -126,7 +126,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleImageEditorSave = (editedImage: File) => {
     // Substituir a imagem editada na lista
-    const updatedImages = formData.images.map(img => 
+    const updatedImages = formData.images.map(img =>
       img === imageToEdit ? editedImage : img
     );
     handleInputChange('images', updatedImages);
@@ -182,7 +182,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   <Sparkles className="h-5 w-5 mr-2" />
                   Informações Básicas
                 </h3>
-                
+
                 <div className="space-y-4">
                   {/* Nome */}
                   <div>
@@ -194,11 +194,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       type="text"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        errors.name 
-                          ? 'border-red-300 bg-red-50' 
+                      className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 ${errors.name
+                          ? 'border-red-300 bg-red-50'
                           : 'border-gray-200 focus:border-purple-500'
-                      }`}
+                        }`}
                       placeholder="Ex: Amigurumi Cinnamoroll"
                     />
                     {errors.name && (
@@ -219,11 +218,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       rows={6}
-                      className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y ${
-                        errors.description 
-                          ? 'border-red-300 bg-red-50' 
+                      className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y ${errors.description
+                          ? 'border-red-300 bg-red-50'
                           : 'border-gray-200 focus:border-purple-500'
-                      }`}
+                        }`}
                       placeholder="Descreva o produto em detalhes: materiais utilizados, tamanho, cores, características especiais, cuidados, etc..."
                     />
                     {errors.description && (
@@ -248,11 +246,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                         min="0"
                         value={formData.priceRange}
                         onChange={(e) => handleInputChange('priceRange', e.target.value)}
-                        className={`w-full pl-10 pr-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                          errors.priceRange 
-                            ? 'border-red-300 bg-red-50' 
+                        className={`w-full pl-10 pr-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 ${errors.priceRange
+                            ? 'border-red-300 bg-red-50'
                             : 'border-gray-200 focus:border-purple-500'
-                        }`}
+                          }`}
                         placeholder="0,00"
                       />
                     </div>
@@ -273,11 +270,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       id="categoryId"
                       value={formData.categoryId}
                       onChange={(e) => handleInputChange('categoryId', Number(e.target.value))}
-                      className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        errors.categoryId 
-                          ? 'border-red-300 bg-red-50' 
+                      className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 ${errors.categoryId
+                          ? 'border-red-300 bg-red-50'
                           : 'border-gray-200 focus:border-purple-500'
-                      }`}
+                        }`}
                     >
                       <option value="">Selecione uma categoria</option>
                       {categories.map((category) => (
@@ -312,10 +308,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     <ImageIcon className="h-5 w-5 mr-2" />
                     Imagens do Produto
                   </h3>
-                  
+
                   <EnhancedImageUpload
                     onImagesChange={(images) => handleInputChange('images', images)}
-                    maxImages={5}
+                    maxImages={100}
                   />
                 </div>
               )}

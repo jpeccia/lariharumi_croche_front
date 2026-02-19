@@ -10,7 +10,7 @@ interface EnhancedImageUploadProps {
 
 export const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
   onImagesChange,
-  maxImages = 5,
+  maxImages = 100,
   className = ''
 }) => {
   const [images, setImages] = useState<File[]>([]);
@@ -22,7 +22,7 @@ export const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    
+
     if (images.length + imageFiles.length > maxImages) {
       alert(`Máximo de ${maxImages} imagens permitidas`);
       return;
@@ -30,18 +30,18 @@ export const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
 
     const newImages = [...images, ...imageFiles];
     setImages(newImages);
-    
+
     // Criar previews
     const newPreviews = imageFiles.map(file => URL.createObjectURL(file));
     setPreviews(prev => [...prev, ...newPreviews]);
-    
+
     onImagesChange(newImages);
   };
 
   const removeImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
     const newPreviews = previews.filter((_, i) => i !== index);
-    
+
     setImages(newImages);
     setPreviews(newPreviews);
     onImagesChange(newImages);
@@ -80,7 +80,7 @@ export const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
           Imagens do Produto
         </label>
         <span className="text-sm text-gray-500">
-          {images.length}/{maxImages} imagens
+          {images.length} {images.length === 1 ? 'imagem' : 'imagens'} (sem limite)
         </span>
       </div>
 
@@ -119,7 +119,7 @@ export const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
                   className="w-full h-full object-cover"
                 />
               </div>
-              
+
               {/* Overlay com ações */}
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-2">
