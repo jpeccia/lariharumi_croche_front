@@ -7,7 +7,7 @@ export function CustomOrderInfo() {
         Encomendas
         <Sparkles className="w-6 h-6 text-yellow-400" />
       </h3>
-      
+
       <div className="space-y-6 font-kawaii">
         {/* Como fazer encomenda */}
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
@@ -18,13 +18,13 @@ export function CustomOrderInfo() {
             <div>
               <h4 className="font-bold text-purple-800 text-lg mb-2">Como fazer sua encomenda:</h4>
               <p className="text-gray-700 leading-relaxed">
-                Entre em contato pelo Instagram <span className="font-bold text-purple-600">@larifazcroche</span> 
+                Entre em contato pelo Instagram <span className="font-bold text-purple-600">@larifazcroche </span>
                 e me conte sobre sua ideia! Vamos conversar sobre tamanho, cores, prazo e todos os detalhes especiais.
               </p>
             </div>
           </div>
         </div>
-        
+
         {/* Prazos */}
         <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-6 border border-pink-100">
           <div className="flex items-start gap-4 mb-4">
