@@ -13,6 +13,7 @@ interface SEOHeadProps {
   modifiedTime?: string;
   section?: string;
   tags?: string[];
+  noIndex?: boolean;
 }
 
 export function SEOHead({
@@ -26,7 +27,8 @@ export function SEOHead({
   publishedTime,
   modifiedTime,
   section,
-  tags
+  tags,
+  noIndex = false
 }: SEOHeadProps) {
   const fullTitle = title.includes('Crochê da Lari') ? title : `${title} | Crochê da Lari`;
   const fullUrl = url ? `https://larifazcroche.vercel.app${url}` : 'https://larifazcroche.vercel.app';
@@ -39,9 +41,19 @@ export function SEOHead({
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords.join(', ')} />
       <meta name="author" content={author} />
-      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-      <meta name="googlebot" content="index, follow" />
-      <meta name="bingbot" content="index, follow" />
+      {noIndex ? (
+        <>
+          <meta name="robots" content="noindex, nofollow" />
+          <meta name="googlebot" content="noindex, nofollow" />
+          <meta name="bingbot" content="noindex, nofollow" />
+        </>
+      ) : (
+        <>
+          <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+          <meta name="googlebot" content="index, follow" />
+          <meta name="bingbot" content="index, follow" />
+        </>
+      )}
       <link rel="canonical" href={fullUrl} />
       
       {/* Language and region */}

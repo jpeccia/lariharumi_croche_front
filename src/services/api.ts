@@ -14,6 +14,12 @@ import {
 import { Product } from '../types/product';
 import { Promotion } from '../types/promotion';
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    skipErrorToast?: boolean;
+  }
+}
+
 interface ErrorResponse {
   message?: string;
   code?: string;
@@ -48,15 +54,25 @@ api.interceptors.response.use(
       retryable: false
     };
 
+    const skipErrorToast = error.config?.skipErrorToast;
+
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();
-      showAuthError();
+      if (!skipErrorToast) {
+        showAuthError();
+      }
     } else if (error.response?.status >= 500) {
-      showServerError();
+      if (!skipErrorToast) {
+        showServerError();
+      }
     } else if (error.response?.status >= 400) {
-      showServerError();
+      if (!skipErrorToast) {
+        showServerError();
+      }
     } else if (!navigator.onLine) {
-      showNetworkError();
+      if (!skipErrorToast) {
+        showNetworkError();
+      }
     }
     
     return Promise.reject(new Error(apiError.message || 'Erro na requisição'));
@@ -74,12 +90,20 @@ publicApiInstance.interceptors.response.use(
       retryable: false
     };
 
+    const skipErrorToast = error.config?.skipErrorToast;
+
     if (error.response?.status >= 500) {
-      showServerError();
+      if (!skipErrorToast) {
+        showServerError();
+      }
     } else if (error.response?.status >= 400) {
-      showServerError();
+      if (!skipErrorToast) {
+        showServerError();
+      }
     } else if (!navigator.onLine) {
-      showNetworkError();
+      if (!skipErrorToast) {
+        showNetworkError();
+      }
     }
     
     return Promise.reject(new Error(apiError.message || 'Erro na requisição'));
@@ -146,7 +170,9 @@ export const publicApi = {
   // Obter imagens de um produto (público)
   getProductImages: async (productId: number) => {
     try {
-      const response = await publicApiInstance.get(`/products/${productId}/images`);
+      const response = await publicApiInstance.get(`/products/${productId}/images`, {
+        skipErrorToast: true
+      });
 
       if (response.data && Array.isArray(response.data)) {
         const baseUrl = env.VITE_API_BASE_URL;
@@ -175,7 +201,9 @@ export const publicApi = {
     }
 
     try {
-      const response = await publicApiInstance.get(`/categories/${categoryId}/image`);
+      const response = await publicApiInstance.get(`/categories/${categoryId}/image`, {
+        skipErrorToast: true
+      });
       return response.data.imageUrl;
     } catch (error) {
       console.error("Erro ao buscar imagem da categoria:", error);
@@ -444,7 +472,9 @@ export const adminApi = {
   // Obter imagens de um produto
   getProductImages: async (productId: number) => {
     try {
-      const response = await api.get(`/products/${productId}/images`);
+      const response = await api.get(`/products/${productId}/images`, {
+        skipErrorToast: true
+      });
 
       if (response.data && Array.isArray(response.data)) {
         const baseUrl = env.VITE_API_BASE_URL;
@@ -481,7 +511,9 @@ export const getCategoryImage = async (categoryId: number) => {
   }
 
   try {
-    const response = await api.get(`/categories/${categoryId}/image`);
+    const response = await api.get(`/categories/${categoryId}/image`, {
+      skipErrorToast: true
+    });
 
     // Retorna a URL da imagem fornecida pela API
     return response.data.imageUrl; // A resposta contém o campo imageUrl com a URL da imagem

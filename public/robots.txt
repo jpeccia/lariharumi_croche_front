@@ -13,10 +13,6 @@ Allow: /care
 Allow: /contact
 Allow: /donation
 
-# Bloquear páginas administrativas
-Disallow: /admin
-Disallow: /login
-
 # Bloquear arquivos desnecessários
 Disallow: /*.json$
 Disallow: /*.js$

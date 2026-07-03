@@ -5,6 +5,7 @@ import { Package, FolderOpen, BarChart3, Plus, Eye, Tag } from 'lucide-react';
 import { useAnalytics } from '../../services/analytics';
 import { CardSkeleton } from '../../components/shared/LoadingStates';
 import { useStatsCache } from '../../hooks/useApiCache';
+import { SEOHead } from '../../components/shared/SEOHead';
 
 // Lazy loading para componentes administrativos pesados
 const ProductManagement = lazy(() => import('../../components/admin/ProductManagement').then(module => ({ default: module.ProductManagement })));
@@ -43,6 +44,7 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <SEOHead title="Painel Administrativo" noIndex={true} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
