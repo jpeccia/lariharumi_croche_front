@@ -192,3 +192,27 @@ export function preloadImages(products: { ID: number; imageUrls?: string; images
     }
   });
 }
+
+/**
+ * Invalidates the image cache for a specific product ID.
+ * Clears both the in-memory cache and sessionStorage.
+ * 
+ * @param productId - The unique identifier of the product.
+ */
+export function invalidateImageCache(productId: number): void {
+  const cacheKey = `product-${productId}`;
+  delete imageCache[cacheKey];
+  sessionStorage.removeItem(cacheKey);
+}
+
+/**
+ * Invalidates the category image cache for a specific category ID.
+ * Clears both the in-memory cache and sessionStorage.
+ * 
+ * @param categoryId - The unique identifier of the category.
+ */
+export function invalidateCategoryCache(categoryId: number): void {
+  const cacheKey = `category-${categoryId}`;
+  delete imageCache[cacheKey];
+  sessionStorage.removeItem(cacheKey);
+}

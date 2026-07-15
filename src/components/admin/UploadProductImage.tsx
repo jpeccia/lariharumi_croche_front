@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
+import { invalidateImageCache } from '../../hooks/useImageCache';
 
 interface UploadProductImagesProps {
   productID: number;
@@ -61,6 +62,7 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
           throw new Error('O retorno do upload não contém URLs válidas');
         }
   
+        invalidateImageCache(productID);
         const finalImages = [...existingImages, ...urls];
         setExistingImages(finalImages);
         onImagesUploaded(finalImages);
@@ -90,14 +92,12 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
         throw new Error('Imagem não encontrada');
       }
 
-      // Remove a imagem do backend
       await adminApi.deleteProductImage(productID, imageIndex);
+      invalidateImageCache(productID);
 
-      // Atualiza a lista de imagens existentes
       const updatedImages = existingImages.filter((image) => image !== imageUrl);
       setExistingImages(updatedImages);
 
-      // Notifica o componente pai com a lista atualizada
       onImagesUploaded(updatedImages);
     } catch (err) {
       setError(`Falha ao remover a imagem: ${err.message}`);

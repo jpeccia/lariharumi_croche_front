@@ -375,7 +375,10 @@ export const adminApi = {
     }
 
     const formData = new FormData();
-    files.forEach((file) => formData.append("images[]", file)); 
+    files.forEach((file) => {
+      formData.append("images[]", file);
+      formData.append("images", file);
+    });
 
     try {
       const response = await api.post(`/products/${productId}/upload-images`, formData, {
@@ -438,7 +441,10 @@ export const adminApi = {
     }
 
     const formData = new FormData();
-    files.forEach((file) => formData.append("images[]", file)); 
+    files.forEach((file) => {
+      formData.append("images[]", file);
+      formData.append("images", file);
+    });
 
     try {
       const response = await api.post(`/products/${productId}/upload-images`, formData, {

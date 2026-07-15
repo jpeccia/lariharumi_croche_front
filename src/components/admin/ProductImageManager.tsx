@@ -3,6 +3,7 @@ import { Edit3, Trash2, Plus, Image as ImageIcon, X, AlertCircle, CheckCircle } 
 import { adminApi } from '../../services/api';
 import { ImageEditor } from './ImageEditor';
 import { showError, showProductSuccess } from '../../utils/toast';
+import { invalidateImageCache } from '../../hooks/useImageCache';
 
 interface ProductImageManagerProps {
   productId: number;
@@ -53,10 +54,8 @@ export const ProductImageManager: React.FC<ProductImageManagerProps> = ({
       setError(null);
       setSuccess(null);
       
-      // Upload da imagem editada
       await adminApi.uploadProductImages([editedImage], productId);
-      
-      // Recarregar imagens
+      invalidateImageCache(productId);
       await loadImages();
       
       setSuccess('Imagem editada com sucesso!');
@@ -83,6 +82,7 @@ export const ProductImageManager: React.FC<ProductImageManagerProps> = ({
       setSuccess(null);
       
       await adminApi.deleteProductImage(productId, index);
+      invalidateImageCache(productId);
       await loadImages();
       
       setSuccess('Imagem removida com sucesso!');
@@ -119,6 +119,7 @@ export const ProductImageManager: React.FC<ProductImageManagerProps> = ({
       setSuccess(null);
       
       await adminApi.uploadProductImages(files, productId);
+      invalidateImageCache(productId);
       await loadImages();
       
       setSuccess(`${files.length} imagem(ns) adicionada(s) com sucesso!`);

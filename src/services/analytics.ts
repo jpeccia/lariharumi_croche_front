@@ -71,7 +71,25 @@ class AnalyticsService {
       };
       localStorage.setItem('analytics_data', JSON.stringify(data));
     } catch (error) {
-      console.warn('Erro ao salvar dados de analytics:', error);
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        this.events = this.events.slice(-20);
+        this.pageViews = this.pageViews.slice(-20);
+        this.conversions = this.conversions.slice(-20);
+        try {
+          const truncatedData = {
+            events: this.events,
+            pageViews: this.pageViews,
+            conversions: this.conversions,
+            sessionId: this.sessionId,
+            userId: this.userId,
+          };
+          localStorage.setItem('analytics_data', JSON.stringify(truncatedData));
+        } catch (retryError) {
+          this.clearData();
+        }
+      } else {
+        console.warn('Erro ao salvar dados de analytics:', error);
+      }
     }
   }
 

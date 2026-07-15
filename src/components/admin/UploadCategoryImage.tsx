@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { adminApi } from '../../services/api';
+import { invalidateCategoryCache } from '../../hooks/useImageCache';
 
 interface UploadCategoryImageProps {
   categoryID: number;
@@ -20,6 +21,7 @@ export function UploadCategoryImage({ categoryID, onImageUploaded, onImageChange
         setError(null);
 
         const imageUrl = await adminApi.uploadCategoryImage(file, categoryID);
+        invalidateCategoryCache(categoryID);
         onImageUploaded?.(imageUrl);
         onImageChange?.(imageUrl);
 
