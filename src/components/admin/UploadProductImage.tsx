@@ -41,16 +41,27 @@ export function UploadProductImage({ productID, onImagesUploaded }: UploadProduc
         setExistingImages(allImages);
         onImagesUploaded(allImages);  // Notifica o componente pai com as imagens atuais
   
-        // Faz o upload real para o backend
         const uploadedImageUrls = await adminApi.uploadProductImages(fileArray, productID);
   
-        // Verifica se o retorno é um array válido de URLs
-        if (!Array.isArray(uploadedImageUrls)) {
-          throw new Error('O retorno do upload não é um array válido');
+        let urls: string[] = [];
+        if (Array.isArray(uploadedImageUrls)) {
+          urls = uploadedImageUrls;
+        } else if (uploadedImageUrls && typeof uploadedImageUrls === 'object') {
+          const responseObj = uploadedImageUrls as any;
+          if (Array.isArray(responseObj.files)) {
+            urls = responseObj.files.map((f: any) => f.url).filter(Boolean);
+          } else if (Array.isArray(responseObj.imageUrls)) {
+            urls = responseObj.imageUrls;
+          } else if (Array.isArray(responseObj.urls)) {
+            urls = responseObj.urls;
+          }
+        }
+
+        if (urls.length === 0) {
+          throw new Error('O retorno do upload não contém URLs válidas');
         }
   
-        // Atualiza as imagens com as URLs retornadas pelo backend
-        const finalImages = [...existingImages, ...uploadedImageUrls];
+        const finalImages = [...existingImages, ...urls];
         setExistingImages(finalImages);
         onImagesUploaded(finalImages);
   

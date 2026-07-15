@@ -221,7 +221,12 @@ export const publicApi = {
     }
   },
 
-  // Obter imagem de uma categoria (público)
+  /**
+   * Retrieves and normalizes the category image URL for public clients.
+   * 
+   * @param categoryId - The unique identifier of the category.
+   * @returns A promise resolving to the normalized absolute category image URL.
+   */
   getCategoryImage: async (categoryId: number) => {
     if (!categoryId) {
       console.error("ID da categoria não definido");
@@ -232,7 +237,13 @@ export const publicApi = {
       const response = await publicApiInstance.get(`/categories/${categoryId}/image`, {
         skipErrorToast: true
       });
-      return response.data.imageUrl;
+      const imageUrl = response.data?.imageUrl;
+      if (imageUrl && !imageUrl.startsWith("http") && !imageUrl.startsWith("data:")) {
+        const baseUrl = env.VITE_API_BASE_URL;
+        const normalizedUrl = imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
+        return `${baseUrl}${normalizedUrl}`;
+      }
+      return imageUrl || "";
     } catch (error) {
       console.error("Erro ao buscar imagem da categoria:", error);
       throw new Error("Falha ao buscar imagem da categoria");
@@ -524,7 +535,12 @@ export const adminApi = {
 };
 
 
-// Função para buscar a imagem de uma categoria
+/**
+ * Retrieves and normalizes the category image URL for administrative clients.
+ * 
+ * @param categoryId - The unique identifier of the category.
+ * @returns A promise resolving to the normalized absolute category image URL.
+ */
 export const getCategoryImage = async (categoryId: number) => {
   if (!categoryId) {
     console.error("ID da categoria não definido");
@@ -536,8 +552,13 @@ export const getCategoryImage = async (categoryId: number) => {
       skipErrorToast: true
     });
 
-    // Retorna a URL da imagem fornecida pela API
-    return response.data.imageUrl; // A resposta contém o campo imageUrl com a URL da imagem
+    const imageUrl = response.data?.imageUrl;
+    if (imageUrl && !imageUrl.startsWith("http") && !imageUrl.startsWith("data:")) {
+      const baseUrl = env.VITE_API_BASE_URL;
+      const normalizedUrl = imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
+      return `${baseUrl}${normalizedUrl}`;
+    }
+    return imageUrl || "";
   } catch (error) {
     console.error("Erro ao buscar imagem da categoria:", error);
     throw new Error("Falha ao buscar imagem da categoria");

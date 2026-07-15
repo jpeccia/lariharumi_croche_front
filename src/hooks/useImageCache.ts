@@ -56,6 +56,16 @@ export function useImageCache(
   const fetchImages = useCallback(async () => {
     const cached = getCachedImages(cacheKey);
     if (cached) {
+      if (initialImages) {
+        const parsed = parseImageUrls(initialImages, env.VITE_API_BASE_URL);
+        const isCacheStale = parsed.length !== cached.length || parsed.some(url => !cached.includes(url));
+        if (isCacheStale) {
+          imageCache[cacheKey] = parsed;
+          sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
+          setImageUrls(parsed);
+          return;
+        }
+      }
       setImageUrls(cached);
       return;
     }
@@ -169,16 +179,15 @@ export function preloadImages(products: { ID: number; imageUrls?: string; images
   products.forEach((product) => {
     const cacheKey = `product-${product.ID}`;
     const cached = getCachedImages(cacheKey);
-    if (cached) {
-      return;
-    }
-
     const rawImages = product.imageUrls || product.images;
     if (rawImages) {
       const parsed = parseImageUrls(rawImages, env.VITE_API_BASE_URL);
       if (parsed.length > 0) {
-        imageCache[cacheKey] = parsed;
-        sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
+        const isCacheStale = !cached || parsed.length !== cached.length || parsed.some(url => !cached.includes(url));
+        if (isCacheStale) {
+          imageCache[cacheKey] = parsed;
+          sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
+        }
       }
     }
   });

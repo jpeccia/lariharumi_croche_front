@@ -3,10 +3,11 @@ import { adminApi } from '../../services/api';
 
 interface UploadCategoryImageProps {
   categoryID: number;
-  onImageUploaded: (imageUrl: string) => void;
+  onImageUploaded?: (imageUrl: string) => void;
+  onImageChange?: (imageUrl: string) => void;
 }
 
-export function UploadCategoryImage({ categoryID, onImageUploaded }: UploadCategoryImageProps) {
+export function UploadCategoryImage({ categoryID, onImageUploaded, onImageChange }: UploadCategoryImageProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,8 +19,9 @@ export function UploadCategoryImage({ categoryID, onImageUploaded }: UploadCateg
         setLoading(true);
         setError(null);
 
-        // Passando os 3 parâmetros necessários para o upload da imagem da categoria
-        await adminApi.uploadCategoryImage(file, categoryID, onImageUploaded);
+        const imageUrl = await adminApi.uploadCategoryImage(file, categoryID);
+        onImageUploaded?.(imageUrl);
+        onImageChange?.(imageUrl);
 
         setLoading(false);
       } catch (err) {
