@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Upload, Image as ImageIcon, Edit3, Trash2, Eye } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Upload, Image as ImageIcon, Edit3, Trash2 } from 'lucide-react';
 import { ImageEditor } from './ImageEditor';
 
 interface EnhancedImageUploadProps {
@@ -18,6 +18,29 @@ export const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const createdUrlsRef = useRef<Set<string>>(new Set());
+
+  const createTrackedUrl = (file: File) => {
+    const url = URL.createObjectURL(file);
+    createdUrlsRef.current.add(url);
+    return url;
+  };
+
+  const revokeTrackedUrl = (url: string) => {
+    if (createdUrlsRef.current.has(url)) {
+      URL.revokeObjectURL(url);
+      createdUrlsRef.current.delete(url);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      createdUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      createdUrlsRef.current.clear();
+    };
+  }, []);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -31,14 +54,18 @@ export const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
     const newImages = [...images, ...imageFiles];
     setImages(newImages);
 
-    // Criar previews
-    const newPreviews = imageFiles.map(file => URL.createObjectURL(file));
+    const newPreviews = imageFiles.map((file) => createTrackedUrl(file));
     setPreviews(prev => [...prev, ...newPreviews]);
 
     onImagesChange(newImages);
   };
 
   const removeImage = (index: number) => {
+    const previewToRevoke = previews[index];
+    if (previewToRevoke) {
+      revokeTrackedUrl(previewToRevoke);
+    }
+
     const newImages = images.filter((_, i) => i !== index);
     const newPreviews = previews.filter((_, i) => i !== index);
 
@@ -55,13 +82,17 @@ export const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
   const handleImageEditorSave = (editedImage: File) => {
     if (editingImageIndex === null) return;
 
+    const oldPreview = previews[editingImageIndex];
+    if (oldPreview) {
+      revokeTrackedUrl(oldPreview);
+    }
+
     const newImages = [...images];
     newImages[editingImageIndex] = editedImage;
     setImages(newImages);
 
-    // Atualizar preview
     const newPreviews = [...previews];
-    newPreviews[editingImageIndex] = URL.createObjectURL(editedImage);
+    newPreviews[editingImageIndex] = createTrackedUrl(editedImage);
     setPreviews(newPreviews);
 
     onImagesChange(newImages);

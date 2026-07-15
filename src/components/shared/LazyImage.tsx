@@ -13,11 +13,17 @@ interface LazyImageProps {
   srcSet?: string;
 }
 
+/**
+ * LazyImage component that renders an image only when it enters the viewport.
+ * Uses IntersectionObserver observed on the outer container.
+ * 
+ * @param props - The props of the LazyImage component.
+ * @returns The LazyImage element.
+ */
 export function LazyImage({
   src,
   alt,
   className = '',
-  placeholder,
   onLoad,
   onError,
   loading = 'lazy',
@@ -27,7 +33,7 @@ export function LazyImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -43,8 +49,8 @@ export function LazyImage({
       }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
     }
 
     return () => observer.disconnect();
@@ -61,8 +67,7 @@ export function LazyImage({
   };
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
-      {/* Placeholder/Loading */}
+    <div ref={containerRef} className={`relative overflow-hidden ${className}`}>
       {!isLoaded && !hasError && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
           {isInView ? (
@@ -73,10 +78,8 @@ export function LazyImage({
         </div>
       )}
 
-      {/* Imagem */}
       {isInView && (
         <img
-          ref={imgRef}
           src={src}
           alt={alt}
           className={`w-full h-full object-cover transition-opacity duration-300 ${
@@ -90,7 +93,6 @@ export function LazyImage({
         />
       )}
 
-      {/* Estado de erro */}
       {hasError && (
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
           <div className="text-center text-gray-500">
@@ -105,7 +107,11 @@ export function LazyImage({
   );
 }
 
-// Hook para pré-carregar imagens
+/**
+ * Hook to manage image preloading states.
+ * 
+ * @returns Functions to preload single or multiple images, and sets containing loaded/loading images.
+ */
 export function useImagePreloader() {
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
@@ -118,7 +124,6 @@ export function useImagePreloader() {
       }
 
       if (loadingImages.has(src)) {
-        // Aguarda a imagem que já está carregando
         const checkLoaded = () => {
           if (loadedImages.has(src)) {
             resolve();
@@ -161,4 +166,3 @@ export function useImagePreloader() {
 
   return { preloadImage, preloadImages, loadedImages, loadingImages };
 }
-
