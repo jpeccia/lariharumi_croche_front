@@ -161,8 +161,7 @@ function Catalog() {
       setCurrentPage(page);
       setPaginationInfo(paginationInfo);
 
-      const productIds = sortedProducts.map((product: Product) => product.ID);
-      preloadImages(productIds, true);
+      preloadImages(sortedProducts);
 
     } catch (error: unknown) {
       if (controller.signal.aborted) return;
@@ -257,8 +256,7 @@ function Catalog() {
         timestamp: Date.now(),
       });
 
-      const productIds = sortedProducts.map((p: Product) => p.ID);
-      preloadImages(productIds, true);
+      preloadImages(sortedProducts);
     } catch {
       /* Prefetch silently fails */
     } finally {

@@ -129,6 +129,41 @@ export const authApi = {
   },
 };
 
+/**
+ * Parses and normalizes raw image URLs from the API.
+ * Handles arrays of strings, comma-separated strings, and prepends the API base URL for relative paths.
+ * 
+ * @param rawData - The raw data containing image URLs.
+ * @param baseUrl - The base URL of the API.
+ * @returns An array of normalized absolute image URL strings.
+ */
+export function parseImageUrls(rawData: unknown, baseUrl: string): string[] {
+  if (!rawData) {
+    return [];
+  }
+
+  let urls: string[] = [];
+
+  if (Array.isArray(rawData)) {
+    urls = rawData.flatMap((item) => {
+      if (typeof item === 'string') {
+        return item.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+      return [];
+    });
+  } else if (typeof rawData === 'string') {
+    urls = rawData.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+
+  return urls.map((url) => {
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+      return url;
+    }
+    const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+    return `${baseUrl}${normalizedUrl}`;
+  });
+}
+
 // Funções públicas (sem autenticação)
 export const publicApi = {
   // Buscar produtos com paginação (público)
@@ -174,19 +209,12 @@ export const publicApi = {
         skipErrorToast: true
       });
 
-      if (response.data && Array.isArray(response.data)) {
-        const baseUrl = env.VITE_API_BASE_URL;
-        const images = response.data.map((url: string) => {
-          if (url.startsWith("http")) return url;
-          const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
-          return `${baseUrl}${normalizedUrl}`;
-        });
-
-        return images;
-      } else {
-        console.error("Nenhuma imagem encontrada para este produto");
-        return [];
+      if (response.data) {
+        return parseImageUrls(response.data, env.VITE_API_BASE_URL);
       }
+
+      console.error("Nenhuma imagem encontrada para este produto");
+      return [];
     } catch (error) {
       console.error("Erro ao buscar imagens do produto:", error);
       return [];
@@ -476,19 +504,12 @@ export const adminApi = {
         skipErrorToast: true
       });
 
-      if (response.data && Array.isArray(response.data)) {
-        const baseUrl = env.VITE_API_BASE_URL;
-        const images = response.data.map((url: string) => {
-          if (url.startsWith("http")) return url;
-          const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
-          return `${baseUrl}${normalizedUrl}`;
-        });
-
-        return images;
-      } else {
-        console.error("Nenhuma imagem encontrada para este produto");
-        return [];
+      if (response.data) {
+        return parseImageUrls(response.data, env.VITE_API_BASE_URL);
       }
+
+      console.error("Nenhuma imagem encontrada para este produto");
+      return [];
     } catch (error) {
       console.error("Erro ao buscar imagens do produto:", error);
       return [];

@@ -14,8 +14,11 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, instagramUsername }: ProductCardProps) {
-  // Usa o hook otimizado para carregar imagens (API pública)
-  const { imageUrls, isLoading, error } = useImageCache(product.ID, true);
+  const { imageUrls, isLoading, error } = useImageCache(
+    product.ID,
+    true,
+    product.imageUrls || product.images
+  );
   const promotion = usePromotionStore((s) => s.promotion);
   const active = isPromotionActive(promotion || undefined);
   const basePrice = extractNumericPrice(product.priceRange);

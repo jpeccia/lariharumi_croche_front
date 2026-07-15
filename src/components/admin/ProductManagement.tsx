@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Package, Plus, Edit, Trash, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
-import { adminApi } from '../../services/api';
+import { adminApi, parseImageUrls } from '../../services/api';
 import { Product } from '../../types/product';
+import { env } from '../../env';
 import { UploadProductImage } from './UploadProductImage';
 import { showProductSuccess, showError } from '../../utils/toast';
 import { useDebounce } from 'use-debounce';
@@ -15,7 +16,9 @@ interface ProductCardProps {
 }
 
 const ProductCard = React.memo(({ product }: Readonly<ProductCardProps>) => {
-  const [imageUrls, setImageUrls] = useState<string[]>([]); 
+  const [imageUrls, setImageUrls] = useState<string[]>(() =>
+    parseImageUrls(product.imageUrls || product.images, env.VITE_API_BASE_URL)
+  );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null); 
@@ -24,7 +27,9 @@ const ProductCard = React.memo(({ product }: Readonly<ProductCardProps>) => {
     const fetchProductImages = async () => {
       try {
         const images = await adminApi.getProductImages(product.ID);
-        setImageUrls(images); 
+        if (images && images.length > 0) {
+          setImageUrls(images);
+        }
       } catch (error) {
         console.error('Erro ao carregar imagens:', error);
       }

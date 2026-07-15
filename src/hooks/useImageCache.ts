@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { adminApi, publicApi, getCategoryImage } from '../services/api';
+import { adminApi, publicApi, getCategoryImage, parseImageUrls } from '../services/api';
+import { env } from '../env';
 
 interface ImageCache {
   [key: string]: string[];
@@ -11,10 +12,41 @@ interface UseImageCacheReturn {
   error: string | null;
 }
 
-// Cache global para imagens
 const imageCache: ImageCache = {};
 
-export function useImageCache(productId: number, usePublicApi: boolean = true): UseImageCacheReturn {
+/**
+ * Checks in-memory cache and sessionStorage for cached images.
+ * 
+ * @param cacheKey - The key identifying the product's images in the cache.
+ * @returns The cached images array if found, otherwise null.
+ */
+function getCachedImages(cacheKey: string): string[] | null {
+  if (imageCache[cacheKey]) {
+    return imageCache[cacheKey];
+  }
+  const cached = sessionStorage.getItem(cacheKey);
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    imageCache[cacheKey] = parsed;
+    return parsed;
+  }
+  return null;
+}
+
+/**
+ * Hook to retrieve and cache product images.
+ * Prefers cached images or parsed initial images to avoid network requests.
+ * 
+ * @param productId - The unique identifier of the product.
+ * @param usePublicApi - Whether to fetch from the public endpoint.
+ * @param initialImages - Initial image data to populate cache (optional).
+ * @returns An object containing the product image URLs, loading state, and error.
+ */
+export function useImageCache(
+  productId: number,
+  usePublicApi: boolean = true,
+  initialImages?: unknown
+): UseImageCacheReturn {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,35 +54,32 @@ export function useImageCache(productId: number, usePublicApi: boolean = true): 
   const cacheKey = `product-${productId}`;
 
   const fetchImages = useCallback(async () => {
-    // Verifica cache global primeiro
-    if (imageCache[cacheKey]) {
-      setImageUrls(imageCache[cacheKey]);
+    const cached = getCachedImages(cacheKey);
+    if (cached) {
+      setImageUrls(cached);
       return;
     }
 
-    // Verifica sessionStorage como fallback
-    const cachedImages = sessionStorage.getItem(cacheKey);
-    if (cachedImages) {
-      const parsedImages = JSON.parse(cachedImages);
-      imageCache[cacheKey] = parsedImages;
-      setImageUrls(parsedImages);
-      return;
+    if (initialImages) {
+      const parsed = parseImageUrls(initialImages, env.VITE_API_BASE_URL);
+      if (parsed.length > 0) {
+        imageCache[cacheKey] = parsed;
+        sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
+        setImageUrls(parsed);
+        return;
+      }
     }
 
-    // Se não há cache, faz a requisição
     setIsLoading(true);
     setError(null);
 
     try {
-      // Usa API pública ou admin dependendo do contexto
-      const images = usePublicApi 
+      const images = usePublicApi
         ? await publicApi.getProductImages(productId)
         : await adminApi.getProductImages(productId);
       
-      // Armazena no cache global e sessionStorage
       imageCache[cacheKey] = images;
       sessionStorage.setItem(cacheKey, JSON.stringify(images));
-      
       setImageUrls(images);
     } catch (err) {
       const errorMessage = 'Erro ao carregar imagens';
@@ -59,7 +88,7 @@ export function useImageCache(productId: number, usePublicApi: boolean = true): 
     } finally {
       setIsLoading(false);
     }
-  }, [productId, cacheKey, usePublicApi]);
+  }, [productId, cacheKey, usePublicApi, initialImages]);
 
   useEffect(() => {
     fetchImages();
@@ -68,8 +97,17 @@ export function useImageCache(productId: number, usePublicApi: boolean = true): 
   return { imageUrls, isLoading, error };
 }
 
-// Hook para carregar imagens de categoria
-export function useCategoryImageCache(categoryId: number, usePublicApi: boolean = true): {
+/**
+ * Hook to retrieve and cache category images.
+ * 
+ * @param categoryId - The unique identifier of the category.
+ * @param usePublicApi - Whether to fetch from the public endpoint.
+ * @returns An object containing the category image URL, loading state, and error.
+ */
+export function useCategoryImageCache(
+  categoryId: number,
+  usePublicApi: boolean = true
+): {
   imageUrl: string;
   isLoading: boolean;
   error: string | null;
@@ -81,13 +119,11 @@ export function useCategoryImageCache(categoryId: number, usePublicApi: boolean 
   const cacheKey = `category-${categoryId}`;
 
   const fetchImage = useCallback(async () => {
-    // Verifica cache global primeiro
     if (imageCache[cacheKey]) {
       setImageUrl(imageCache[cacheKey][0]);
       return;
     }
 
-    // Verifica sessionStorage como fallback
     const cachedImage = sessionStorage.getItem(cacheKey);
     if (cachedImage) {
       const parsedImage = JSON.parse(cachedImage);
@@ -100,15 +136,12 @@ export function useCategoryImageCache(categoryId: number, usePublicApi: boolean 
     setError(null);
 
     try {
-      // Usa API pública ou admin dependendo do contexto
       const image = usePublicApi 
         ? await publicApi.getCategoryImage(categoryId)
         : await getCategoryImage(categoryId);
       
-      // Armazena no cache global e sessionStorage
       imageCache[cacheKey] = [image];
       sessionStorage.setItem(cacheKey, JSON.stringify(image));
-      
       setImageUrl(image);
     } catch (err) {
       const errorMessage = 'Erro ao carregar imagem da categoria';
@@ -126,36 +159,27 @@ export function useCategoryImageCache(categoryId: number, usePublicApi: boolean 
   return { imageUrl, isLoading, error };
 }
 
-// Função para pré-carregar imagens em lote
-export async function preloadImages(productIds: number[], usePublicApi: boolean = true): Promise<void> {
-  const uncachedIds = productIds.filter(id => {
-    const cacheKey = `product-${id}`;
-    return !imageCache[cacheKey] && !sessionStorage.getItem(cacheKey);
-  });
-
-  if (uncachedIds.length === 0) return;
-
-  try {
-    // Carrega imagens em paralelo (limitado a 5 por vez para não sobrecarregar)
-    const batchSize = 5;
-    for (let i = 0; i < uncachedIds.length; i += batchSize) {
-      const batch = uncachedIds.slice(i, i + batchSize);
-      await Promise.all(
-        batch.map(async (id) => {
-          try {
-            const images = usePublicApi 
-              ? await publicApi.getProductImages(id)
-              : await adminApi.getProductImages(id);
-            const cacheKey = `product-${id}`;
-            imageCache[cacheKey] = images;
-            sessionStorage.setItem(cacheKey, JSON.stringify(images));
-          } catch (error) {
-            console.error(`Erro ao pré-carregar imagens do produto ${id}:`, error);
-          }
-        })
-      );
+/**
+ * Preloads and caches product images from a list of products.
+ * Populates both the in-memory cache and sessionStorage to avoid future network requests.
+ * 
+ * @param products - The list of products containing image URLs.
+ */
+export function preloadImages(products: { ID: number; imageUrls?: string; images?: string }[]): void {
+  products.forEach((product) => {
+    const cacheKey = `product-${product.ID}`;
+    const cached = getCachedImages(cacheKey);
+    if (cached) {
+      return;
     }
-  } catch (error) {
-    console.error('Erro ao pré-carregar imagens:', error);
-  }
+
+    const rawImages = product.imageUrls || product.images;
+    if (rawImages) {
+      const parsed = parseImageUrls(rawImages, env.VITE_API_BASE_URL);
+      if (parsed.length > 0) {
+        imageCache[cacheKey] = parsed;
+        sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
+      }
+    }
+  });
 }
