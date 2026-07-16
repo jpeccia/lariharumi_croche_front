@@ -359,10 +359,8 @@ export const adminApi = {
     return response.data;
   },
 
-  // Upload de imagens de produto (assíncrono)
   uploadProductImages: async (files: File[], productId: number, config?: UploadConfig): Promise<UploadResponse> => {
-    // Validação dos arquivos
-    const maxFileSize = config?.maxFileSize || 5 * 1024 * 1024; // 5MB padrão
+    const maxFileSize = config?.maxFileSize || 5 * 1024 * 1024;
     const allowedTypes = config?.allowedTypes || ['image/jpeg', 'image/png', 'image/webp'];
     
     for (const file of files) {
@@ -374,25 +372,57 @@ export const adminApi = {
       }
     }
 
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append("images[]", file);
-      formData.append("images", file);
-    });
+    const allUrls: string[] = [];
+    const allFiles: any[] = [];
+    let lastResponse: any = null;
 
     try {
-      const response = await api.post(`/products/${productId}/upload-images`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 30000, // 30 segundos
-      });
-      
-      return response.data;
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("images[]", file);
+
+        const response = await api.post(`/products/${productId}/upload-images`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          timeout: 60000,
+        });
+
+        const responseData = response.data;
+        lastResponse = responseData;
+
+        if (Array.isArray(responseData)) {
+          allUrls.push(...responseData);
+        } else if (responseData && typeof responseData === 'object') {
+          if (Array.isArray(responseData.files)) {
+            allFiles.push(...responseData.files);
+            responseData.files.forEach((f: any) => {
+              if (f.url) allUrls.push(f.url);
+            });
+          }
+          if (Array.isArray(responseData.imageUrls)) {
+            allUrls.push(...responseData.imageUrls);
+          }
+          if (Array.isArray(responseData.urls)) {
+            allUrls.push(...responseData.urls);
+          }
+        }
+      }
+
+      if (Array.isArray(lastResponse)) {
+        return allUrls as any;
+      } else if (lastResponse && typeof lastResponse === 'object') {
+        return {
+          ...lastResponse,
+          files: allFiles,
+          imageUrls: allUrls,
+          urls: allUrls,
+        } as any;
+      }
+      return lastResponse;
     } catch (error: unknown) {
       console.error("Erro ao enviar as imagens:", error);
       
-      // Tratamento específico de erros
       const axiosError = error as AxiosError;
       if (axiosError.response?.status === 413) {
         throw new Error('Arquivo muito grande');
@@ -443,7 +473,6 @@ export const adminApi = {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append("images[]", file);
-      formData.append("images", file);
     });
 
     try {
