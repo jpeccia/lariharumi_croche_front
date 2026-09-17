@@ -53,31 +53,35 @@ export function useImageCache(
 
   const cacheKey = `product-${productId}`;
 
+  // Reset state immediately when the product changes to avoid showing
+  // stale images from a previously rendered card occupying the same slot.
+  useEffect(() => {
+    setImageUrls([]);
+    setError(null);
+  }, [productId]);
+
   const fetchImages = useCallback(async () => {
     const cached = getCachedImages(cacheKey);
-    if (cached) {
-      if (initialImages) {
-        const parsed = parseImageUrls(initialImages, env.VITE_API_BASE_URL);
-        const isCacheStale = parsed.length !== cached.length || parsed.some(url => !cached.includes(url));
-        if (isCacheStale) {
-          imageCache[cacheKey] = parsed;
-          sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
-          setImageUrls(parsed);
-          return;
-        }
-      }
-      setImageUrls(cached);
-      return;
-    }
 
     if (initialImages) {
       const parsed = parseImageUrls(initialImages, env.VITE_API_BASE_URL);
       if (parsed.length > 0) {
-        imageCache[cacheKey] = parsed;
-        sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
+        const isCacheStale =
+          !cached ||
+          parsed.length !== cached.length ||
+          parsed.some((url) => !cached.includes(url));
+        if (isCacheStale) {
+          imageCache[cacheKey] = parsed;
+          sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
+        }
         setImageUrls(parsed);
         return;
       }
+    }
+
+    if (cached && cached.length > 0) {
+      setImageUrls(cached);
+      return;
     }
 
     setIsLoading(true);
@@ -87,7 +91,7 @@ export function useImageCache(
       const images = usePublicApi
         ? await publicApi.getProductImages(productId)
         : await adminApi.getProductImages(productId);
-      
+
       imageCache[cacheKey] = images;
       sessionStorage.setItem(cacheKey, JSON.stringify(images));
       setImageUrls(images);
@@ -100,6 +104,7 @@ export function useImageCache(
     }
   }, [productId, cacheKey, usePublicApi, initialImages]);
 
+  // Run fetch whenever productId or initialImages change.
   useEffect(() => {
     fetchImages();
   }, [fetchImages]);
