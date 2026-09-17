@@ -40,18 +40,28 @@ export function useImageCache(
   usePublicApi: boolean = true,
   initialImages?: unknown
 ): UseImageCacheReturn {
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const cacheKey = `product-${productId}`;
 
-  // Reset state immediately when the product changes to avoid showing
-  // stale images from a previously rendered card occupying the same slot.
-  useEffect(() => {
-    setImageUrls([]);
-    setError(null);
-  }, [productId]);
+  /**
+   * Lazy initializer: resolves images synchronously on the first render so
+   * the component never starts with an empty array when data is already available.
+   * Execution order in Catalog: preloadImages() → setProducts() → React render →
+   * useState(() => ...) — the cache is already populated at this point.
+   */
+  const [imageUrls, setImageUrls] = useState<string[]>(() => {
+    if (initialImages) {
+      const parsed = parseImageUrls(initialImages, env.VITE_API_BASE_URL);
+      if (parsed.length > 0) {
+        imageCache[cacheKey] = parsed;
+        return parsed;
+      }
+    }
+    const cached = getCachedImages(cacheKey);
+    return cached && cached.length > 0 ? cached : [];
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchImages = useCallback(async (signal: AbortSignal) => {
     // 1. Prefer images embedded in the list payload — no extra request needed.
@@ -103,6 +113,8 @@ export function useImageCache(
     }
   }, [productId, cacheKey, usePublicApi, initialImages]);
 
+  // Run fetch whenever productId or initialImages change. The AbortController
+  // ensures in-flight requests are cancelled when the hook dependencies update.
   useEffect(() => {
     const controller = new AbortController();
     fetchImages(controller.signal);
