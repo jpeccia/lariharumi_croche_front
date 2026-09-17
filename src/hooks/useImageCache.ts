@@ -15,31 +15,24 @@ interface UseImageCacheReturn {
 const imageCache: ImageCache = {};
 
 /**
- * Checks in-memory cache and sessionStorage for cached images.
- * 
+ * Checks the in-memory module-level cache for previously fetched images.
+ *
  * @param cacheKey - The key identifying the product's images in the cache.
  * @returns The cached images array if found, otherwise null.
  */
 function getCachedImages(cacheKey: string): string[] | null {
-  if (imageCache[cacheKey]) {
-    return imageCache[cacheKey];
-  }
-  const cached = sessionStorage.getItem(cacheKey);
-  if (cached) {
-    const parsed = JSON.parse(cached);
-    imageCache[cacheKey] = parsed;
-    return parsed;
-  }
-  return null;
+  return imageCache[cacheKey] ?? null;
 }
 
 /**
  * Hook to retrieve and cache product images.
- * Prefers cached images or parsed initial images to avoid network requests.
- * 
+ * Prioritises images embedded in the API payload (initialImages), then the
+ * in-memory module cache, and falls back to a dedicated image endpoint.
+ * An AbortController cancels any in-flight fetch when the product changes.
+ *
  * @param productId - The unique identifier of the product.
  * @param usePublicApi - Whether to fetch from the public endpoint.
- * @param initialImages - Initial image data to populate cache (optional).
+ * @param initialImages - Raw image data returned by the products list endpoint.
  * @returns An object containing the product image URLs, loading state, and error.
  */
 export function useImageCache(
@@ -60,30 +53,32 @@ export function useImageCache(
     setError(null);
   }, [productId]);
 
-  const fetchImages = useCallback(async () => {
-    const cached = getCachedImages(cacheKey);
-
+  const fetchImages = useCallback(async (signal: AbortSignal) => {
+    // 1. Prefer images embedded in the list payload — no extra request needed.
     if (initialImages) {
       const parsed = parseImageUrls(initialImages, env.VITE_API_BASE_URL);
       if (parsed.length > 0) {
+        const cached = getCachedImages(cacheKey);
         const isCacheStale =
           !cached ||
           parsed.length !== cached.length ||
           parsed.some((url) => !cached.includes(url));
         if (isCacheStale) {
           imageCache[cacheKey] = parsed;
-          sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
         }
         setImageUrls(parsed);
         return;
       }
     }
 
+    // 2. Use in-memory cache when payload was empty.
+    const cached = getCachedImages(cacheKey);
     if (cached && cached.length > 0) {
       setImageUrls(cached);
       return;
     }
 
+    // 3. Fallback: fetch from the dedicated images endpoint.
     setIsLoading(true);
     setError(null);
 
@@ -92,21 +87,26 @@ export function useImageCache(
         ? await publicApi.getProductImages(productId)
         : await adminApi.getProductImages(productId);
 
+      if (signal.aborted) return;
+
       imageCache[cacheKey] = images;
-      sessionStorage.setItem(cacheKey, JSON.stringify(images));
       setImageUrls(images);
     } catch (err) {
+      if (signal.aborted) return;
       const errorMessage = 'Erro ao carregar imagens';
       setError(errorMessage);
       console.error(errorMessage, err);
     } finally {
-      setIsLoading(false);
+      if (!signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [productId, cacheKey, usePublicApi, initialImages]);
 
-  // Run fetch whenever productId or initialImages change.
   useEffect(() => {
-    fetchImages();
+    const controller = new AbortController();
+    fetchImages(controller.signal);
+    return () => controller.abort();
   }, [fetchImages]);
 
   return { imageUrls, isLoading, error };
@@ -114,7 +114,7 @@ export function useImageCache(
 
 /**
  * Hook to retrieve and cache category images.
- * 
+ *
  * @param categoryId - The unique identifier of the category.
  * @param usePublicApi - Whether to fetch from the public endpoint.
  * @returns An object containing the category image URL, loading state, and error.
@@ -134,16 +134,9 @@ export function useCategoryImageCache(
   const cacheKey = `category-${categoryId}`;
 
   const fetchImage = useCallback(async () => {
-    if (imageCache[cacheKey]) {
-      setImageUrl(imageCache[cacheKey][0]);
-      return;
-    }
-
-    const cachedImage = sessionStorage.getItem(cacheKey);
-    if (cachedImage) {
-      const parsedImage = JSON.parse(cachedImage);
-      imageCache[cacheKey] = [parsedImage];
-      setImageUrl(parsedImage);
+    const cached = getCachedImages(cacheKey);
+    if (cached && cached.length > 0) {
+      setImageUrl(cached[0]);
       return;
     }
 
@@ -151,12 +144,11 @@ export function useCategoryImageCache(
     setError(null);
 
     try {
-      const image = usePublicApi 
+      const image = usePublicApi
         ? await publicApi.getCategoryImage(categoryId)
         : await getCategoryImage(categoryId);
-      
+
       imageCache[cacheKey] = [image];
-      sessionStorage.setItem(cacheKey, JSON.stringify(image));
       setImageUrl(image);
     } catch (err) {
       const errorMessage = 'Erro ao carregar imagem da categoria';
@@ -175,49 +167,49 @@ export function useCategoryImageCache(
 }
 
 /**
- * Preloads and caches product images from a list of products.
- * Populates both the in-memory cache and sessionStorage to avoid future network requests.
- * 
+ * Preloads and caches product images from a list of products into the
+ * in-memory module cache, so subsequent renders find the cache already
+ * populated and skip the network fetch.
+ *
  * @param products - The list of products containing image URLs.
  */
 export function preloadImages(products: { ID: number; imageUrls?: string; images?: string }[]): void {
   products.forEach((product) => {
     const cacheKey = `product-${product.ID}`;
-    const cached = getCachedImages(cacheKey);
     const rawImages = product.imageUrls || product.images;
-    if (rawImages) {
-      const parsed = parseImageUrls(rawImages, env.VITE_API_BASE_URL);
-      if (parsed.length > 0) {
-        const isCacheStale = !cached || parsed.length !== cached.length || parsed.some(url => !cached.includes(url));
-        if (isCacheStale) {
-          imageCache[cacheKey] = parsed;
-          sessionStorage.setItem(cacheKey, JSON.stringify(parsed));
-        }
-      }
+    if (!rawImages) return;
+
+    const parsed = parseImageUrls(rawImages, env.VITE_API_BASE_URL);
+    if (parsed.length === 0) return;
+
+    const cached = getCachedImages(cacheKey);
+    const isCacheStale =
+      !cached ||
+      parsed.length !== cached.length ||
+      parsed.some((url) => !cached.includes(url));
+
+    if (isCacheStale) {
+      imageCache[cacheKey] = parsed;
     }
   });
 }
 
 /**
  * Invalidates the image cache for a specific product ID.
- * Clears both the in-memory cache and sessionStorage.
- * 
+ * Clears the in-memory cache entry.
+ *
  * @param productId - The unique identifier of the product.
  */
 export function invalidateImageCache(productId: number): void {
-  const cacheKey = `product-${productId}`;
-  delete imageCache[cacheKey];
-  sessionStorage.removeItem(cacheKey);
+  delete imageCache[`product-${productId}`];
 }
 
 /**
  * Invalidates the category image cache for a specific category ID.
- * Clears both the in-memory cache and sessionStorage.
- * 
+ * Clears the in-memory cache entry.
+ *
  * @param categoryId - The unique identifier of the category.
  */
 export function invalidateCategoryCache(categoryId: number): void {
-  const cacheKey = `category-${categoryId}`;
-  delete imageCache[cacheKey];
-  sessionStorage.removeItem(cacheKey);
+  delete imageCache[`category-${categoryId}`];
 }

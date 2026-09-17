@@ -11,9 +11,11 @@ import { openIgDm } from '../../utils/instagram';
 interface ProductCardProps {
   readonly product: Product;
   readonly instagramUsername: string;
+  /** When true the product image loads eagerly (above the fold). Defaults to false. */
+  readonly priority?: boolean;
 }
 
-export function ProductCard({ product, instagramUsername }: ProductCardProps) {
+export function ProductCard({ product, instagramUsername, priority = false }: ProductCardProps) {
   const { imageUrls, isLoading, error } = useImageCache(
     product.ID,
     true,
@@ -41,6 +43,7 @@ export function ProductCard({ product, instagramUsername }: ProductCardProps) {
         isLoading={isLoading}
         error={error}
         className="rounded-t-xl"
+        priority={priority}
       />
       
       {/* Conteúdo do card responsivo */}

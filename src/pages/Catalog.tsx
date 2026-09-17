@@ -157,11 +157,13 @@ function Catalog() {
         timestamp: Date.now(),
       });
 
+      // Populate the image cache BEFORE triggering a re-render so every
+      // ProductCard finds its images already resolved on the first render.
+      preloadImages(sortedProducts);
+
       setProducts(sortedProducts);
       setCurrentPage(page);
       setPaginationInfo(paginationInfo);
-
-      preloadImages(sortedProducts);
 
     } catch (error: unknown) {
       if (controller.signal.aborted) return;
@@ -583,6 +585,7 @@ function Catalog() {
                         <ProductCard
                           product={product}
                           instagramUsername="larifazcroche"
+                          priority={index < 8}
                         />
                       </div>
                     ));

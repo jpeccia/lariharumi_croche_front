@@ -11,6 +11,8 @@ interface ProductImageDisplayProps {
   isLoading?: boolean;
   error?: string | null;
   className?: string;
+  /** When true, sets loading="eager" on the main image for above-the-fold content. */
+  priority?: boolean;
 }
 
 export function ProductImageDisplay({
@@ -22,6 +24,7 @@ export function ProductImageDisplay({
   isLoading = false,
   error = null,
   className = '',
+  priority = false,
 }: ProductImageDisplayProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -44,6 +47,13 @@ export function ProductImageDisplay({
       setIsGalleryOpen(true);
     }
   }, [images.length]);
+
+  // Reset carousel position and image loaded state when a new product's
+  // images arrive, preventing stale index or flash of the previous image.
+  useEffect(() => {
+    setCurrentIndex(0);
+    setImageLoaded(false);
+  }, [images]);
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -116,7 +126,7 @@ export function ProductImageDisplay({
           onClick={handleImageClick}
           onLoad={handleImageLoad}
           onError={handleImageError}
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
         />
 
         {/* Loading placeholder */}
