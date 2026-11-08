@@ -30,7 +30,17 @@ export function ProductImageDisplay({
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  // Resiliência: o i.ibb.co às vezes estrangula conexões e a imagem fica
+  // travada (sem onload nem onerror). retry refaz a requisição com cache-bust;
+  // depois de MAX_RETRIES marcamos como falha e mostramos o placeholder.
+  const [retry, setRetry] = useState(0);
+  const [failed, setFailed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Num catálogo de vendas, imagem faltando é falha grave (a cliente não vê a
+  // peça). As URLs existem — o que falha é o i.ibb.co estrangular conexões —,
+  // então insistimos bastante antes de desistir: o placeholder é último recurso.
+  const MAX_RETRIES = 6;
+  const STALL_TIMEOUT_MS = 7000;
 
   const handlePrev = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -53,14 +63,53 @@ export function ProductImageDisplay({
   useEffect(() => {
     setCurrentIndex(0);
     setImageLoaded(false);
+    setRetry(0);
+    setFailed(false);
   }, [images]);
+
+  // Ao trocar de imagem no carrossel, reinicia o estado de carregamento.
+  useEffect(() => {
+    setImageLoaded(false);
+    setRetry(0);
+    setFailed(false);
+  }, [currentIndex]);
+
+  // Detecta imagem travada (nem onload nem onerror, típico do estrangulamento
+  // do i.ibb.co) e tenta de novo com backoff leve. Enquanto não esgotar as
+  // tentativas NÃO marcamos como falha — a imagem existe e deve carregar
+  // quando as conexões liberarem.
+  useEffect(() => {
+    if (imageLoaded || failed || images.length === 0) return;
+    const delay = STALL_TIMEOUT_MS + retry * 1500;
+    const timer = setTimeout(() => {
+      setRetry((r) => {
+        if (r < MAX_RETRIES) return r + 1;
+        setFailed(true);
+        return r;
+      });
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [imageLoaded, failed, retry, currentIndex, images.length]);
+
+  // URL com cache-bust nas tentativas seguintes para forçar nova conexão.
+  const currentSrc = images[currentIndex]
+    ? retry > 0
+      ? `${images[currentIndex]}${images[currentIndex].includes('?') ? '&' : '?'}r=${retry}`
+      : images[currentIndex]
+    : '';
 
   const handleImageLoad = () => {
     setImageLoaded(true);
+    setFailed(false);
   };
 
   const handleImageError = () => {
     setImageLoaded(false);
+    setRetry((r) => {
+      if (r < MAX_RETRIES) return r + 1;
+      setFailed(true);
+      return r;
+    });
   };
 
   // Keyboard navigation for the main image
@@ -118,7 +167,8 @@ export function ProductImageDisplay({
       >
         {/* Main image */}
         <img
-          src={images[currentIndex]}
+          key={`${currentIndex}-${retry}`}
+          src={currentSrc}
           alt={`${productName} - Vista ${currentIndex + 1}`}
           className={`w-full h-full object-contain transition-opacity duration-300 cursor-pointer ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
@@ -129,10 +179,33 @@ export function ProductImageDisplay({
           loading={priority ? 'eager' : 'lazy'}
         />
 
-        {/* Loading placeholder */}
-        {!imageLoaded && (
+        {/* Loading placeholder (enquanto carrega / tenta de novo) */}
+        {!imageLoaded && !failed && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="animate-pulse bg-gray-200 rounded w-full h-full" />
+          </div>
+        )}
+
+        {/* Placeholder de falha: depois de esgotar as tentativas automáticas.
+            Mantém um botão para a cliente forçar novo carregamento. */}
+        {!imageLoaded && failed && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+            <div className="text-center text-gray-500 p-4">
+              <div className="w-12 h-12 mx-auto mb-2 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-xl">🧶</span>
+              </div>
+              <p className="text-xs mb-2">Não foi possível carregar a imagem</p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFailed(false);
+                  setRetry((r) => r + 1);
+                }}
+                className="text-xs font-semibold text-purple-600 hover:text-purple-700 underline"
+              >
+                Tentar de novo
+              </button>
+            </div>
           </div>
         )}
 
