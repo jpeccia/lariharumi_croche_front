@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { publicApi, adminApi } from '../services/api';
 import { PaginatedResponse, PaginationConfig } from '../types/api';
 import { Product } from '../types/product';
@@ -28,13 +28,20 @@ export function useApiCache<T>(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  // Mantém sempre a referência mais recente do fetcher sem recriar `fetchData`.
+  // Callers normalmente passam uma arrow inline (novo fetcher a cada render);
+  // guardá-la num ref evita que o efeito de montagem re-dispare em loop,
+  // especialmente no caminho de erro (setError -> re-render -> refetch -> ...).
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
+
   const isExpired = useCallback((timestamp: number) => {
     return Date.now() - timestamp > ttl;
   }, [ttl]);
 
   const fetchData = useCallback(async (force = false) => {
     const cached = globalCache.get(key);
-    
+
     // Se temos dados em cache e não estão expirados, usar cache
     if (cached && !isExpired(cached.timestamp) && !force) {
       setData(cached.data);
@@ -52,19 +59,19 @@ export function useApiCache<T>(
     try {
       setLoading(true);
       setError(null);
-      
+
       // Marcar como carregando no cache global
       globalCache.set(key, { data: cached?.data || null, timestamp: Date.now(), loading: true });
-      
-      const result = await fetcher();
-      
+
+      const result = await fetcherRef.current();
+
       // Salvar no cache
-      globalCache.set(key, { 
-        data: result, 
-        timestamp: Date.now(), 
-        loading: false 
+      globalCache.set(key, {
+        data: result,
+        timestamp: Date.now(),
+        loading: false
       });
-      
+
       setData(result);
       setLoading(false);
       return result;
@@ -72,15 +79,16 @@ export function useApiCache<T>(
       const error = err as Error;
       setError(error);
       setLoading(false);
-      
+
       // Remover entrada de loading do cache em caso de erro
       globalCache.delete(key);
       throw error;
     }
-  }, [key, fetcher, isExpired]);
+  }, [key, isExpired]);
 
   useEffect(() => {
-    fetchData(refetchOnMount);
+    // Captura a rejeição para não gerar "Uncaught (in promise)"; o erro já fica no estado.
+    fetchData(refetchOnMount).catch(() => { /* erro tratado via estado `error` */ });
   }, [fetchData, refetchOnMount]);
 
   const invalidate = useCallback(() => {

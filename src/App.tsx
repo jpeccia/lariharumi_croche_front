@@ -32,6 +32,16 @@ const PageLoader = () => (
   </div>
 );
 
+/**
+ * Envolve cada página lazy com um ErrorBoundary próprio e o fallback de carregamento.
+ * Evita repetir a mesma árvore ErrorBoundary > Suspense em todas as rotas.
+ */
+const LazyRoute = ({ children }: { children: React.ReactNode }) => (
+  <ErrorBoundary>
+    <Suspense fallback={<PageLoader />}>{children}</Suspense>
+  </ErrorBoundary>
+);
+
 function App() {
   const setPromotion = usePromotionStore((s) => s.setPromotion);
 
@@ -76,76 +86,13 @@ function App() {
         <SkipLinks />
         <Navbar />
         <Routes>
-          <Route 
-            path="/" 
-            element={
-              <ErrorBoundary>
-                <Suspense fallback={<PageLoader />}>
-                  <Home />
-                </Suspense>
-              </ErrorBoundary>
-            } 
-          />
-          <Route 
-            path="/login" 
-            element={
-              <ErrorBoundary>
-                <Suspense fallback={<PageLoader />}>
-                  <LoginPage />
-                </Suspense>
-              </ErrorBoundary>
-            } 
-          />
-          <Route 
-            path="/catalog" 
-            element={
-              <ErrorBoundary>
-                <Suspense fallback={<PageLoader />}>
-                  <Catalog />
-                </Suspense>
-              </ErrorBoundary>
-            } 
-          />
-          <Route 
-            path="/care" 
-            element={
-              <ErrorBoundary>
-                <Suspense fallback={<PageLoader />}>
-                  <Care />
-                </Suspense>
-              </ErrorBoundary>
-            } 
-          />
-          <Route 
-            path="/donation" 
-            element={
-              <ErrorBoundary>
-                <Suspense fallback={<PageLoader />}>
-                  <DonationPage />
-                </Suspense>
-              </ErrorBoundary>
-            } 
-          />
-          <Route 
-            path="/contact" 
-            element={
-              <ErrorBoundary>
-                <Suspense fallback={<PageLoader />}>
-                  <Contact />
-                </Suspense>
-              </ErrorBoundary>
-            } 
-          />
-          <Route 
-            path="/admin" 
-            element={
-              <ErrorBoundary>
-                <Suspense fallback={<PageLoader />}>
-                  <AdminDashboard />
-                </Suspense>
-              </ErrorBoundary>
-            } 
-          />
+          <Route path="/" element={<LazyRoute><Home /></LazyRoute>} />
+          <Route path="/login" element={<LazyRoute><LoginPage /></LazyRoute>} />
+          <Route path="/catalog" element={<LazyRoute><Catalog /></LazyRoute>} />
+          <Route path="/care" element={<LazyRoute><Care /></LazyRoute>} />
+          <Route path="/donation" element={<LazyRoute><DonationPage /></LazyRoute>} />
+          <Route path="/contact" element={<LazyRoute><Contact /></LazyRoute>} />
+          <Route path="/admin" element={<LazyRoute><AdminDashboard /></LazyRoute>} />
         </Routes>
       </div>
     </ErrorBoundary>

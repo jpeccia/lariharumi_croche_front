@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { Search, Grid, List, Heart, ArrowLeft } from 'lucide-react';
+import { Search, Heart, ArrowLeft, ArrowUp, ChevronDown, X } from 'lucide-react';
 import { publicApi } from '../services/api';
 import CategoryCard from '../components/catalog/CategoryCard';
 import ProductCard from '../components/catalog/ProductCard';
@@ -24,6 +24,8 @@ import { usePromotionStore } from '../store/promotionStore';
 import { isPromotionActive, getApplicableDiscount } from '../types/promotion';
 import { extractNumericPrice } from '../utils/price';
 
+type SortOption = 'nome' | 'menor' | 'maior';
+
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -35,8 +37,9 @@ function Catalog() {
   const [searchTerm, setSearchTerm] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showOnlyDiscounted, setShowOnlyDiscounted] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('nome');
+  const [showTopButton, setShowTopButton] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const productsCacheRef = useRef<Map<string, { products: Product[]; pagination: PaginatedResponse<Product>['pagination'] | null; timestamp: number }>>(new Map());
@@ -57,6 +60,9 @@ function Catalog() {
   // Cache de categorias
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useCategoriesCache();
 
+  // Evita avisos de variáveis não utilizadas mantendo as otimizações disponíveis
+  void mobileOptimization;
+  void createThrottledCallback;
 
   // Monitorar quando categorias são carregadas
   useEffect(() => {
@@ -177,9 +183,6 @@ function Catalog() {
     }
   }, []);
 
-
-
-
   useEffect(() => {
     startRenderMeasurement();
     trackPageView('catalog');
@@ -204,6 +207,13 @@ function Catalog() {
       abortControllerRef.current?.abort();
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
+  }, []);
+
+  // Mostrar botão "voltar ao topo" após rolar
+  useEffect(() => {
+    const onScroll = () => setShowTopButton(window.scrollY > 520);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   /** @description Selects a category and lets the consolidated effect trigger the fetch. */
@@ -306,12 +316,44 @@ function Catalog() {
     trackClick('clear_search', 'catalog');
   }, [trackClick]);
 
+  /** @description Limpa todos os filtros ativos (categoria, busca e desconto). */
+  const handleClearFilters = useCallback(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    setSelectedCategory(null);
+    setInputValue('');
+    setSearchTerm('');
+    setShowOnlyDiscounted(false);
+    trackClick('clear_filters', 'catalog');
+  }, [trackClick]);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     if (selectedCategory !== null && viewProductCatalogRef.current) {
       viewProductCatalogRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [selectedCategory]);
+
+  const hasActiveFilters = selectedCategory !== null || !!searchTerm || showOnlyDiscounted;
+
+  /** @description Ordena a lista de produtos da página atual conforme a opção escolhida. */
+  const sortProducts = useCallback((list: Product[]): Product[] => {
+    const arr = [...list];
+    if (sortBy === 'menor') {
+      arr.sort((a, b) => (extractNumericPrice(a.priceRange) || 0) - (extractNumericPrice(b.priceRange) || 0));
+    } else if (sortBy === 'maior') {
+      arr.sort((a, b) => (extractNumericPrice(b.priceRange) || 0) - (extractNumericPrice(a.priceRange) || 0));
+    } else {
+      arr.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+    }
+    return arr;
+  }, [sortBy]);
+
+  const chipBase = 'whitespace-nowrap px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 flex-none';
+  const chipInactive = 'bg-white border-purple-100 text-gray-600 hover:border-purple-300 hover:text-purple-700';
+  const chipActive = 'bg-gradient-to-r from-pink-100 to-purple-100 border-purple-200 text-purple-800';
 
   return (
     <PageTransition>
@@ -325,7 +367,77 @@ function Catalog() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
         <FloatingHearts />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Sub-barra fixa do catálogo (fica logo abaixo do menu principal / navbar) */}
+        <div className="sticky top-16 z-30 bg-white/85 backdrop-blur-md border-b border-purple-100 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2 sm:gap-3 py-3 flex-wrap">
+              {/* Busca */}
+              <div className="relative order-1 w-full sm:w-72 sm:flex-none">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => handleSearchInput(e.target.value)}
+                  placeholder="Buscar peça (mín. 3 letras)..."
+                  className="w-full pl-9 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+                {inputValue && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label="Limpar busca"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Chips de categoria (navegação rápida) */}
+              <div className="order-3 sm:order-2 flex-1 min-w-0 overflow-x-auto flex gap-2 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <button
+                  onClick={handleShowAllProducts}
+                  className={`${chipBase} ${selectedCategory === null ? chipActive : chipInactive}`}
+                >
+                  Todas
+                </button>
+                {categories?.map((category) => (
+                  <button
+                    key={category.ID}
+                    onClick={() => handleCategoryClick(category.ID)}
+                    onMouseEnter={() => prefetchCategory(category.ID)}
+                    className={`${chipBase} ${selectedCategory === category.ID ? chipActive : chipInactive}`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setShowOnlyDiscounted((v) => !v)}
+                  className={`${chipBase} inline-flex items-center gap-1.5 ${showOnlyDiscounted ? 'bg-pink-500 border-transparent text-white' : chipInactive}`}
+                >
+                  <Heart className="w-3.5 h-3.5" />
+                  Com desconto
+                </button>
+              </div>
+
+              {/* Ordenação */}
+              <div className="order-2 sm:order-3 relative flex-none">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  aria-label="Ordenar"
+                  className="appearance-none pl-3 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="nome">Nome (A–Z)</option>
+                  <option value="menor">Menor preço</option>
+                  <option value="maior">Maior preço</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="relative">
             {/* Elemento decorativo */}
             <div className="absolute top-24 -right-3 sm:-top-2 sm:-right-4 sm:left-auto z-10">
@@ -341,13 +453,13 @@ function Catalog() {
 
             {/* Header Principal */}
             <CascadeAnimation delay={200}>
-              <div className="text-center mb-16">
-                <div className="flex justify-center mb-6">
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
-                    <Heart className="w-10 h-10 text-purple-600" />
+              <div className="text-center mb-12">
+                <div className="flex justify-center mb-5">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
+                    <Heart className="w-8 h-8 text-purple-600" />
                   </div>
                 </div>
-                <h1 className="font-handwritten text-4xl sm:text-5xl lg:text-6xl text-purple-800 mb-4">
+                <h1 className="font-handwritten text-4xl sm:text-5xl lg:text-6xl text-purple-800 mb-3">
                   Catálogo de Peças
                 </h1>
                 <p className="font-kawaii text-lg text-gray-600 max-w-2xl mx-auto">
@@ -356,22 +468,19 @@ function Catalog() {
               </div>
             </CascadeAnimation>
 
-            {/* Banner de Promoção */}
-            {/* <PromotionBanner /> */}
-
             {/* Seção de Categorias */}
             <CascadeAnimation delay={300}>
-              <div className="mb-16">
-                <div className="text-center mb-8">
-                  <h2 className="font-handwritten text-3xl sm:text-4xl text-purple-800 mb-2">
+              <div className="mb-12">
+                <div className="text-center mb-6">
+                  <h2 className="font-handwritten text-3xl sm:text-4xl text-purple-800 mb-1">
                     Categorias
                   </h2>
-                  <p className="text-gray-600">Escolha uma categoria para ver as peças</p>
+                  <p className="text-gray-600 text-sm">Toque numa categoria para filtrar as peças</p>
                 </div>
 
                 {categoriesLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {Array.from({ length: 4 }).map((_, index) => (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                    {Array.from({ length: 6 }).map((_, index) => (
                       <SkeletonCategoryCard key={index} />
                     ))}
                   </div>
@@ -391,9 +500,9 @@ function Catalog() {
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                     {categories?.map((category, index) => (
-                      <div key={category.ID} style={{ animationDelay: `${400 + index * 100}ms` }}>
+                      <div key={category.ID} style={{ animationDelay: `${400 + index * 80}ms` }}>
                         <CategoryCard
                           category={category}
                           onClick={() => handleCategoryClick(category.ID)}
@@ -406,85 +515,14 @@ function Catalog() {
               </div>
             </CascadeAnimation>
 
-            {/* Barra de Busca e Filtros */}
+            {/* Header dos Produtos + contexto */}
             <CascadeAnimation delay={500}>
-              <div className="bg-white rounded-3xl p-6 shadow-lg border border-purple-100 mb-8">
-                <div className="flex flex-col lg:flex-row gap-4 items-center">
-                  {/* Campo de Busca */}
-                  <div className="flex-1 relative">
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="text"
-                        placeholder="Buscar peças de crochê (mín. 3 letras)..."
-                        value={inputValue}
-                        onChange={(e) => handleSearchInput(e.target.value)}
-                        className="w-full pl-12 pr-12 py-3 text-gray-700 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                      />
-                      {inputValue && (
-                        <button
-                          onClick={handleClearSearch}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                    {isSearching && (
-                      <div className="mt-2 text-center">
-                        <span className="text-sm text-purple-600 font-medium animate-pulse">
-                          🔍 Buscando por "{searchTerm}"...
-                        </span>
-                      </div>
-                    )}
-                    {inputValue.length > 0 && inputValue.length < 3 && (
-                      <div className="mt-2 text-center">
-                        <span className="text-sm text-gray-400">
-                          Digite mais {3 - inputValue.length} letra{3 - inputValue.length > 1 ? 's' : ''} para buscar
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Botões de Visualização */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
-                          ? 'bg-purple-100 text-purple-600'
-                          : 'text-gray-400 hover:text-gray-600'
-                        }`}
-                    >
-                      <Grid className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
-                          ? 'bg-purple-100 text-purple-600'
-                          : 'text-gray-400 hover:text-gray-600'
-                        }`}
-                    >
-                      <List className="w-5 h-5" />
-                    </button>
-                    <label className="ml-3 flex items-center gap-2 text-sm text-gray-700">
-                      <input type="checkbox" checked={showOnlyDiscounted} onChange={(e) => setShowOnlyDiscounted(e.target.checked)} />
-                      Mostrar apenas com desconto
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </CascadeAnimation>
-
-            {/* Header dos Produtos */}
-            <CascadeAnimation delay={600}>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-                <div className="flex items-center gap-4 mb-4 sm:mb-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+                <div className="flex items-center gap-4">
                   {selectedCategory && (
                     <button
                       onClick={handleShowAllProducts}
-                      className="flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors"
+                      className="flex items-center gap-1.5 text-purple-600 hover:text-purple-700 transition-colors flex-none"
                     >
                       <ArrowLeft className="w-4 h-4" />
                       <span className="text-sm font-medium">Voltar</span>
@@ -495,26 +533,35 @@ function Catalog() {
                       {searchTerm
                         ? `Resultados para "${searchTerm}"`
                         : selectedCategory
-                          ? categories.find((c) => c.ID === selectedCategory)?.name
-                          : 'Todas as Peças'}
+                          ? categories?.find((c) => c.ID === selectedCategory)?.name
+                          : showOnlyDiscounted
+                            ? 'Peças com desconto'
+                            : 'Todas as Peças'}
                     </h2>
                     {paginationInfo && (
-                      <p className="text-gray-600 text-sm mt-1">
+                      <p className="text-gray-600 text-sm mt-0.5">
                         {paginationInfo.total} peça{paginationInfo.total !== 1 ? 's' : ''} encontrada{paginationInfo.total !== 1 ? 's' : ''}
                       </p>
                     )}
                   </div>
                 </div>
+
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleClearFilters}
+                    className="inline-flex items-center gap-1.5 self-start sm:self-auto px-4 py-2 rounded-full border border-purple-100 bg-white text-sm font-semibold text-purple-600 hover:border-pink-400 hover:text-pink-600 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Limpar filtros
+                  </button>
+                )}
               </div>
             </CascadeAnimation>
 
             {/* Grid de Produtos */}
-            <CascadeAnimation delay={700}>
+            <CascadeAnimation delay={600}>
               <div
-                className={`${viewMode === 'grid'
-                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                    : 'space-y-4'
-                  }`}
+                className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
                 ref={viewProductCatalogRef}
               >
                 {(() => {
@@ -531,13 +578,11 @@ function Catalog() {
 
                   if (isLoading && products.length === 0) {
                     return (
-                      <div className="col-span-full">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                          {Array.from({ length: 8 }).map((_, index) => (
-                            <SkeletonProductCard key={index} />
-                          ))}
-                        </div>
-                      </div>
+                      <>
+                        {Array.from({ length: 8 }).map((_, index) => (
+                          <SkeletonProductCard key={index} />
+                        ))}
+                      </>
                     );
                   }
 
@@ -550,22 +595,18 @@ function Catalog() {
                           </div>
                           <h3 className="text-lg font-semibold text-gray-800 mb-2">
                             {searchTerm
-                              ? `Nenhum produto encontrado para "${searchTerm}"`
-                              : 'Nenhum produto encontrado'
-                            }
+                              ? `Nenhuma peça encontrada para "${searchTerm}"`
+                              : 'Nenhuma peça encontrada'}
                           </h3>
                           <p className="text-gray-600 text-sm mb-4">
-                            {searchTerm
-                              ? 'Tente buscar por outro termo ou limpar a busca'
-                              : 'Tente ajustar os filtros ou buscar por outro termo'
-                            }
+                            Tente outra categoria ou limpe os filtros.
                           </p>
-                          {searchTerm && (
+                          {hasActiveFilters && (
                             <button
-                              onClick={handleClearSearch}
+                              onClick={handleClearFilters}
                               className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                             >
-                              Limpar busca
+                              Ver todas as peças
                             </button>
                           )}
                         </div>
@@ -573,29 +614,50 @@ function Catalog() {
                     );
                   }
 
-                  return products
-                    .filter((p) => {
-                      if (!showOnlyDiscounted) return true;
-                      const basePrice = extractNumericPrice(p.priceRange);
-                      if (isNaN(basePrice)) return false;
-                      return promoActive && getApplicableDiscount(promotion || undefined, basePrice) > 0;
-                    })
-                    .map((product, index) => (
-                      <div key={product.ID} style={{ animationDelay: `${800 + index * 50}ms` }}>
-                        <ProductCard
-                          product={product}
-                          instagramUsername="larifazcroche"
-                          priority={index < 8}
-                        />
+                  const visibleProducts = sortProducts(products).filter((p) => {
+                    if (!showOnlyDiscounted) return true;
+                    const basePrice = extractNumericPrice(p.priceRange);
+                    if (isNaN(basePrice)) return false;
+                    return promoActive && getApplicableDiscount(promotion || undefined, basePrice) > 0;
+                  });
+
+                  if (visibleProducts.length === 0) {
+                    return (
+                      <div className="col-span-full text-center py-12">
+                        <div className="bg-white rounded-2xl p-8 shadow-lg border border-purple-100 max-w-md mx-auto">
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-2xl">🏷️</span>
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                            Nenhuma peça com desconto nesta seleção
+                          </h3>
+                          <button
+                            onClick={() => setShowOnlyDiscounted(false)}
+                            className="mt-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                          >
+                            Mostrar todas
+                          </button>
+                        </div>
                       </div>
-                    ));
+                    );
+                  }
+
+                  return visibleProducts.map((product, index) => (
+                    <div key={product.ID} style={{ animationDelay: `${index * 40}ms` }}>
+                      <ProductCard
+                        product={product}
+                        instagramUsername="larifazcroche"
+                        priority={index < 8}
+                      />
+                    </div>
+                  ));
                 })()}
               </div>
             </CascadeAnimation>
 
             {/* Paginação */}
             {paginationInfo && paginationInfo.totalPages > 1 && (
-              <CascadeAnimation delay={900}>
+              <CascadeAnimation delay={700}>
                 <div className="mt-12">
                   {/* Paginação para desktop */}
                   <div className="hidden sm:block">
@@ -624,6 +686,26 @@ function Catalog() {
             )}
           </div>
         </div>
+
+        {/* Botão voltar ao topo */}
+        <button
+          onClick={scrollToTop}
+          aria-label="Voltar ao topo"
+          className={`fixed right-4 bottom-4 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+            showTopButton ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+
+        {/* Indicador de busca em andamento */}
+        {isSearching && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-sm border border-purple-100 shadow-lg rounded-full px-4 py-2">
+            <span className="text-sm text-purple-600 font-medium animate-pulse">
+              🔍 Buscando por "{searchTerm}"...
+            </span>
+          </div>
+        )}
       </div>
     </PageTransition>
   );
