@@ -1,7 +1,7 @@
-import { memo, useCallback } from 'react';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { memo, useCallback, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { Category } from '../../types/product';
-import { useCategoryImageCache } from '../../hooks/useImageCache';
+import { env } from '../../env';
 
 interface CategoryCardProps {
   readonly category: Category;
@@ -9,8 +9,24 @@ interface CategoryCardProps {
   readonly onMouseEnter?: (categoryId: number) => void;
 }
 
+/**
+ * Resolves the category image URL that already comes in the `/categories` payload.
+ * Avoids an extra `GET /categories/{id}/image` request per card (N+1 redundant
+ * round-trips), so the image shows together with the list. Normalizes relative paths
+ * just in case the backend ever returns one.
+ */
+function resolveCategoryImage(image?: string): string {
+  if (!image) return '';
+  if (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('data:')) {
+    return image;
+  }
+  const normalized = image.startsWith('/') ? image : `/${image}`;
+  return `${env.VITE_API_BASE_URL}${normalized}`;
+}
+
 function CategoryCard({ category, onClick, onMouseEnter }: CategoryCardProps) {
-  const { imageUrl: categoryImageUrl, isLoading, error } = useCategoryImageCache(category.ID, true);
+  const [errored, setErrored] = useState(false);
+  const imageSrc = resolveCategoryImage(category.image);
 
   const handleClick = useCallback(() => {
     onClick(category.ID);
@@ -27,61 +43,30 @@ function CategoryCard({ category, onClick, onMouseEnter }: CategoryCardProps) {
       onMouseEnter={handleMouseEnter}
       className="group cursor-pointer animate-slide-up"
     >
-      <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-purple-100 overflow-hidden transition-all duration-300 hover:-translate-y-2">
-        <div className="relative h-56 overflow-hidden">
-          {isLoading ? (
-            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-purple-50 to-pink-50">
-              <div className="animate-spin rounded-full h-10 w-10 border-4 border-purple-200 border-t-purple-500"></div>
-            </div>
-          ) : error ? (
-            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-50 to-gray-100">
-              <div className="text-center text-gray-500">
-                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <span className="text-lg">📷</span>
-                </div>
-                <p className="text-sm font-medium">Erro ao carregar</p>
-              </div>
-            </div>
+      <div className="bg-white rounded-2xl shadow-md hover:shadow-xl border border-purple-100 overflow-hidden transition-all duration-300 hover:-translate-y-1.5">
+        {/* Imagem compacta (quadrada) — vem direto do payload de categorias, sem request extra */}
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50">
+          {imageSrc && !errored ? (
+            <img
+              loading="lazy"
+              src={imageSrc}
+              alt={category.name}
+              onError={() => setErrored(true)}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
           ) : (
-            <>
-              <img
-                loading="lazy"
-                src={categoryImageUrl || `${category.image}.webp`}
-                alt={category.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              {/* Overlay gradiente */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              {/* Ícone de decoração */}
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
-                </div>
-              </div>
-            </>
+            <div className="flex items-center justify-center w-full h-full text-gray-400">
+              <span className="text-2xl">📷</span>
+            </div>
           )}
         </div>
 
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xl font-bold text-purple-800 group-hover:text-purple-600 transition-colors duration-300">
-              {category.name}
-            </h3>
-            <ArrowRight className="w-5 h-5 text-purple-400 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1" />
-          </div>
-
-          {category.description && (
-            <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
-              {category.description}
-            </p>
-          )}
-
-          {/* Indicador de clique */}
-          <div className="mt-4 flex items-center text-purple-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <span>Explorar peças</span>
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </div>
+        {/* Nome em HTML (legível e nítido, independente da imagem) */}
+        <div className="p-3 flex items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-purple-800 group-hover:text-purple-600 transition-colors duration-300 leading-tight line-clamp-2">
+            {category.name}
+          </h3>
+          <ArrowRight className="w-4 h-4 text-purple-300 group-hover:text-purple-600 transition-all duration-300 transform group-hover:translate-x-0.5 flex-shrink-0" />
         </div>
       </div>
     </div>

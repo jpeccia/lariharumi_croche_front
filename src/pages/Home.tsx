@@ -40,7 +40,7 @@ function Home() {
           </div>
 
           {/* Título Principal */}
-          <h1 className="font-handwritten text-5xl sm:text-6xl lg:text-7xl text-purple-800 mb-6 relative">
+          <h1 className="font-handwritten text-4xl sm:text-6xl lg:text-7xl text-purple-800 mb-6 relative break-words">
             Crochê da Lari
             <div className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6">
               <Suspense fallback={<div className="w-12 h-12 bg-pink-100 rounded-full animate-pulse"></div>}>
