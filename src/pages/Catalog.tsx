@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react';
 import { Search, Heart, ArrowLeft, ArrowUp, ChevronDown, X } from 'lucide-react';
 import { publicApi } from '../services/api';
 import CategoryCard from '../components/catalog/CategoryCard';
@@ -25,6 +25,16 @@ import { isPromotionActive, getApplicableDiscount } from '../types/promotion';
 import { extractNumericPrice } from '../utils/price';
 
 type SortOption = 'nome' | 'menor' | 'maior';
+
+/**
+ * Tamanho de página aplicado no cliente para a visão de categoria.
+ * O endpoint /products/category/:id devolve TODOS os produtos de uma vez e,
+ * sem paginar, o grid renderiza dezenas de <img> apontando para os originais
+ * full-res no i.ibb.co ao mesmo tempo. O i.ibb.co estrangula conexões
+ * concorrentes (~12-15), então o excedente trava e as imagens não carregam.
+ * Paginando em 12 mantemos as requisições de imagem abaixo desse teto.
+ */
+const CATEGORY_PAGE_SIZE = 12;
 
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -285,7 +295,12 @@ function Catalog() {
   /** @description Handles pagination: fetches products for the given page. */
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    fetchProducts(selectedCategory, page, searchTerm);
+    // Categoria é paginada no cliente (dados já em memória): só troca a página.
+    // Todas/busca são paginadas no servidor: refetch da página pedida.
+    const clientPaginated = selectedCategory !== null && !searchTerm;
+    if (!clientPaginated) {
+      fetchProducts(selectedCategory, page, searchTerm);
+    }
     trackClick('page_change', 'catalog');
     viewProductCatalogRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [fetchProducts, selectedCategory, searchTerm, trackClick]);
@@ -336,6 +351,12 @@ function Catalog() {
     }
   }, [selectedCategory]);
 
+  // Volta para a primeira página ao mudar ordenação ou filtro de desconto,
+  // evitando ficar numa página inexistente após a lista encolher/reordenar.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy, showOnlyDiscounted]);
+
   const hasActiveFilters = selectedCategory !== null || !!searchTerm || showOnlyDiscounted;
 
   /** @description Ordena a lista de produtos da página atual conforme a opção escolhida. */
@@ -350,6 +371,46 @@ function Catalog() {
     }
     return arr;
   }, [sortBy]);
+
+  /**
+   * Lista final exibida + paginação.
+   * Na visão de categoria a paginação é feita no cliente (o backend devolve
+   * todos os produtos), limitando quantas imagens carregam por vez e evitando
+   * o estrangulamento do i.ibb.co. Nas demais visões (todas/busca) mantém a
+   * paginação vinda do servidor.
+   */
+  const display = useMemo(() => {
+    const filtered = sortProducts(products).filter((p) => {
+      if (!showOnlyDiscounted) return true;
+      const basePrice = extractNumericPrice(p.priceRange);
+      if (isNaN(basePrice)) return false;
+      return promoActive && getApplicableDiscount(promotion || undefined, basePrice) > 0;
+    });
+
+    const isClientPaginated = selectedCategory !== null && !searchTerm;
+
+    if (isClientPaginated) {
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / CATEGORY_PAGE_SIZE));
+      const safePage = Math.min(Math.max(1, currentPage), totalPages);
+      const start = (safePage - 1) * CATEGORY_PAGE_SIZE;
+      return {
+        filtered,
+        pageItems: filtered.slice(start, start + CATEGORY_PAGE_SIZE),
+        totalPages,
+        total,
+        limit: CATEGORY_PAGE_SIZE,
+      };
+    }
+
+    return {
+      filtered,
+      pageItems: filtered,
+      totalPages: paginationInfo?.totalPages ?? 1,
+      total: paginationInfo?.total ?? filtered.length,
+      limit: paginationInfo?.limit ?? 10,
+    };
+  }, [products, sortProducts, showOnlyDiscounted, promoActive, promotion, selectedCategory, searchTerm, currentPage, paginationInfo]);
 
   const chipBase = 'whitespace-nowrap px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 flex-none';
   const chipInactive = 'bg-white border-purple-100 text-gray-600 hover:border-purple-300 hover:text-purple-700';
@@ -538,9 +599,9 @@ function Catalog() {
                             ? 'Peças com desconto'
                             : 'Todas as Peças'}
                     </h2>
-                    {paginationInfo && (
+                    {products.length > 0 && (
                       <p className="text-gray-600 text-sm mt-0.5">
-                        {paginationInfo.total} peça{paginationInfo.total !== 1 ? 's' : ''} encontrada{paginationInfo.total !== 1 ? 's' : ''}
+                        {display.total} peça{display.total !== 1 ? 's' : ''} encontrada{display.total !== 1 ? 's' : ''}
                       </p>
                     )}
                   </div>
@@ -614,14 +675,7 @@ function Catalog() {
                     );
                   }
 
-                  const visibleProducts = sortProducts(products).filter((p) => {
-                    if (!showOnlyDiscounted) return true;
-                    const basePrice = extractNumericPrice(p.priceRange);
-                    if (isNaN(basePrice)) return false;
-                    return promoActive && getApplicableDiscount(promotion || undefined, basePrice) > 0;
-                  });
-
-                  if (visibleProducts.length === 0) {
+                  if (display.filtered.length === 0) {
                     return (
                       <div className="col-span-full text-center py-12">
                         <div className="bg-white rounded-2xl p-8 shadow-lg border border-purple-100 max-w-md mx-auto">
@@ -642,7 +696,7 @@ function Catalog() {
                     );
                   }
 
-                  return visibleProducts.map((product, index) => (
+                  return display.pageItems.map((product, index) => (
                     <div key={product.ID} style={{ animationDelay: `${index * 40}ms` }}>
                       <ProductCard
                         product={product}
@@ -655,19 +709,19 @@ function Catalog() {
               </div>
             </CascadeAnimation>
 
-            {/* Paginação */}
-            {paginationInfo && paginationInfo.totalPages > 1 && (
+            {/* Paginação (servidor para Todas/busca, cliente para categoria) */}
+            {display.totalPages > 1 && (
               <CascadeAnimation delay={700}>
                 <div className="mt-12">
                   {/* Paginação para desktop */}
                   <div className="hidden sm:block">
                     <Pagination
-                      currentPage={currentPage}
-                      totalPages={paginationInfo.totalPages}
+                      currentPage={Math.min(currentPage, display.totalPages)}
+                      totalPages={display.totalPages}
                       onPageChange={handlePageChange}
                       showInfo={true}
-                      itemsPerPage={paginationInfo.limit}
-                      totalItems={paginationInfo.total}
+                      itemsPerPage={display.limit}
+                      totalItems={display.total}
                       className="justify-center"
                     />
                   </div>
@@ -675,8 +729,8 @@ function Catalog() {
                   {/* Paginação compacta para mobile */}
                   <div className="sm:hidden">
                     <CompactPagination
-                      currentPage={currentPage}
-                      totalPages={paginationInfo.totalPages}
+                      currentPage={Math.min(currentPage, display.totalPages)}
+                      totalPages={display.totalPages}
                       onPageChange={handlePageChange}
                       className="justify-center"
                     />
