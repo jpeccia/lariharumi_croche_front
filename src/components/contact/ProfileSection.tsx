@@ -20,20 +20,32 @@ export function ProfileSection() {
 
         <div className="flex-1 text-center md:text-left">
           <h3 className="font-handwritten text-3xl text-purple-800 mb-4">
-            Olá! Sou a Larissa 💖
+            Bem-vindo ao Lari Faz Crochê! 💖
           </h3>
 
           <div className="font-kawaii prose text-gray-600 space-y-4">
             <p className="text-lg leading-relaxed">
-              Bem vindo! Sou a Larissa, tenho 22 aninhos,
-              moro em Cravinhos e sou estudante de Engenharia Elétrica no IFSP.
-              Há mais ou menos 2 anos comecei minha jornada com o crochê e
-              desde então venho me apaixonando e me aventurando cada vez mais por essa arte! 🌻💫
+              Tenho 23 anos, sou formada em Engenharia Elétrica e atualmente estou me
+              aventurando no mundo do empreendedorismo, unindo duas paixões: o crochê e
+              o universo fitness.
             </p>
             <p className="text-lg leading-relaxed">
-              Cada peça que crio é única, feita com todo o cuidado e atenção aos detalhes,
-              especialmente para você! ♡
-              Acredito que o artesanato tem o poder de transformar momentos em algo ainda mais especial.
+              O crochê faz parte da minha história há algum tempo e se tornou muito mais
+              do que uma atividade ou um hobby. É algo que realmente amo fazer! Gosto de
+              cada etapa do processo, desde escolher os fios até ver uma ideia ganhar
+              forma através das minhas mãos.
+            </p>
+            <p className="text-lg leading-relaxed">
+              Para mim, o artesanato tem uma beleza única, pois não existem duas peças
+              exatamente iguais. Cada criação é feita com cuidado, carinho e atenção aos
+              detalhes, carregando um pouquinho de dedicação e amor em cada ponto. 🌻💫
+            </p>
+            <p className="text-lg leading-relaxed">
+              Espero que você encontre por aqui um pouquinho da minha paixão!
+            </p>
+            <p className="text-lg leading-relaxed">
+              Com carinho,<br />
+              <span className="font-handwritten text-2xl text-purple-700">Lari Harumi ♡</span>
             </p>
           </div>
         </div>
