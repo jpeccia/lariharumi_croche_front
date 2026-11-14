@@ -1,4 +1,4 @@
-import { Heart, Sparkles, MapPin } from 'lucide-react';
+import { Heart, Sparkles } from 'lucide-react';
 
 export function ProfileSection() {
   return (
@@ -48,19 +48,6 @@ export function ProfileSection() {
               <span className="font-handwritten text-2xl text-purple-700">Lari Harumi ♡</span>
             </p>
           </div>
-        </div>
-      </div>
-
-      {/* Informação de localização */}
-      <div className="mt-8">
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-purple-600" />
-            </div>
-            <h4 className="font-bold text-purple-800">Localização</h4>
-          </div>
-          <p className="text-gray-700">Cravinhos, São Paulo</p>
         </div>
       </div>
 
