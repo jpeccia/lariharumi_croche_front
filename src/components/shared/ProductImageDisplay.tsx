@@ -36,6 +36,11 @@ export function ProductImageDisplay({
   const [retry, setRetry] = useState(0);
   const [failed, setFailed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Telas de toque não têm hover: sem isto as setas de navegação ficariam
+  // invisíveis (opacity-0) e a cliente não teria como passar as imagens.
+  const [isTouch] = useState(
+    () => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(hover: none)').matches
+  );
   // Num catálogo de vendas, imagem faltando é falha grave (a cliente não vê a
   // peça). As URLs existem — o que falha é o i.ibb.co estrangular conexões —,
   // então insistimos bastante antes de desistir: o placeholder é último recurso.
@@ -215,7 +220,7 @@ export function ProductImageDisplay({
             <button
               onClick={handlePrev}
               className={`absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/30 hover:bg-black/50 p-1.5 sm:p-2 rounded-full transition-all duration-200 ${
-                isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+                isHovered || isTouch ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
               }`}
               aria-label="Imagem anterior"
             >
@@ -224,7 +229,7 @@ export function ProductImageDisplay({
             <button
               onClick={handleNext}
               className={`absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/30 hover:bg-black/50 p-1.5 sm:p-2 rounded-full transition-all duration-200 ${
-                isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+                isHovered || isTouch ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
               }`}
               aria-label="Próxima imagem"
             >
