@@ -92,9 +92,15 @@ function Contact() {
                   <p className="text-gray-600">Cravinhos, SP</p>
                 </div>
 
-                {/* Logo */}
-                <div className="flex justify-center">
-                  <img src="/logo.png" alt="Logo" className="w-48 sm:w-56 opacity-90 hover:opacity-100 transition-opacity duration-300" />
+                {/* Logo / assinatura da marca */}
+                <div className="mt-8 pt-6 border-t border-purple-100">
+                  <div className="mx-auto w-fit rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-purple-100 transition-transform duration-300 hover:scale-[1.03]">
+                    <img
+                      src="/logo.png"
+                      alt="Lari Faz Crochê"
+                      className="block w-52 sm:w-60"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
