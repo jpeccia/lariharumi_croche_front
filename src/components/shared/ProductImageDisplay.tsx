@@ -72,9 +72,11 @@ export function ProductImageDisplay({
     setFailed(false);
   }, [images]);
 
-  // Ao trocar de imagem no carrossel, reinicia o estado de carregamento.
+  // Ao navegar no carrossel limpamos só tentativa/falha. NÃO zeramos
+  // imageLoaded: assim o <img> mantém a imagem atual visível até a próxima
+  // carregar (o navegador troca o src no lugar), evitando piscar em branco a
+  // cada clique — a resiliência de stall segue ativa no 1º carregamento.
   useEffect(() => {
-    setImageLoaded(false);
     setRetry(0);
     setFailed(false);
   }, [currentIndex]);
@@ -170,9 +172,9 @@ export function ProductImageDisplay({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Main image */}
+        {/* Main image — sem key: trocar o src no lugar faz o navegador manter a
+            imagem atual até a próxima decodificar, sem flash branco ao navegar. */}
         <img
-          key={`${currentIndex}-${retry}`}
           src={currentSrc}
           alt={`${productName} - Vista ${currentIndex + 1}`}
           className={`w-full h-full object-contain transition-opacity duration-300 cursor-pointer ${
